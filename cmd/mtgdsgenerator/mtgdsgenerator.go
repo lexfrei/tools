@@ -30,34 +30,22 @@ func main() {
 
 		log.Printf("%.2f%% %s", float64(index)*float64(100)/float64(len(cards)), IDString)
 		if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
-
 			if cards[index].ImageURIs != nil {
 				imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
-				err = downloadAndSave(cards[index].ImageURIs.Normal, imagePath)
-				if err != nil {
+				if err = downloadAndSave(cards[index].ImageURIs, &IDString, &imagePath, result); err != nil {
 					log.Println(err)
 					continue
 				}
-				result[IDString] = []string{imagePath}
-				continue
 			}
 
-			if cards[index].CardFaces != nil {
-				for i := range cards[index].CardFaces {
-					if cards[index].CardFaces[i].ImageURIs.Normal == "" {
-						continue
-					}
+			for i := range cards[index].CardFaces {
+				imagePath := "./images" + "/" +
+					cards[index].Set + "/" +
+					string(cards[index].Lang) + "/" +
+					cards[index].ID + strconv.Itoa(i) + ".jpg"
 
-					imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) +
-						"/" + cards[index].ID + strconv.Itoa(i) + ".jpg"
-
-					err = downloadAndSave(cards[index].CardFaces[i].ImageURIs.Normal, imagePath)
-					if err != nil {
-						log.Println(err)
-						continue
-					}
-
-					result[IDString] = append(result[IDString], imagePath)
+				if err = downloadAndSave(&cards[index].CardFaces[i].ImageURIs, &IDString, &imagePath, result); err != nil {
+					log.Println(err)
 					continue
 				}
 			}
@@ -75,10 +63,14 @@ func main() {
 	}
 }
 
-func downloadAndSave(url, filepath string) error {
-	resp, err := http.Get(url)
+func downloadAndSave(iURIs *scryfall.ImageURIs, filepath, id *string, result map[string][]string) error {
+	if iURIs.Normal == "" {
+		return errors.New("normal image url not found")
+	}
+
+	resp, err := http.Get(iURIs.Normal)
 	if err != nil {
-		return errors.Wrap(err, "cant dowbload file")
+		return errors.Wrap(err, "cant download file")
 	}
 	defer resp.Body.Close()
 
@@ -87,15 +79,18 @@ func downloadAndSave(url, filepath string) error {
 		return errors.Wrap(err, "cant read body")
 	}
 
-	err = os.MkdirAll(path.Dir(filepath), os.ModePerm)
+	err = os.MkdirAll(path.Dir(*filepath), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cant create directory")
 	}
 
-	err = os.WriteFile(filepath, body, os.ModePerm)
+	err = os.WriteFile(*filepath, body, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cant write file")
 	}
+
+	result[*id] = append(result[*id], *filepath)
+
 	return nil
 }
 
