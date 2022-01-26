@@ -32,7 +32,7 @@ func main() {
 		if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
 			if cards[index].ImageURIs != nil {
 				imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
-				if err = downloadAndSave(cards[index].ImageURIs, &IDString, &imagePath, result); err != nil {
+				if err = downloadAndSave(cards[index].ImageURIs, &imagePath, &IDString, result); err != nil {
 					log.Println(err)
 					continue
 				}
@@ -44,7 +44,7 @@ func main() {
 					string(cards[index].Lang) + "/" +
 					cards[index].ID + strconv.Itoa(i) + ".jpg"
 
-				if err = downloadAndSave(&cards[index].CardFaces[i].ImageURIs, &IDString, &imagePath, result); err != nil {
+				if err = downloadAndSave(&cards[index].CardFaces[i].ImageURIs, &imagePath, &IDString, result); err != nil {
 					log.Println(err)
 					continue
 				}
