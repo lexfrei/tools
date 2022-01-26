@@ -1,0 +1,36 @@
+{
+	"name": "Go",
+	"build": {
+		"dockerfile": "Dockerfile",
+	},
+	"runArgs": [
+		"--cap-add=SYS_PTRACE",
+		"--security-opt",
+		"seccomp=unconfined",
+		"-v",
+		"${env:HOME}/.gnupg/pubring.kbx:/root/.gnupg/pubring.kbx",
+		"-v",
+		"${env:HOME}/.gnupg/trustdb.gpg:/root/.gnupg/trustdb.gpg",
+		"-v",
+		"${env:HOME}/.gnupg/S.gpg-agent:/root/.gnupg/S.gpg-agent",
+		"-v",
+		"${env:SSH_AUTH_SOCK}:${env:SSH_AUTH_SOCK}",
+		"-e",
+		"SSH_AUTH_SOCK=${env:SSH_AUTH_SOCK}"
+	],
+	"settings": {
+		"go.toolsManagement.checkForUpdates": "local",
+		"go.useLanguageServer": true,
+		"go.gopath": "/go",
+		"go.goroot": "/usr/local/go"
+	},
+	"extensions": [
+		"golang.Go"
+	],
+	"remoteUser": "vscode",
+	"features": {
+		"docker-from-docker": {
+			"version": "latest",
+		}
+	}
+}
