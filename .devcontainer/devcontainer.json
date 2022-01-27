@@ -14,6 +14,8 @@
 		"-v",
 		"${env:HOME}/.gnupg/S.gpg-agent:/root/.gnupg/S.gpg-agent",
 		"-v",
+		"${env:HOME}/.bashrc:/home/vscode/.bashrc",
+		"-v",
 		"${env:SSH_AUTH_SOCK}:${env:SSH_AUTH_SOCK}",
 		"-e",
 		"SSH_AUTH_SOCK=${env:SSH_AUTH_SOCK}"
@@ -25,7 +27,8 @@
 		"go.goroot": "/usr/local/go"
 	},
 	"extensions": [
-		"golang.Go"
+		"golang.Go",
+		"redhat.vscode-yaml"
 	],
 	"remoteUser": "vscode",
 	"features": {

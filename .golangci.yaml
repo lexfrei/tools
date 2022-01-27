@@ -21,60 +21,31 @@ linters-settings:
       - style
     disabled-checks:
       - dupImport # https://github.com/go-critic/go-critic/issues/845
-      - ifElseChain
-      - octalLiteral
-      - whyNoLint
-      - wrapperFunc
-  
-  gomnd:
-    settings:
-      mnd:
-        checks: [argument,case,condition,return]
 
   nolintlint:
-    allow-leading-space: true
     allow-unused: false
     require-explanation: false
     require-specific: false
 
+  varnamelen:
+    max-distance: 5
+    min-name-length: 3
+    check-receiver: false
+    check-return: false
+    ignore-type-assert-ok: false
+    ignore-map-index-ok: false
+    ignore-chan-recv-ok: false
+    ignore-decls:
+      - wg *sync.WaitGroup
+      - mu *sync.Mutex
+
+  gomnd:
+    ignored-numbers:
+      - "100"
 
 linters:
-  disable-all: true
-  enable:
-    - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
-    - dupl
-    - errcheck
-    - exportloopref
-    - exhaustive
-    - funlen
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - golint
-    - gomnd
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - noctx
-    - nolintlint
-    - rowserrcheck
-    - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - varcheck
-    - whitespace
+  enable-all: true
+  disable:
+    - interfacer
+    - maligned
+    - scopelint

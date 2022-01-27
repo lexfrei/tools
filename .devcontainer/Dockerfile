@@ -30,6 +30,8 @@ RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master
     go install \
         github.com/lukehoban/go-outline@latest && \
     go install \
-        github.com/uudashr/gopkgs/cmd/gopkgs@v2 && \
+        github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest && \
     go install \
-        github.com/cweill/gotests/...@latest
+        github.com/cweill/gotests/...@latest && \
+    go install \
+        mvdan.cc/gofumpt/gofumports@v0.1.1
