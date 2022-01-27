@@ -56,6 +56,7 @@ func main() {
 
 func generateReport(result map[string][]string) {
 	log.Println("Generating report...")
+
 	jsondata, err := json.Marshal(result)
 	if err != nil {
 		log.Println(err)
