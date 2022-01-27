@@ -5,9 +5,6 @@ linters-settings:
   gocyclo:
     min-complexity: 10
 
-  maligned:
-    suggest-new: true
-
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -36,12 +33,13 @@ linters-settings:
     ignore-map-index-ok: false
     ignore-chan-recv-ok: false
     ignore-decls:
-      - wg *sync.WaitGroup
-      - mu *sync.Mutex
+      - wg sync.WaitGroup
+      - mu sync.Mutex
 
   gomnd:
     ignored-numbers:
       - "100"
+      - "10"
 
 linters:
   enable-all: true
@@ -49,3 +47,5 @@ linters:
     - interfacer
     - maligned
     - scopelint
+    - gochecknoglobals
+    - gochecknoinits

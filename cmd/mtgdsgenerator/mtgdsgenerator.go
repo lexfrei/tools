@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	scryfall "github.com/BlueMonday/go-scryfall"
+	"github.com/lexfrei/tools/cmd/mtgdsgenerator/cmd"
 	"github.com/pkg/errors"
 )
 
@@ -21,18 +22,23 @@ type config struct {
 }
 
 func main() {
+	cmd.Execute()
+
 	var conf config
 
 	ctx := context.Background()
 
-	cards, err := getAllCards(ctx, "all_cards")
+	cards, err := getAllCards(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	result := make(map[string][]string)
+	defer generateReport(result)
 
-	const workersCount = 5
+	log.Printf("Spawning %d workers...\n", cmd.Parallel)
+
+	workersCount := int(cmd.Parallel)
 	jobIndex := make(chan int, workersCount)
 
 	for w := 1; w <= workersCount; w++ {
@@ -46,7 +52,10 @@ func main() {
 
 	close(jobIndex)
 	conf.wg.Wait()
+}
 
+func generateReport(result map[string][]string) {
+	log.Println("Generating report...")
 	jsondata, err := json.Marshal(result)
 	if err != nil {
 		log.Println(err)
@@ -66,7 +75,7 @@ func downloadAndSave(
 	result map[string][]string,
 ) error {
 	if iURIs.Normal == "" {
-		return errors.New("normal image url not found")
+		return errors.Errorf("normal image url not found for %s", *cardid)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, iURIs.Normal, http.NoBody)
@@ -102,7 +111,7 @@ func downloadAndSave(
 	return nil
 }
 
-func getAllCards(ctx context.Context, datatype string) (cards []scryfall.Card, err error) {
+func getAllCards(ctx context.Context) (cards []scryfall.Card, err error) {
 	client, err := scryfall.NewClient()
 	if err != nil {
 		return
@@ -114,11 +123,11 @@ func getAllCards(ctx context.Context, datatype string) (cards []scryfall.Card, e
 	}
 
 	for index := range lbd {
-		if lbd[index].Type != datatype {
+		if lbd[index].Type != cmd.DataType {
 			continue
 		}
 
-		log.Println("Downloading bulk data...")
+		log.Printf("Downloading bulk data for %s...\n", cmd.DataType)
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, lbd[index].DownloadURI, http.NoBody)
 		if err != nil {
@@ -176,6 +185,8 @@ func worker(
 
 					continue
 				}
+
+				continue
 			}
 
 			for faceIndex := range cards[index].CardFaces {
