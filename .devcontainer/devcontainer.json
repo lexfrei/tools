@@ -27,8 +27,16 @@
 		"go.goroot": "/usr/local/go"
 	},
 	"extensions": [
+		"eamodio.gitlens",
+		"exiasr.hadolint",
 		"golang.Go",
-		"redhat.vscode-yaml"
+		"JHeilingbrunner.vscode-gnupg-tool",
+		"mde.select-highlight-minimap",
+		"ms-azuretools.vscode-docker",
+		"oderwat.indent-rainbow",
+		"redhat.vscode-commons",
+		"redhat.vscode-yaml",
+		"zxh404.vscode-proto3",
 	],
 	"remoteUser": "vscode",
 	"features": {
