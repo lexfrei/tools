@@ -34,4 +34,6 @@ RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master
     go install \
         github.com/cweill/gotests/...@latest && \
     go install \
-        mvdan.cc/gofumpt/gofumports@v0.1.1
+        mvdan.cc/gofumpt/gofumports@latest && \
+    go install \
+        github.com/spf13/cobra/cobra@latest
