@@ -15,7 +15,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+type config struct {
+	wg sync.WaitGroup
+	mu sync.Mutex
+}
+
 func main() {
+	var conf config
+
 	ctx := context.Background()
 
 	cards, err := getAllCards(ctx, "all_cards")
@@ -28,13 +35,9 @@ func main() {
 	const workersCount = 5
 	jobIndex := make(chan int, workersCount)
 
-	var wg *sync.WaitGroup
-
-	var mu *sync.Mutex
-
 	for w := 1; w <= workersCount; w++ {
-		go worker(ctx, wg, mu, cards, jobIndex, result)
-		wg.Add(1)
+		go worker(ctx, &conf, cards, jobIndex, result)
+		conf.wg.Add(1)
 	}
 
 	for index := range cards {
@@ -42,7 +45,7 @@ func main() {
 	}
 
 	close(jobIndex)
-	wg.Wait()
+	conf.wg.Wait()
 
 	jsondata, err := json.Marshal(result)
 	if err != nil {
@@ -57,7 +60,7 @@ func main() {
 
 func downloadAndSave(
 	ctx context.Context,
-	mu *sync.Mutex,
+	conf *config,
 	iURIs *scryfall.ImageURIs,
 	filepath, cardid *string,
 	result map[string][]string,
@@ -92,9 +95,9 @@ func downloadAndSave(
 		return errors.Wrap(err, "cant write file")
 	}
 
-	mu.Lock()
+	conf.mu.Lock()
 	result[*cardid] = append(result[*cardid], *filepath)
-	mu.Unlock()
+	conf.mu.Unlock()
 
 	return nil
 }
@@ -149,13 +152,12 @@ func getAllCards(ctx context.Context, datatype string) (cards []scryfall.Card, e
 
 func worker(
 	ctx context.Context,
-	wg *sync.WaitGroup,
-	mu *sync.Mutex,
+	conf *config,
 	cards []scryfall.Card,
 	indexChan <-chan int,
 	result map[string][]string,
 ) {
-	defer wg.Done()
+	defer conf.wg.Done()
 
 	for index := range indexChan {
 		IDString := cards[index].Name + " " +
@@ -169,7 +171,7 @@ func worker(
 		if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
 			if cards[index].ImageURIs != nil {
 				imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
-				if err := downloadAndSave(ctx, mu, cards[index].ImageURIs, &imagePath, &IDString, result); err != nil {
+				if err := downloadAndSave(ctx, conf, cards[index].ImageURIs, &imagePath, &IDString, result); err != nil {
 					log.Println(err)
 
 					continue
@@ -182,7 +184,7 @@ func worker(
 					string(cards[index].Lang) + "/" +
 					cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
 
-				if err := downloadAndSave(ctx, mu, &cards[index].CardFaces[faceIndex].ImageURIs, &imagePath, &IDString, result); err != nil {
+				if err := downloadAndSave(ctx, conf, &cards[index].CardFaces[faceIndex].ImageURIs, &imagePath, &IDString, result); err != nil {
 					log.Println(err)
 
 					continue
