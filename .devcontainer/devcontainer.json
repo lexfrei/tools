@@ -7,8 +7,8 @@
 		"--cap-add=SYS_PTRACE",
 		"--security-opt",
 		"seccomp=unconfined",
-		"-v",
-		"${env:HOME}/.bashrc:/home/vscode/.bashrc",
+		// "-v",
+		// "${env:HOME}/.bashrc:/home/vscode/.bashrc",
 	],
 	"settings": {
 		"go.toolsManagement.checkForUpdates": "local",

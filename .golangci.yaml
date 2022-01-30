@@ -40,6 +40,7 @@ linters-settings:
     ignored-numbers:
       - "100"
       - "10"
+      - "64"
 
 linters:
   enable-all: true
@@ -49,3 +50,5 @@ linters:
     - scopelint
     - gochecknoglobals
     - gochecknoinits
+    - exhaustivestruct
+    - gofmt
