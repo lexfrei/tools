@@ -1,6 +1,4 @@
-ARG GO_VERSION=1.17.6
-
-FROM golang:${GO_VERSION}
+FROM registry.hub.docker.com/library/golang:1.17.6
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
@@ -34,6 +32,10 @@ RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master
     go install \
         github.com/cweill/gotests/...@latest && \
     go install \
-        mvdan.cc/gofumpt/gofumports@latest && \
+        github.com/spf13/cobra/cobra@latest && \
     go install \
-        github.com/spf13/cobra/cobra@latest
+        github.com/go-delve/delve/cmd/dlv@latest && \
+    go install \
+        mvdan.cc/gofumpt@latest && \
+    go install \
+        github.com/godoctor/godoctor@latest
