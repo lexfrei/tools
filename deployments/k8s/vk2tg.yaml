@@ -30,7 +30,7 @@ spec:
             capabilities:
               drop:
                 - all
-          readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: true
 ---
 apiVersion: v1
 kind: Secret
