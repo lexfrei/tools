@@ -139,9 +139,10 @@ func getAllCards(ctx context.Context) (cards []scryfall.Card, err error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "cant do request")
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+
 			return nil, errors.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
 		}
 

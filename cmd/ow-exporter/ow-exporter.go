@@ -102,6 +102,7 @@ func getStats(u *url.URL) {
 	pretty.Println(player)
 }
 
+//nolint:deadcode,unused // for the future use
 func normalize(str string) string {
 	result, _, _ := transform.String(
 		transform.Chain(

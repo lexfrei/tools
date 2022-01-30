@@ -51,4 +51,4 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - exhaustivestruct
-    - gofmt
+    - golint

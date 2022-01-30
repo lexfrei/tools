@@ -1,4 +1,4 @@
-name: vk2tg Workflow
+name: Build Container Image for vk2tg
 
 on:
   push:
