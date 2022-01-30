@@ -8,6 +8,7 @@ on:
       - "internal/pkg/vk2tg"
       - "go.mod"
       - "go.sum"
+      - ".github/workflows/vk2tg.yml"
 
 jobs:
   build:
