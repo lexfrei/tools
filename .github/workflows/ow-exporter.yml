@@ -8,6 +8,7 @@ on:
       - "internal/pkg/owparser"
       - "go.mod"
       - "go.sum"
+      - ".github/workflows/ow-exporter.yml"
 
 jobs:
   build:
