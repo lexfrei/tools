@@ -11,6 +11,9 @@ type ChatInviteLink struct {
 	// The invite link.
 	InviteLink string `json:"invite_link"`
 
+	// Invite link name.
+	Name string `json:"name"`
+
 	// The creator of the link.
 	Creator *User `json:"creator"`
 
@@ -20,13 +23,20 @@ type ChatInviteLink struct {
 	// If the link is revoked.
 	IsRevoked bool `json:"is_revoked"`
 
-	// (Optional) Point in time when the link will expire, use
-	// ChatInviteLink.ExpireDate() to get time.Time
+	// (Optional) Point in time when the link will expire,
+	// use ExpireDate() to get time.Time.
 	ExpireUnixtime int64 `json:"expire_date,omitempty"`
 
 	// (Optional) Maximum number of users that can be members of
 	// the chat simultaneously.
 	MemberLimit int `json:"member_limit,omitempty"`
+
+	// (Optional) True, if users joining the chat via the link need to
+	// be approved by chat administrators. If True, member_limit can't be specified.
+	JoinRequest bool `json:"creates_join_request"`
+
+	// (Optional) Number of pending join requests created using this link.
+	PendingCount int `json:"pending_join_request_count"`
 }
 
 // ExpireDate returns the moment of the link expiration in local time.
@@ -34,15 +44,15 @@ func (c *ChatInviteLink) ExpireDate() time.Time {
 	return time.Unix(c.ExpireUnixtime, 0)
 }
 
-// ChatMemberUpdated object represents changes in the status of a chat member.
-type ChatMemberUpdated struct {
+// ChatMemberUpdate object represents changes in the status of a chat member.
+type ChatMemberUpdate struct {
 	// Chat where the user belongs to.
-	Chat Chat `json:"chat"`
+	Chat *Chat `json:"chat"`
 
-	// From which user the action was triggered.
-	From User `json:"from"`
+	// Sender which user the action was triggered.
+	Sender *User `json:"from"`
 
-	// Unixtime, use ChatMemberUpdated.Time() to get time.Time
+	// Unixtime, use Date() to get time.Time.
 	Unixtime int64 `json:"date"`
 
 	// Previous information about the chat member.
@@ -57,7 +67,7 @@ type ChatMemberUpdated struct {
 }
 
 // Time returns the moment of the change in local time.
-func (c *ChatMemberUpdated) Time() time.Time {
+func (c *ChatMemberUpdate) Time() time.Time {
 	return time.Unix(c.Unixtime, 0)
 }
 
@@ -87,8 +97,8 @@ func NoRights() Rights { return Rights{} }
 // NoRestrictions should be used when un-restricting or
 // un-promoting user.
 //
-//	   member.Rights = tb.NoRestrictions()
-//     bot.Restrict(chat, member)
+//		member.Rights = tele.NoRestrictions()
+//		b.Restrict(chat, member)
 //
 func NoRestrictions() Rights {
 	return Rights{
@@ -220,8 +230,10 @@ func (b *Bot) Promote(chat *Chat, member *ChatMember) error {
 //
 // On success, returns an Array of ChatMember objects that
 // contains information about all chat administrators except other bots.
+//
 // If the chat is a group or a supergroup and
 // no administrators were appointed, only the creator will be returned.
+//
 func (b *Bot) AdminsOf(chat *Chat) ([]ChatMember, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),

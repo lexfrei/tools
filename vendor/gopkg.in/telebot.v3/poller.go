@@ -9,6 +9,7 @@ import (
 // All pollers must implement Poll(), which accepts bot
 // pointer and subscription channel and start polling
 // synchronously straight away.
+//
 type Poller interface {
 	// Poll is supposed to take the bot object
 	// subscription channel and start polling
@@ -85,7 +86,7 @@ type LongPoller struct {
 	// 		poll
 	// 		poll_answer
 	//
-	AllowedUpdates []string
+	AllowedUpdates []string `yaml:"allowed_updates"`
 }
 
 // Poll does long polling.

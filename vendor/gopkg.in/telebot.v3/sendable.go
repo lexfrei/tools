@@ -11,8 +11,7 @@ import (
 // Recipient is any possible endpoint you can send
 // messages to: either user, group or a channel.
 type Recipient interface {
-	// Must return legit Telegram chat_id or username
-	Recipient() string
+	Recipient() string // must return legit Telegram chat_id or username
 }
 
 // Sendable is any object that can send itself.
@@ -20,6 +19,7 @@ type Recipient interface {
 // This is pretty cool, since it lets bots implement
 // custom Sendables for complex kind of media or
 // chat objects spanning across multiple messages.
+//
 type Sendable interface {
 	Send(*Bot, Recipient, *SendOptions) (*Message, error)
 }
@@ -32,7 +32,7 @@ func (p *Photo) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 	}
 	b.embedSendOptions(params, opt)
 
-	msg, err := b.sendObject(&p.File, "photo", params, nil)
+	msg, err := b.sendMedia(p, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,7 @@ func (a *Audio) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		"caption":   a.Caption,
 		"performer": a.Performer,
 		"title":     a.Title,
+		"file_name": a.FileName,
 	}
 	b.embedSendOptions(params, opt)
 
@@ -58,7 +59,7 @@ func (a *Audio) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		params["duration"] = strconv.Itoa(a.Duration)
 	}
 
-	msg, err := b.sendObject(a.MediaFile(), "audio", params, thumbnailToFilemap(a.Thumbnail))
+	msg, err := b.sendMedia(a, params, thumbnailToFilemap(a.Thumbnail))
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +81,9 @@ func (a *Audio) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 // Send delivers media through bot b to recipient.
 func (d *Document) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 	params := map[string]string{
-		"chat_id": to.Recipient(),
-		"caption": d.Caption,
+		"chat_id":   to.Recipient(),
+		"caption":   d.Caption,
+		"file_name": d.FileName,
 	}
 	b.embedSendOptions(params, opt)
 
@@ -89,7 +91,7 @@ func (d *Document) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error
 		params["file_size"] = strconv.Itoa(d.FileSize)
 	}
 
-	msg, err := b.sendObject(d.MediaFile(), "document", params, thumbnailToFilemap(d.Thumbnail))
+	msg, err := b.sendMedia(d, params, thumbnailToFilemap(d.Thumbnail))
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +110,7 @@ func (s *Sticker) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error)
 	}
 	b.embedSendOptions(params, opt)
 
-	msg, err := b.sendObject(&s.File, "sticker", params, nil)
+	msg, err := b.sendMedia(s, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +124,9 @@ func (s *Sticker) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error)
 // Send delivers media through bot b to recipient.
 func (v *Video) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 	params := map[string]string{
-		"chat_id": to.Recipient(),
-		"caption": v.Caption,
+		"chat_id":   to.Recipient(),
+		"caption":   v.Caption,
+		"file_name": v.FileName,
 	}
 	b.embedSendOptions(params, opt)
 
@@ -136,11 +139,11 @@ func (v *Video) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 	if v.Height != 0 {
 		params["height"] = strconv.Itoa(v.Height)
 	}
-	if v.SupportsStreaming {
+	if v.Streaming {
 		params["supports_streaming"] = "true"
 	}
 
-	msg, err := b.sendObject(v.MediaFile(), "video", params, thumbnailToFilemap(v.Thumbnail))
+	msg, err := b.sendMedia(v, params, thumbnailToFilemap(v.Thumbnail))
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +167,9 @@ func (v *Video) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 // Send delivers animation through bot b to recipient.
 func (a *Animation) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 	params := map[string]string{
-		"chat_id": to.Recipient(),
-		"caption": a.Caption,
+		"chat_id":   to.Recipient(),
+		"caption":   a.Caption,
+		"file_name": a.FileName,
 	}
 	b.embedSendOptions(params, opt)
 
@@ -179,29 +183,29 @@ func (a *Animation) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, erro
 		params["height"] = strconv.Itoa(a.Height)
 	}
 
-	// Without the FileName GIF sends as a document.
-	if a.FileName == "" && a.File.OnDisk() {
-		a.FileName = filepath.Base(a.File.FileLocal)
+	// file_name is required, without it animation sends as a document
+	if params["file_name"] == "" && a.File.OnDisk() {
+		params["file_name"] = filepath.Base(a.File.FileLocal)
 	}
 
-	msg, err := b.sendObject(a.MediaFile(), "animation", params, nil)
+	msg, err := b.sendMedia(a, params, thumbnailToFilemap(a.Thumbnail))
 	if err != nil {
 		return nil, err
 	}
 
-	if msg.Animation != nil {
-		msg.Animation.File.stealRef(&a.File)
+	if anim := msg.Animation; anim != nil {
+		anim.File.stealRef(&a.File)
 		*a = *msg.Animation
-	} else {
+	} else if doc := msg.Document; doc != nil {
 		*a = Animation{
-			File:      msg.Document.File,
-			Thumbnail: msg.Document.Thumbnail,
-			MIME:      msg.Document.MIME,
-			FileName:  msg.Document.FileName,
+			File:      doc.File,
+			Thumbnail: doc.Thumbnail,
+			MIME:      doc.MIME,
+			FileName:  doc.FileName,
 		}
 	}
-	a.Caption = msg.Caption
 
+	a.Caption = msg.Caption
 	return msg, nil
 }
 
@@ -217,7 +221,7 @@ func (v *Voice) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		params["duration"] = strconv.Itoa(v.Duration)
 	}
 
-	msg, err := b.sendObject(&v.File, "voice", params, nil)
+	msg, err := b.sendMedia(v, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +246,7 @@ func (v *VideoNote) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, erro
 		params["length"] = strconv.Itoa(v.Length)
 	}
 
-	msg, err := b.sendObject(&v.File, "videoNote", params, thumbnailToFilemap(v.Thumbnail))
+	msg, err := b.sendMedia(v, params, thumbnailToFilemap(v.Thumbnail))
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +271,7 @@ func (x *Location) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error
 	if x.Heading != 0 {
 		params["heading"] = strconv.Itoa(x.Heading)
 	}
-	if x.ProximityAlertRadius != 0 {
+	if x.AlertRadius != 0 {
 		params["proximity_alert_radius"] = strconv.Itoa(x.Heading)
 	}
 	b.embedSendOptions(params, opt)

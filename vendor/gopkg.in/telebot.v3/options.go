@@ -12,6 +12,7 @@ import (
 // flags instead.
 //
 // Supported options are defined as iota-constants.
+//
 type Option int
 
 const (
@@ -26,7 +27,20 @@ const (
 
 	// OneTimeKeyboard = ReplyMarkup.OneTimeKeyboard
 	OneTimeKeyboard
+
+	// RemoveKeyboard = ReplyMarkup.RemoveKeyboard
+	RemoveKeyboard
 )
+
+// Placeholder is used to set input field placeholder as a send option.
+func Placeholder(text string) *SendOptions {
+	return &SendOptions{
+		ReplyMarkup: &ReplyMarkup{
+			ForceReply:  true,
+			Placeholder: text,
+		},
+	}
+}
 
 // SendOptions has most complete control over in what way the message
 // must be sent, providing an API-complete set of custom properties
@@ -35,6 +49,7 @@ const (
 // Despite its power, SendOptions is rather inconvenient to use all
 // the way through bot logic, so you might want to consider storing
 // and re-using it somewhere or be using Option flags instead.
+//
 type SendOptions struct {
 	// If the message is a reply, original message.
 	ReplyTo *Message
@@ -50,6 +65,9 @@ type SendOptions struct {
 
 	// ParseMode controls how client apps render your message.
 	ParseMode ParseMode
+
+	// Entities is a list of special entities that appear in message text, which can be specified instead of parse_mode.
+	Entities Entities
 
 	// DisableContentDetection abilities to disable server-side file content type detection.
 	DisableContentDetection bool
@@ -90,7 +108,7 @@ type ReplyMarkup struct {
 	//
 	// Defaults to false, in which case the custom keyboard is always of the
 	// same height as the app's standard keyboard.
-	ResizeReplyKeyboard bool `json:"resize_keyboard,omitempty"`
+	ResizeKeyboard bool `json:"resize_keyboard,omitempty"`
 
 	// Requests clients to hide the reply keyboard as soon as it's been used.
 	//
@@ -100,7 +118,7 @@ type ReplyMarkup struct {
 	// Requests clients to remove the reply keyboard.
 	//
 	// Defaults to false.
-	ReplyKeyboardRemove bool `json:"remove_keyboard,omitempty"`
+	RemoveKeyboard bool `json:"remove_keyboard,omitempty"`
 
 	// Use this param if you want to force reply from
 	// specific users only.
@@ -110,6 +128,9 @@ type ReplyMarkup struct {
 	// 2) If the bot's message is a reply (has SendOptions.ReplyTo),
 	//       sender of the original message.
 	Selective bool `json:"selective,omitempty"`
+
+	// Placeholder will be shown in the input field when the reply is active.
+	Placeholder string `json:"input_field_placeholder,omitempty"`
 }
 
 func (r *ReplyMarkup) copy() *ReplyMarkup {
@@ -138,21 +159,13 @@ func (r *ReplyMarkup) copy() *ReplyMarkup {
 //
 // Set either Contact or Location to true in order to request
 // sensitive info, such as user's phone number or current location.
-// (Available in private chats only.)
+//
 type ReplyButton struct {
 	Text string `json:"text"`
 
 	Contact  bool     `json:"request_contact,omitempty"`
 	Location bool     `json:"request_location,omitempty"`
 	Poll     PollType `json:"request_poll,omitempty"`
-}
-
-// InlineKeyboardMarkup represents an inline keyboard that appears
-// right next to the message it belongs to.
-type InlineKeyboardMarkup struct {
-	// Array of button rows, each represented by
-	// an Array of KeyboardButton objects.
-	InlineKeyboard [][]InlineButton `json:"inline_keyboard,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler. It allows to pass
@@ -166,12 +179,28 @@ func (pt PollType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&aux)
 }
 
-// Row represents an array of buttons, a row
+// Row represents an array of buttons, a row.
 type Row []Btn
 
-// Row create a row of buttons
+// Row creates a row of buttons.
 func (r *ReplyMarkup) Row(many ...Btn) Row {
 	return many
+}
+
+// Split splits the keyboard into the rows with N maximum number of buttons.
+// For example, if you pass six buttons and 3 as the max, you get two rows with
+// three buttons in each.
+//
+// Split(3, []Btn{six buttons...}) -> [[1, 2, 3], [4, 5, 6]]
+// Split(2, []Btn{six buttons...}) -> [[1, 2],[3, 4],[5, 6]]
+//
+func (r *ReplyMarkup) Split(max int, btns []Btn) []Row {
+	rows := make([]Row, (max-1+len(btns))/max)
+	for i, b := range btns {
+		i /= max
+		rows[i] = append(rows[i], b)
+	}
+	return rows
 }
 
 func (r *ReplyMarkup) Inline(rows ...Row) {
@@ -254,16 +283,16 @@ func (r *ReplyMarkup) Login(text string, login *Login) Btn {
 
 // Btn is a constructor button, which will later become either a reply, or an inline button.
 type Btn struct {
-	Unique          string
-	Text            string
-	URL             string
-	Data            string
-	InlineQuery     string
-	InlineQueryChat string
-	Contact         bool
-	Location        bool
-	Poll            PollType
-	Login           *Login
+	Unique          string   `json:"unique,omitempty"`
+	Text            string   `json:"text,omitempty"`
+	URL             string   `json:"url,omitempty"`
+	Data            string   `json:"callback_data,omitempty"`
+	InlineQuery     string   `json:"switch_inline_query,omitempty"`
+	InlineQueryChat string   `json:"switch_inline_query_current_chat,omitempty"`
+	Contact         bool     `json:"request_contact,omitempty"`
+	Location        bool     `json:"request_location,omitempty"`
+	Poll            PollType `json:"request_poll,omitempty"`
+	Login           *Login   `json:"login_url,omitempty"`
 }
 
 func (b Btn) Inline() *InlineButton {

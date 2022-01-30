@@ -3,6 +3,7 @@ package telebot
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,8 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Raw lets you call any method of Bot API manually.
@@ -61,7 +60,7 @@ func (b *Bot) Raw(method string, payload interface{}) ([]byte, error) {
 }
 
 func (b *Bot) sendFiles(method string, files map[string]File, params map[string]string) ([]byte, error) {
-	rawFiles := map[string]interface{}{}
+	rawFiles := make(map[string]interface{})
 	for name, f := range files {
 		switch {
 		case f.InCloud():
@@ -73,7 +72,7 @@ func (b *Bot) sendFiles(method string, files map[string]File, params map[string]
 		case f.FileReader != nil:
 			rawFiles[name] = f.FileReader
 		default:
-			return nil, errors.Errorf("telebot: File for field %s doesn't exist", name)
+			return nil, fmt.Errorf("telebot: file for field %s doesn't exist", name)
 		}
 	}
 
@@ -140,7 +139,7 @@ func addFileToWriter(writer *multipart.Writer, filename, field string, file inte
 		defer f.Close()
 		reader = f
 	} else {
-		return errors.Errorf("telebot: File for field %v should be an io.ReadCloser or string", field)
+		return fmt.Errorf("telebot: file for field %v should be io.ReadCloser or string", field)
 	}
 
 	part, err := writer.CreateFormFile(field, filename)
@@ -167,19 +166,20 @@ func (b *Bot) sendText(to Recipient, text string, opt *SendOptions) (*Message, e
 	return extractMessage(data)
 }
 
-func (b *Bot) sendObject(f *File, what string, params map[string]string, files map[string]File) (*Message, error) {
-	sendWhat := "send" + strings.Title(what)
+func (b *Bot) sendMedia(media Media, params map[string]string, files map[string]File) (*Message, error) {
+	kind := media.MediaType()
+	what := "send" + strings.Title(kind)
 
-	if what == "videoNote" {
-		what = "video_note"
+	if kind == "videoNote" {
+		kind = "video_note"
 	}
 
-	sendFiles := map[string]File{what: *f}
+	sendFiles := map[string]File{kind: *media.MediaFile()}
 	for k, v := range files {
 		sendFiles[k] = v
 	}
 
-	data, err := b.sendFiles(sendWhat, sendFiles, params)
+	data, err := b.sendFiles(what, sendFiles, params)
 	if err != nil {
 		return nil, err
 	}

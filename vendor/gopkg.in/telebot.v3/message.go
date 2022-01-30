@@ -3,13 +3,12 @@ package telebot
 import (
 	"strconv"
 	"time"
+	"unicode/utf16"
 )
 
 // Message object represents a message.
 type Message struct {
 	ID int `json:"message_id"`
-
-	InlineID string `json:"-"`
 
 	// For message sent to channels, Sender will be nil
 	Sender *User `json:"from"`
@@ -74,14 +73,14 @@ type Message struct {
 
 	// For text messages, special entities like usernames, URLs, bot commands,
 	// etc. that appear in the text.
-	Entities []MessageEntity `json:"entities,omitempty"`
+	Entities Entities `json:"entities,omitempty"`
 
 	// Some messages containing media, may as well have a caption.
 	Caption string `json:"caption,omitempty"`
 
 	// For messages with a caption, special entities like usernames, URLs,
 	// bot commands, etc. that appear in the caption.
-	CaptionEntities []MessageEntity `json:"caption_entities,omitempty"`
+	CaptionEntities Entities `json:"caption_entities,omitempty"`
 
 	// For an audio recording, information about it.
 	Audio *Audio `json:"audio"`
@@ -91,10 +90,7 @@ type Message struct {
 
 	// For a photo, all available sizes (thumbnails).
 	Photo *Photo `json:"photo"`
-	
-	// For a game, information about it.
-	Game *Game `json:"game"`
-	
+
 	// For a sticker, information about it.
 	Sticker *Sticker `json:"sticker"`
 
@@ -121,6 +117,9 @@ type Message struct {
 
 	// For a poll, information the native poll.
 	Poll *Poll `json:"poll"`
+
+	// For a game, information about it.
+	Game *Game `json:"game"`
 
 	// For a dice, information about it.
 	Dice *Dice `json:"dice"`
@@ -221,11 +220,6 @@ type Message struct {
 	// The domain name of the website on which the user has logged in.
 	ConnectedWebsite string `json:"connected_website,omitempty"`
 
-	// Inline keyboard attached to the message.
-	ReplyMarkup InlineKeyboardMarkup `json:"reply_markup"`
-
-	VoiceChatSchedule *VoiceChatScheduled `json:"voice_chat_scheduled,omitempty"`
-
 	// For a service message, a voice chat started in the chat.
 	VoiceChatStarted *VoiceChatStarted `json:"voice_chat_started,omitempty"`
 
@@ -233,19 +227,20 @@ type Message struct {
 	VoiceChatEnded *VoiceChatEnded `json:"voice_chat_ended,omitempty"`
 
 	// For a service message, some users were invited in the voice chat.
-	VoiceChatParticipantsInvited *VoiceChatParticipantsInvited `json:"voice_chat_participants_invited,omitempty"`
+	VoiceChatParticipants *VoiceChatParticipants `json:"voice_chat_participants_invited,omitempty"`
+
+	// For a service message, a voice chat schedule in the chat.
+	VoiceChatScheduled *VoiceChatScheduled `json:"voice_chat_scheduled,omitempty"`
 
 	// For a service message, represents the content of a service message,
 	// sent whenever a user in the chat triggers a proximity alert set by another user.
-	ProximityAlert *ProximityAlertTriggered `json:"proximity_alert_triggered,omitempty"`
+	ProximityAlert *ProximityAlert `json:"proximity_alert_triggered,omitempty"`
 
 	// For a service message, represents about a change in auto-delete timer settings.
-	AutoDeleteTimer *MessageAutoDeleteTimerChanged `json:"message_auto_delete_timer_changed,omitempty"`
-}
+	AutoDeleteTimer *AutoDeleteTimer `json:"message_auto_delete_timer_changed,omitempty"`
 
-// MessageAutoDeleteTimerChanged represents a service message about a change in auto-delete timer settings.
-type MessageAutoDeleteTimerChanged struct {
-	DeleteTime int `json:"message_auto_delete_time"`
+	// Inline keyboard attached to the message.
+	ReplyMarkup *ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 // MessageEntity object represents "special" parts of text messages,
@@ -272,11 +267,24 @@ type MessageEntity struct {
 	Language string `json:"language,omitempty"`
 }
 
+// Entities is used to set message's text entities as a send option.
+type Entities []MessageEntity
+
+// ProximityAlert sent whenever a user in the chat triggers
+// a proximity alert set by another user.
+type ProximityAlert struct {
+	Traveler *User `json:"traveler,omitempty"`
+	Watcher  *User `json:"watcher,omitempty"`
+	Distance int   `json:"distance"`
+}
+
+// AutoDeleteTimer represents a service message about a change in auto-delete timer settings.
+type AutoDeleteTimer struct {
+	Unixtime int `json:"message_auto_delete_time"`
+}
+
 // MessageSig satisfies Editable interface (see Editable.)
 func (m *Message) MessageSig() (string, int64) {
-	if m.InlineID != "" {
-		return m.InlineID, 0
-	}
 	return strconv.Itoa(m.ID), m.Chat.ID
 }
 
@@ -322,6 +330,7 @@ func (m *Message) FromChannel() bool {
 // Service messages are automatically sent messages, which
 // typically occur on some global action. For instance, when
 // anyone leaves the chat or chat title changes.
+//
 func (m *Message) IsService() bool {
 	fact := false
 
@@ -335,4 +344,49 @@ func (m *Message) IsService() bool {
 	fact = fact || (m.MigrateTo != m.MigrateFrom)
 
 	return fact
+}
+
+// EntityText returns the substring of the message identified by the
+// given MessageEntity.
+//
+// It's safer than manually slicing Text because Telegram uses
+// UTF-16 indices whereas Go string are []byte.
+//
+func (m *Message) EntityText(e MessageEntity) string {
+	text := m.Text
+	if text == "" {
+		text = m.Caption
+	}
+
+	a := utf16.Encode([]rune(text))
+	off, end := e.Offset, e.Offset+e.Length
+
+	if off < 0 || end > len(a) {
+		return ""
+	}
+
+	return string(utf16.Decode(a[off:end]))
+}
+
+// Media returns the message's media if it contains either photo,
+// voice, audio, animation, document, video or video note.
+func (m *Message) Media() Media {
+	switch {
+	case m.Photo != nil:
+		return m.Photo
+	case m.Voice != nil:
+		return m.Voice
+	case m.Audio != nil:
+		return m.Audio
+	case m.Animation != nil:
+		return m.Animation
+	case m.Document != nil:
+		return m.Document
+	case m.Video != nil:
+		return m.Video
+	case m.VideoNote != nil:
+		return m.VideoNote
+	default:
+		return nil
+	}
 }

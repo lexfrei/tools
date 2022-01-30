@@ -9,10 +9,10 @@ import (
 )
 
 // A WebhookTLS specifies the path to a key and a cert so the poller can open
-// a TLS listener
+// a TLS listener.
 type WebhookTLS struct {
-	Key  string
-	Cert string
+	Key  string `json:"key"`
+	Cert string `json:"cert"`
 }
 
 // A WebhookEndpoint describes the endpoint to which telegram will send its requests.
@@ -21,8 +21,8 @@ type WebhookTLS struct {
 // path of this certificate so telegram will trust it. This field can be ignored if you
 // have a trusted certificate (letsencrypt, ...).
 type WebhookEndpoint struct {
-	PublicURL string
-	Cert      string
+	PublicURL string `json:"public_url"`
+	Cert      string `json:"cert"`
 }
 
 // A Webhook configures the poller for webhooks. It opens a port on the given
@@ -42,15 +42,14 @@ type Webhook struct {
 	Listen         string   `json:"url"`
 	MaxConnections int      `json:"max_connections"`
 	AllowedUpdates []string `json:"allowed_updates"`
+	IP             string   `json:"ip_address"`
+	DropUpdates    bool     `json:"drop_pending_updates"`
 
 	// (WebhookInfo)
 	HasCustomCert  bool   `json:"has_custom_certificate"`
 	PendingUpdates int    `json:"pending_update_count"`
 	ErrorUnixtime  int64  `json:"last_error_date"`
 	ErrorMessage   string `json:"last_error_message"`
-
-	IP          string `json:"ip_address"`
-	DropUpdates bool   `json:"drop_pending_updates"`
 
 	TLS      *WebhookTLS
 	Endpoint *WebhookEndpoint
@@ -147,26 +146,23 @@ func (h *Webhook) Poll(b *Bot, dest chan Update, stop chan struct{}) {
 }
 
 func (h *Webhook) waitForStop(stop chan struct{}) {
-	_, ok := <-stop
-	if ok {
-		close(stop)
-	}
+	<-stop
+	close(stop)
 }
 
 // The handler simply reads the update from the body of the requests
 // and writes them to the update channel.
 func (h *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var update Update
-	err := json.NewDecoder(r.Body).Decode(&update)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		h.bot.debug(fmt.Errorf("cannot decode update: %v", err))
 		return
 	}
 	h.dest <- update
 }
 
-// GetWebhook returns current webhook status.
-func (b *Bot) GetWebhook() (*Webhook, error) {
+// Webhook returns the current webhook status.
+func (b *Bot) Webhook() (*Webhook, error) {
 	data, err := b.Raw("getWebhookInfo", nil)
 	if err != nil {
 		return nil, err
@@ -176,7 +172,7 @@ func (b *Bot) GetWebhook() (*Webhook, error) {
 		Result Webhook
 	}
 	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, err
+		return nil, wrapError(err)
 	}
 	return &resp.Result, nil
 }

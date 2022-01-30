@@ -5,16 +5,6 @@ import (
 	"fmt"
 )
 
-// ChosenInlineResult represents a result of an inline query that was chosen
-// by the user and sent to their chat partner.
-type ChosenInlineResult struct {
-	From      User      `json:"from"`
-	Location  *Location `json:"location,omitempty"`
-	ResultID  string    `json:"result_id"`
-	Query     string    `json:"query"`
-	MessageID string    `json:"inline_message_id"` // inline messages only!
-}
-
 // Query is an incoming inline query. When the user sends
 // an empty query, your bot could return some default or
 // trending results.
@@ -23,7 +13,7 @@ type Query struct {
 	ID string `json:"id"`
 
 	// Sender.
-	From User `json:"from"`
+	Sender *User `json:"from"`
 
 	// Sender location, only for bots that request user location.
 	Location *Location `json:"location"`
@@ -39,7 +29,6 @@ type Query struct {
 }
 
 // QueryResponse builds a response to an inline Query.
-// See also: https://core.telegram.org/bots/api#answerinlinequery
 type QueryResponse struct {
 	// The ID of the query to which this is a response.
 	//
@@ -74,13 +63,29 @@ type QueryResponse struct {
 	SwitchPMParameter string `json:"switch_pm_parameter,omitempty"`
 }
 
+// InlineResult represents a result of an inline query that was chosen
+// by the user and sent to their chat partner.
+type InlineResult struct {
+	Sender    *User     `json:"from"`
+	Location  *Location `json:"location,omitempty"`
+	ResultID  string    `json:"result_id"`
+	Query     string    `json:"query"`
+	MessageID string    `json:"inline_message_id"` // inline messages only!
+}
+
+// MessageSig satisfies Editable interface.
+func (ir *InlineResult) MessageSig() (string, int64) {
+	return ir.MessageID, 0
+}
+
 // Result represents one result of an inline query.
 type Result interface {
 	ResultID() string
 	SetResultID(string)
+	SetParseMode(ParseMode)
 	SetContent(InputMessageContent)
-	SetReplyMarkup([][]InlineButton)
-	Process()
+	SetReplyMarkup(*ReplyMarkup)
+	Process(*Bot)
 }
 
 // Results is a slice wrapper for convenient marshalling.
@@ -127,7 +132,7 @@ func inferIQR(result Result) error {
 	case *StickerResult:
 		r.Type = "sticker"
 	default:
-		return fmt.Errorf("result %v is not supported", result)
+		return fmt.Errorf("telebot: result %v is not supported", result)
 	}
 
 	return nil
