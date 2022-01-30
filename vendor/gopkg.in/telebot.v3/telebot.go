@@ -6,21 +6,20 @@
 //
 //		import (
 //			"time"
-//			tb "gopkg.in/tucnak/telebot.v2"
+//			tele "gopkg.in/tucnak/telebot.v3"
 //		)
 //
 //		func main() {
-//			b, err := tb.NewBot(tb.Settings{
-//				Token: "TOKEN_HERE",
-//				Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+//			b, err := tele.NewBot(tele.Settings{
+//				Token:  "...",
+//				Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 //			})
-//
 //			if err != nil {
 //				return
 //			}
 //
-//			b.Handle(tb.OnText, func(m *tb.Message) {
-//				b.Send(m.Sender, "hello world")
+//			b.Handle(tele.OnText, func(c tele.Context) error {
+//				return c.Send("Hello world!")
 //			})
 //
 //			b.Start()
@@ -28,13 +27,14 @@
 //
 package telebot
 
-import "github.com/pkg/errors"
+import "errors"
 
 var (
 	ErrBadRecipient    = errors.New("telebot: recipient is nil")
 	ErrUnsupportedWhat = errors.New("telebot: unsupported what argument")
 	ErrCouldNotUpdate  = errors.New("telebot: could not fetch new updates")
 	ErrTrueResult      = errors.New("telebot: result is True")
+	ErrBadContext      = errors.New("telebot: context does not contain message")
 )
 
 const DefaultApiURL = "https://api.telegram.org"
@@ -43,40 +43,43 @@ const DefaultApiURL = "https://api.telegram.org"
 //
 // For convenience, all Telebot-provided endpoints start with
 // an "alert" character \a.
+//
 const (
 	// Basic message handlers.
-	//
-	// Handler: func(*Message)
-	OnText              = "\atext"
-	OnPhoto             = "\aphoto"
-	OnAudio             = "\aaudio"
-	OnAnimation         = "\aanimation"
-	OnDocument          = "\adocument"
-	OnSticker           = "\asticker"
-	OnVideo             = "\avideo"
-	OnVoice             = "\avoice"
-	OnVideoNote         = "\avideo_note"
-	OnContact           = "\acontact"
-	OnLocation          = "\alocation"
-	OnVenue             = "\avenue"
-	OnEdited            = "\aedited"
-	OnPinned            = "\apinned"
-	OnChannelPost       = "\achan_post"
-	OnEditedChannelPost = "\achan_edited_post"
-	OnDice              = "\adice"
-	OnInvoice           = "\ainvoice"
-	OnPayment           = "\apayment"
-	OnGame              = "\agame"
+	OnText       = "\atext"
+	OnEdited     = "\aedited"
+	OnPhoto      = "\aphoto"
+	OnAudio      = "\aaudio"
+	OnAnimation  = "\aanimation"
+	OnDocument   = "\adocument"
+	OnSticker    = "\asticker"
+	OnVideo      = "\avideo"
+	OnVoice      = "\avoice"
+	OnVideoNote  = "\avideo_note"
+	OnContact    = "\acontact"
+	OnLocation   = "\alocation"
+	OnVenue      = "\avenue"
+	OnDice       = "\adice"
+	OnInvoice    = "\ainvoice"
+	OnPayment    = "\apayment"
+	OnGame       = "\agame"
+	OnPoll       = "\apoll"
+	OnPollAnswer = "\apoll_answer"
+	OnPinned     = "\apinned"
+
+	// Will fire on channel posts.
+	OnChannelPost       = "\achannel_post"
+	OnEditedChannelPost = "\aedited_channel_post"
 
 	// Will fire when bot is added to a group.
 	OnAddedToGroup = "\aadded_to_group"
 
-	// Group events:
+	// Service events:
 	OnUserJoined        = "\auser_joined"
 	OnUserLeft          = "\auser_left"
 	OnNewGroupTitle     = "\anew_chat_title"
 	OnNewGroupPhoto     = "\anew_chat_photo"
-	OnGroupPhotoDeleted = "\achat_photo_del"
+	OnGroupPhotoDeleted = "\achat_photo_deleted"
 	OnGroupCreated      = "\agroup_created"
 	OnSuperGroupCreated = "\asupergroup_created"
 	OnChannelCreated    = "\achannel_created"
@@ -85,84 +88,52 @@ const (
 	// a supergroup. You might want to update
 	// your internal references to this chat
 	// upon switching as its ID will change.
-	//
-	// Handler: func(from, to int64)
 	OnMigration = "\amigration"
 
+	// Will fire on any unhandled media.
+	OnMedia = "\amedia"
+
 	// Will fire on callback requests.
-	//
-	// Handler: func(*Callback)
 	OnCallback = "\acallback"
 
 	// Will fire on incoming inline queries.
-	//
-	// Handler: func(*Query)
 	OnQuery = "\aquery"
 
 	// Will fire on chosen inline results.
-	//
-	// Handler: func(*ChosenInlineResult)
-	OnChosenInlineResult = "\achosen_inline_result"
+	OnInlineResult = "\ainline_result"
 
-	// Will fire on ShippingQuery.
-	//
-	// Handler: func(*ShippingQuery)
+	// Will fire on a shipping query.
 	OnShipping = "\ashipping_query"
 
-	// Will fire on PreCheckoutQuery.
-	//
-	// Handler: func(*PreCheckoutQuery)
+	// Will fire on pre checkout query.
 	OnCheckout = "\apre_checkout_query"
 
-	// Will fire on Poll.
-	//
-	// Handler: func(*Poll)
-	OnPoll = "\apoll"
-
-	// Will fire on PollAnswer.
-	//
-	// Handler: func(*PollAnswer)
-	OnPollAnswer = "\apoll_answer"
-
-	// Will fire on MyChatMember
-	//
-	// Handler: func(*ChatMemberUpdated)
+	// Will fire on bot's chat member changes.
 	OnMyChatMember = "\amy_chat_member"
 
-	// Will fire on ChatMember
-	//
-	// Handler: func(*ChatMemberUpdated)
+	// Will fire on chat member's changes.
 	OnChatMember = "\achat_member"
 
-	// Will fire on VoiceChatStarted
-	//
-	// Handler: func(*Message)
+	// Will fire on chat join request.
+	OnChatJoinRequest = "\achat_join_request"
+
+	// Will fire on the start of a voice chat.
 	OnVoiceChatStarted = "\avoice_chat_started"
 
-	// Will fire on VoiceChatEnded
-	//
-	// Handler: func(*Message)
+	// Will fire on the end of a voice chat.
 	OnVoiceChatEnded = "\avoice_chat_ended"
 
-	// Will fire on VoiceChatParticipantsInvited
-	//
-	// Handler: func(*Message)
-	OnVoiceChatParticipantsInvited = "\avoice_chat_participants_invited"
+	// Will fire on invited participants to the voice chat.
+	OnVoiceChatParticipants = "\avoice_chat_participants_invited"
 
-	// Will fire on ProximityAlert
-	//
-	// Handler: func(*Message)
+	// Will fire on scheduling a voice chat.
+	OnVoiceChatScheduled = "\avoice_chat_scheduled"
+
+	// Will fire on a proximity alert.
 	OnProximityAlert = "\aproximity_alert_triggered"
 
-	// Will fire on AudoDeleteTimer
-	//
-	// Handler: func(*Message)
+	// Will fire on auto delete timer set.
 	OnAutoDeleteTimer = "\amessage_auto_delete_timer_changed"
-
-	// Will fire on OnVoiceChatScheduled
-	//
-	// Handler: func(*Message)
-	OnVoiceChatScheduled = "\avoice_chat_scheduled"
 )
 
 // ChatAction is a client-side status indicating bot activity.
@@ -179,6 +150,7 @@ const (
 	RecordingAudio    ChatAction = "record_audio"
 	RecordingVNote    ChatAction = "record_video_note"
 	FindingLocation   ChatAction = "find_location"
+	ChoosingSticker   ChatAction = "choose_sticker"
 )
 
 // ParseMode determines the way client applications treat the text of the message

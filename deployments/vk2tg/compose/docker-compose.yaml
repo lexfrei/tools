@@ -3,7 +3,7 @@ version: '3.8'
 services:
   vk2tg:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: ./build/vk2tg/Dockerfile
     environment:
       - V2T_TG_TOKEN=xxx

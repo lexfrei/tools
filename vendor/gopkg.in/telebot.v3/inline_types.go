@@ -9,11 +9,15 @@ type ResultBase struct {
 	// Ignore. This field gets set automatically.
 	Type string `json:"type"`
 
+	// Optional. Send Markdown or HTML, if you want Telegram apps to show
+	// bold, italic, fixed-width text or inline URLs in the media caption.
+	ParseMode ParseMode `json:"parse_mode,omitempty"`
+
 	// Optional. Content of the message to be sent.
-	Content *InputMessageContent `json:"input_message_content,omitempty"`
+	Content InputMessageContent `json:"input_message_content,omitempty"`
 
 	// Optional. Inline keyboard attached to the message.
-	ReplyMarkup *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	ReplyMarkup *ReplyMarkup `json:"reply_markup,omitempty"`
 }
 
 // ResultID returns ResultBase.ID.
@@ -26,24 +30,37 @@ func (r *ResultBase) SetResultID(id string) {
 	r.ID = id
 }
 
+// SetParseMode sets ResultBase.ParseMode.
+func (r *ResultBase) SetParseMode(mode ParseMode) {
+	r.ParseMode = mode
+}
+
 // SetContent sets ResultBase.Content.
 func (r *ResultBase) SetContent(content InputMessageContent) {
-	r.Content = &content
+	r.Content = content
 }
 
 // SetReplyMarkup sets ResultBase.ReplyMarkup.
-func (r *ResultBase) SetReplyMarkup(keyboard [][]InlineButton) {
-	r.ReplyMarkup = &InlineKeyboardMarkup{InlineKeyboard: keyboard}
+func (r *ResultBase) SetReplyMarkup(markup *ReplyMarkup) {
+	r.ReplyMarkup = markup
 }
 
-func (r *ResultBase) Process() {
+func (r *ResultBase) Process(b *Bot) {
+	if r.ParseMode == ModeDefault {
+		r.ParseMode = b.parseMode
+	}
+	if r.Content != nil {
+		c, ok := r.Content.(*InputTextMessageContent)
+		if ok && c.ParseMode == ModeDefault {
+			c.ParseMode = r.ParseMode
+		}
+	}
 	if r.ReplyMarkup != nil {
 		processButtons(r.ReplyMarkup.InlineKeyboard)
 	}
 }
 
 // ArticleResult represents a link to an article or web page.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultarticle
 type ArticleResult struct {
 	ResultBase
 
@@ -92,16 +109,11 @@ type AudioResult struct {
 	// Optional. Caption, 0-1024 characters.
 	Caption string `json:"caption,omitempty"`
 
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
-
 	// If Cache != "", it'll be used instead
 	Cache string `json:"audio_file_id,omitempty"`
 }
 
-// ContentResult represents a contact with a phone number.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultcontact
+// ContactResult represents a contact with a phone number.
 type ContactResult struct {
 	ResultBase
 
@@ -128,7 +140,6 @@ type ContactResult struct {
 }
 
 // DocumentResult represents a link to a file.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultdocument
 type DocumentResult struct {
 	ResultBase
 
@@ -144,10 +155,6 @@ type DocumentResult struct {
 
 	// Optional. Caption of the document to be sent, 0-200 characters.
 	Caption string `json:"caption,omitempty"`
-
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
 
 	// Optional. Short description of the result.
 	Description string `json:"description,omitempty"`
@@ -166,7 +173,6 @@ type DocumentResult struct {
 }
 
 // GifResult represents a link to an animated GIF file.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultgif
 type GifResult struct {
 	ResultBase
 
@@ -195,16 +201,11 @@ type GifResult struct {
 	// Optional. Caption of the GIF file to be sent, 0-200 characters.
 	Caption string `json:"caption,omitempty"`
 
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
-
 	// If Cache != "", it'll be used instead
 	Cache string `json:"gif_file_id,omitempty"`
 }
 
 // LocationResult represents a location on a map.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultlocation
 type LocationResult struct {
 	ResultBase
 
@@ -217,9 +218,8 @@ type LocationResult struct {
 	ThumbURL string `json:"thumb_url,omitempty"`
 }
 
-// ResultMpeg4Gif represents a link to a video animation
+// Mpeg4GifResult represents a link to a video animation
 // (H.264/MPEG-4 AVC video without sound).
-// See also: https://core.telegram.org/bots/api#inlinequeryresultmpeg4gif
 type Mpeg4GifResult struct {
 	ResultBase
 
@@ -248,16 +248,11 @@ type Mpeg4GifResult struct {
 	// Optional. Caption of the MPEG-4 file to be sent, 0-200 characters.
 	Caption string `json:"caption,omitempty"`
 
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
-
 	// If Cache != "", it'll be used instead
 	Cache string `json:"mpeg4_file_id,omitempty"`
 }
 
-// ResultResult represents a link to a photo.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultphoto
+// PhotoResult represents a link to a photo.
 type PhotoResult struct {
 	ResultBase
 
@@ -280,10 +275,6 @@ type PhotoResult struct {
 	// Optional. Caption of the photo to be sent, 0-200 characters.
 	Caption string `json:"caption,omitempty"`
 
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
-
 	// URL of the thumbnail for the photo.
 	ThumbURL string `json:"thumb_url"`
 
@@ -292,7 +283,6 @@ type PhotoResult struct {
 }
 
 // VenueResult represents a venue.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultvenue
 type VenueResult struct {
 	ResultBase
 
@@ -319,7 +309,6 @@ type VenueResult struct {
 
 // VideoResult represents a link to a page containing an embedded
 // video player or a video file.
-// See also: https://core.telegram.org/bots/api#inlinequeryresultvideo
 type VideoResult struct {
 	ResultBase
 
@@ -337,10 +326,6 @@ type VideoResult struct {
 
 	// Optional. Caption of the video to be sent, 0-200 characters.
 	Caption string `json:"caption,omitempty"`
-
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
 
 	// Optional. Video width.
 	Width int `json:"video_width,omitempty"`
@@ -360,8 +345,6 @@ type VideoResult struct {
 
 // VoiceResult represents a link to a voice recording in an .ogg
 // container encoded with OPUS.
-//
-// See also: https://core.telegram.org/bots/api#inlinequeryresultvoice
 type VoiceResult struct {
 	ResultBase
 
@@ -376,10 +359,6 @@ type VoiceResult struct {
 
 	// Optional. Caption, 0-1024 characters.
 	Caption string `json:"caption,omitempty"`
-
-	// Optional. Send Markdown or HTML, if you want Telegram apps to show
-	// bold, italic, fixed-width text or inline URLs in the media caption.
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
 
 	// If Cache != "", it'll be used instead
 	Cache string `json:"voice_file_id,omitempty"`

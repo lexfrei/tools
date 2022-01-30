@@ -13,7 +13,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	golang.org/x/text v0.3.7
-	gopkg.in/tucnak/telebot.v2 v2.5.0
+	gopkg.in/telebot.v3 v3.0.0-20220130115853-f0291132d3c3
 )
 
 require (

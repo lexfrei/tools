@@ -169,9 +169,9 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/ini.v1 v1.66.3
 ## explicit
 gopkg.in/ini.v1
-# gopkg.in/tucnak/telebot.v2 v2.5.0
+# gopkg.in/telebot.v3 v3.0.0-20220130115853-f0291132d3c3
 ## explicit; go 1.13
-gopkg.in/tucnak/telebot.v2
+gopkg.in/telebot.v3
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2

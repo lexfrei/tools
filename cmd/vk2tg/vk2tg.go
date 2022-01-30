@@ -14,7 +14,7 @@ const period = 10 * time.Second
 func main() {
 	logger := log.New(os.Stdout, "VK2TG: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	user, err := strconv.Atoi(os.Getenv("V2T_TG_USER"))
+	user, err := strconv.ParseInt(os.Getenv("V2T_TG_USER"), 10, 64)
 	if err != nil {
 		logger.Fatalf("Invalid TG user ID: %s\n", os.Getenv("V2T_TG_USER"))
 	}

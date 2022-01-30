@@ -9,12 +9,12 @@ type VoiceChatStarted struct{}
 // VoiceChatEnded represents a service message about a voice chat
 // ended in the chat.
 type VoiceChatEnded struct {
-	Duration int `json:"duration"`
+	Duration int `json:"duration"` // in seconds
 }
 
-// VoiceChatParticipantsInvited represents a service message about new
+// VoiceChatParticipants represents a service message about new
 // members invited to a voice chat
-type VoiceChatParticipantsInvited struct {
+type VoiceChatParticipants struct {
 	Users []User `json:"users"`
 }
 
@@ -23,7 +23,7 @@ type VoiceChatScheduled struct {
 	Unixtime int64 `json:"start_date"`
 }
 
-// ExpireDate returns the point when the voice chat is supposed to be started by a chat administrator.
-func (v *VoiceChatScheduled) ExpireDate() time.Time {
+// StartsAt returns the point when the voice chat is supposed to be started by a chat administrator.
+func (v *VoiceChatScheduled) StartsAt() time.Time {
 	return time.Unix(v.Unixtime, 0)
 }

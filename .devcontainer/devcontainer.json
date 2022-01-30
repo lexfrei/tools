@@ -7,14 +7,13 @@
 		"--cap-add=SYS_PTRACE",
 		"--security-opt",
 		"seccomp=unconfined",
-		// "-v",
-		// "${env:HOME}/.bashrc:/home/vscode/.bashrc",
 	],
 	"settings": {
+		"go.gopath": "/go",
+		"go.goroot": "/usr/local/go",
 		"go.toolsManagement.checkForUpdates": "local",
 		"go.useLanguageServer": true,
-		"go.gopath": "/go",
-		"go.goroot": "/usr/local/go"
+		"vscode-kubernetes.kubectl-path.linux": "/usr/bin/kubectl"
 	},
 	"extensions": [
 		"eamodio.gitlens",
@@ -23,6 +22,7 @@
 		"JHeilingbrunner.vscode-gnupg-tool",
 		"mde.select-highlight-minimap",
 		"ms-azuretools.vscode-docker",
+		"ms-kubernetes-tools.vscode-kubernetes-tools",
 		"oderwat.indent-rainbow",
 		"redhat.vscode-commons",
 		"redhat.vscode-yaml",

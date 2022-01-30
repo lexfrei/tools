@@ -27,6 +27,19 @@ type Callback struct {
 	// Data associated with the callback button. Be aware that
 	// a bad client can send arbitrary data in this field.
 	Data string `json:"data"`
+
+	// Unique displays an unique of the button from which the
+	// callback was fired. Sets immediately before the handling,
+	// while the Data field stores only with payload.
+	Unique string `json:"-"`
+}
+
+// MessageSig satisfies Editable interface.
+func (c *Callback) MessageSig() (string, int64) {
+	if c.IsInline() {
+		return c.MessageID, 0
+	}
+	return c.Message.MessageSig()
 }
 
 // IsInline says whether message is an inline message.
@@ -35,8 +48,6 @@ func (c *Callback) IsInline() bool {
 }
 
 // CallbackResponse builds a response to a Callback query.
-//
-// See also: https://core.telegram.org/bots/api#answerCallbackQuery
 type CallbackResponse struct {
 	// The ID of the callback to which this is a response.
 	//

@@ -11,7 +11,7 @@ import (
 
 	vkapi "github.com/himidori/golang-vk-api"
 	"github.com/pkg/errors"
-	tb "gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/telebot.v3"
 )
 
 // Moscow
@@ -32,7 +32,7 @@ type VTClinent struct {
 }
 
 type config struct {
-	TGUser       int           `yaml:"tgUser"`
+	TGUser       int64         `yaml:"tgUser"`
 	Paused       bool          `yaml:"paused"`
 	Silent       bool          `yaml:"silent"`
 	TGToken      string        `yaml:"tgToken"`
@@ -42,7 +42,7 @@ type config struct {
 	LastPostDate int64         `yaml:"lastPostDate"`
 }
 
-func NewVTClient(tgToken, vkToken string, tgRecepient int, period time.Duration) *VTClinent {
+func NewVTClient(tgToken, vkToken string, tgRecepient int64, period time.Duration) *VTClinent {
 	vtcli := new(VTClinent)
 	vtcli.config = new(config)
 	vtcli.config.TGToken = tgToken
@@ -208,13 +208,13 @@ func (vtCli *VTClinent) TGSender() {
 		}
 
 		if len(album) > 0 {
-			if _, err := vtCli.tgClient.SendAlbum(&tb.User{ID: int64(vtCli.config.TGUser)}, album); err != nil {
+			if _, err := vtCli.tgClient.SendAlbum(&tb.User{ID: vtCli.config.TGUser}, album); err != nil {
 				vtCli.logger.Printf("Can't send album: %s\n", err)
 			}
 		}
 
 		_, err := vtCli.tgClient.Send(
-			&tb.User{ID: int64(vtCli.config.TGUser)},
+			&tb.User{ID: vtCli.config.TGUser},
 			post.Text,
 			vtCli.generateOptionsForPost(post),
 		)
@@ -224,7 +224,7 @@ func (vtCli *VTClinent) TGSender() {
 			return
 		}
 
-		chat, err := vtCli.tgClient.ChatByID(strconv.Itoa(vtCli.config.TGUser))
+		chat, err := vtCli.tgClient.ChatByID(vtCli.config.TGUser)
 		if err != nil {
 			vtCli.logger.Printf("Error on fetching user info: %s", err)
 
@@ -243,7 +243,7 @@ func (vtCli *VTClinent) sendMessage(u *tb.User, options ...interface{}) error {
 	return nil
 }
 
-func (vtCli *VTClinent) status(tgMsg *tb.Message) {
+func (vtCli *VTClinent) status(tbContext tb.Context) error {
 	msg := fmt.Sprintf("I'm fine\nLast post date:\t%s\nReceived in:\t%s\nUptime:\t%s\nPaused:\t%t\nSound:\t%t",
 		time.Unix(vtCli.config.LastPostDate, 0).In(zone).Format(time.RFC822),
 		vtCli.LastUpdate.In(zone).Format(time.RFC822),
@@ -252,41 +252,47 @@ func (vtCli *VTClinent) status(tgMsg *tb.Message) {
 		!vtCli.config.Silent,
 	)
 
-	if err := vtCli.sendMessage(tgMsg.Sender, msg); err != nil {
-		vtCli.logger.Println(err)
+	if err := vtCli.sendMessage(tbContext.Sender(), msg); err != nil {
+		return err
 	}
+
+	return nil
 }
 
-func (vtCli *VTClinent) pause(tgMsg *tb.Message) {
+func (vtCli *VTClinent) pause(tbContext tb.Context) error {
 	if !vtCli.config.Paused {
 		vtCli.Pause()
 
-		if err := vtCli.sendMessage(tgMsg.Sender, "Paused! Send /pause to continue"); err != nil {
+		if err := vtCli.sendMessage(tbContext.Sender(), "Paused! Send /pause to continue"); err != nil {
 			vtCli.logger.Println(err)
 		}
 	} else {
 		vtCli.Resume()
 
-		if err := vtCli.sendMessage(tgMsg.Sender, "Unpaused! Send /pause to stop"); err != nil {
+		if err := vtCli.sendMessage(tbContext.Sender(), "Unpaused! Send /pause to stop"); err != nil {
 			vtCli.logger.Println(err)
 		}
 	}
+
+	return nil
 }
 
-func (vtCli *VTClinent) mute(tgMsg *tb.Message) {
+func (vtCli *VTClinent) mute(tbContext tb.Context) error {
 	if !vtCli.config.Silent {
 		vtCli.Mute()
 
-		if err := vtCli.sendMessage(tgMsg.Sender, "Muted! Send /mute to go loud"); err != nil {
+		if err := vtCli.sendMessage(tbContext.Sender(), "Muted! Send /mute to go loud"); err != nil {
 			vtCli.logger.Println(err)
 		}
 	} else {
 		vtCli.Unmute()
 
-		if err := vtCli.sendMessage(tgMsg.Sender, "Unmuted! Send /mute to go silent"); err != nil {
+		if err := vtCli.sendMessage(tbContext.Sender(), "Unmuted! Send /mute to go silent"); err != nil {
 			vtCli.logger.Println(err)
 		}
 	}
+
+	return nil
 }
 
 func (vtCli *VTClinent) generateOptionsForPost(post *vkapi.WallPost) *tb.SendOptions {
