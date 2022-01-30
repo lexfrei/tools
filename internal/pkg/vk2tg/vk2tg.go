@@ -1,6 +1,7 @@
 package vk2tg
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -94,7 +95,7 @@ func (vtCli *VTClinent) Start() error {
 
 	var commands []tb.Command
 
-	vtCli.tgClient.Handle("/status", vtCli.status)
+	vtCli.tgClient.Handle("/status", vtCli.status, loggerMiddleware(vtCli.logger))
 
 	commands = append(commands,
 		tb.Command{
@@ -102,7 +103,7 @@ func (vtCli *VTClinent) Start() error {
 			Description: "Show status",
 		})
 
-	vtCli.tgClient.Handle("/pause", vtCli.pause)
+	vtCli.tgClient.Handle("/pause", vtCli.pause, loggerMiddleware(vtCli.logger))
 
 	commands = append(commands,
 		tb.Command{
@@ -110,7 +111,7 @@ func (vtCli *VTClinent) Start() error {
 			Description: "(Un)pause bot",
 		})
 
-	vtCli.tgClient.Handle("/mute", vtCli.mute)
+	vtCli.tgClient.Handle("/mute", vtCli.mute, loggerMiddleware(vtCli.logger))
 
 	commands = append(commands,
 		tb.Command{
@@ -338,5 +339,23 @@ func (vtCli *VTClinent) generateOptionsForPost(post *vkapi.WallPost) *tb.SendOpt
 			},
 		},
 		DisableNotification: vtCli.config.Silent,
+	}
+}
+
+func loggerMiddleware(logger ...*log.Logger) tb.MiddlewareFunc {
+	var loggers *log.Logger
+	if len(logger) > 0 {
+		loggers = logger[0]
+	} else {
+		loggers = log.Default()
+	}
+
+	return func(next tb.HandlerFunc) tb.HandlerFunc {
+		return func(tbContext tb.Context) error {
+			data, _ := json.MarshalIndent(tbContext.Update(), "", "  ")
+			loggers.Println(string(data))
+
+			return next(tbContext)
+		}
 	}
 }
