@@ -92,9 +92,37 @@ func (vtCli *VTClinent) Start() error {
 		return errors.Wrap(err, "Can't longin to TG")
 	}
 
+	var commands []tb.Command
+
 	vtCli.tgClient.Handle("/status", vtCli.status)
+
+	commands = append(commands,
+		tb.Command{
+			Text:        "status",
+			Description: "Show status",
+		})
+
 	vtCli.tgClient.Handle("/pause", vtCli.pause)
+
+	commands = append(commands,
+		tb.Command{
+			Text:        "pause",
+			Description: "(Un)pause bot",
+		})
+
 	vtCli.tgClient.Handle("/mute", vtCli.mute)
+
+	commands = append(commands,
+		tb.Command{
+			Text:        "mute",
+			Description: "(Un)mute bot",
+		})
+
+	err = vtCli.tgClient.SetCommands(commands)
+
+	if err != nil {
+		return errors.Wrap(err, "can't set commands")
+	}
 
 	go vtCli.tgClient.Start()
 
@@ -137,7 +165,6 @@ func (vtCli *VTClinent) VKWatcher() {
 
 	for range vtCli.ticker.C {
 		vtCli.LastUpdate = time.Now()
-		vtCli.logger.Println("Fetching new posts")
 
 		vkWall, err := vtCli.vkClient.WallGet("cosplay_second", 10, nil)
 		if err != nil {
@@ -147,8 +174,6 @@ func (vtCli *VTClinent) VKWatcher() {
 		}
 
 		if vkWall.Posts[0].ID == vtCli.config.LastPostID {
-			vtCli.logger.Printf("No new posts found")
-
 			continue
 		}
 
@@ -252,8 +277,8 @@ func (vtCli *VTClinent) status(tbContext tb.Context) error {
 		!vtCli.config.Silent,
 	)
 
-	if err := vtCli.sendMessage(tbContext.Sender(), msg); err != nil {
-		return err
+	if _, err := vtCli.tgClient.Send(tbContext.Sender(), msg); err != nil {
+		return errors.Wrap(err, "error on sending message")
 	}
 
 	return nil

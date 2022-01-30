@@ -13,7 +13,7 @@
 		"go.goroot": "/usr/local/go",
 		"go.toolsManagement.checkForUpdates": "local",
 		"go.useLanguageServer": true,
-		"vscode-kubernetes.kubectl-path.linux": "/usr/bin/kubectl"
+		"vscode-kubernetes.kubectl-path.linux": "/usr/bin/kubectl",
 	},
 	"extensions": [
 		"eamodio.gitlens",
