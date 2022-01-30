@@ -11,7 +11,10 @@ RUN groupadd -g 1000 mygroup && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Install useful things
-RUN apt-get update && apt-get install --assume-yes bash git sudo gpg
+
+RUN curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list && \
+    apt-get update && apt-get install --assume-yes bash git sudo gpg apt-transport-https ca-certificates kubectl
 
 USER $USERNAME
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
