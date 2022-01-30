@@ -1,7 +1,6 @@
 package vk2tg
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +12,7 @@ import (
 	vkapi "github.com/himidori/golang-vk-api"
 	"github.com/pkg/errors"
 	tb "gopkg.in/telebot.v3"
+	"gopkg.in/telebot.v3/middleware"
 )
 
 // Moscow
@@ -93,31 +93,24 @@ func (vtCli *VTClinent) Start() error {
 		return errors.Wrap(err, "Can't longin to TG")
 	}
 
+	vtCli.tgClient.Use(middleware.Logger(vtCli.logger))
+
 	var commands []tb.Command
 
-	vtCli.tgClient.Handle("/status", vtCli.status, loggerMiddleware(vtCli.logger))
+	vtCli.tgClient.Handle("/status", vtCli.status)
 
 	commands = append(commands,
-		tb.Command{
-			Text:        "status",
-			Description: "Show status",
-		})
+		tb.Command{Text: "status", Description: "Show status"})
 
-	vtCli.tgClient.Handle("/pause", vtCli.pause, loggerMiddleware(vtCli.logger))
+	vtCli.tgClient.Handle("/pause", vtCli.pause)
 
 	commands = append(commands,
-		tb.Command{
-			Text:        "pause",
-			Description: "(Un)pause bot",
-		})
+		tb.Command{Text: "pause", Description: "(Un)pause bot"})
 
-	vtCli.tgClient.Handle("/mute", vtCli.mute, loggerMiddleware(vtCli.logger))
+	vtCli.tgClient.Handle("/mute", vtCli.mute)
 
 	commands = append(commands,
-		tb.Command{
-			Text:        "mute",
-			Description: "(Un)mute bot",
-		})
+		tb.Command{Text: "mute", Description: "(Un)mute bot"})
 
 	err = vtCli.tgClient.SetCommands(commands)
 
@@ -339,23 +332,5 @@ func (vtCli *VTClinent) generateOptionsForPost(post *vkapi.WallPost) *tb.SendOpt
 			},
 		},
 		DisableNotification: vtCli.config.Silent,
-	}
-}
-
-func loggerMiddleware(logger ...*log.Logger) tb.MiddlewareFunc {
-	var loggers *log.Logger
-	if len(logger) > 0 {
-		loggers = logger[0]
-	} else {
-		loggers = log.Default()
-	}
-
-	return func(next tb.HandlerFunc) tb.HandlerFunc {
-		return func(tbContext tb.Context) error {
-			data, _ := json.MarshalIndent(tbContext.Update(), "", "  ")
-			loggers.Println(string(data))
-
-			return next(tbContext)
-		}
 	}
 }
