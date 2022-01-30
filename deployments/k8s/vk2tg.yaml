@@ -14,16 +14,23 @@ spec:
         app.kubernetes.io/name: vk2tg
     spec:
       containers:
-      - envFrom:
-        - secretRef:
-            name: vk2tg
-        image: ghcr.io/lexfrei/vk2tg:latest
-        imagePullPolicy: IfNotPresent
-        name: vk2tg
-        resources:
-          limits:
-            cpu: 100m
-            memory: 50Mi
+        - name: vk2tg
+          image: ghcr.io/lexfrei/vk2tg:latest
+          envFrom:
+            - secretRef:
+                name: vk2tg
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - all
+          readOnlyRootFilesystem: true
 ---
 apiVersion: v1
 kind: Secret
