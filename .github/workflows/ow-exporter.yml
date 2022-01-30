@@ -19,7 +19,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v3.6.2
         with:
-          images: ghcr.io/lexfrei/tools/ow-exporter
+          images: ghcr.io/lexfrei/ow-exporter
           flavor: |
             latest=true
           tags: |

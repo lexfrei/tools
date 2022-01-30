@@ -19,7 +19,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v3.6.2
         with:
-          images: ghcr.io/tools/vk2tg
+          images: ghcr.io/lexfrei/vk2tg
           flavor: |
             latest=true
           tags: |
