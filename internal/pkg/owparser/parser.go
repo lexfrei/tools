@@ -21,6 +21,7 @@ func NewPlayerByLink(playerURL *url.URL) *Player {
 	}
 }
 
+//nolint:funlen,gocyclo,cyclop // WIP
 func (p *Player) Gather(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, p.url.String(), http.NoBody)
 	if err != nil {
@@ -100,7 +101,8 @@ func (p *Player) Gather(ctx context.Context) error {
 	return nil
 }
 
-func (p *Player) parseStats(s *goquery.Document) {
+//nolint:lll,funlen,gocyclo,cyclop  // WIP
+func (p *Player) parseStats(doc *goquery.Document) {
 	defer pretty.Println(p)
 
 	var (
@@ -112,7 +114,7 @@ func (p *Player) parseStats(s *goquery.Document) {
 	switcher := []bool{true, false}
 	heroes := make(map[string]string)
 
-	s.Find("section:nth-child(2)").Find("option").Each(func(i int, s *goquery.Selection) {
+	doc.Find("section:nth-child(2)").Find("option").Each(func(i int, s *goquery.Selection) {
 		code, e := s.Attr("value")
 		if e {
 			heroes[code] = s.Text()
@@ -121,16 +123,13 @@ func (p *Player) parseStats(s *goquery.Document) {
 
 	for _, isComp := range switcher {
 		if isComp {
-			sel = s.Find(baseComp)
+			sel = doc.Find(baseComp)
 		} else {
-			sel = s.Find(baseQP)
+			sel = doc.Find(baseQP)
 		}
 
 		for code := range heroes {
-			// fmt.Println(name)
-
-			s.Find(baseQP).Find(fmt.Sprintf("div[data-category-id=\"%s\"]", code)).Find("table.DataTable").Each(func(i int, s *goquery.Selection) {
-				// fmt.Printf("\t%s\n", s.Find(".stat-title").Text())
+			doc.Find(baseQP).Find(fmt.Sprintf("div[data-category-id=\"%q\"]", code)).Find("table.DataTable").Each(func(i int, s *goquery.Selection) {
 				s.Find("tbody").Find("tr").Each(func(i int, s *goquery.Selection) {
 					var exStat Stat
 					stat, e := s.Attr("data-stat-id")
@@ -141,13 +140,11 @@ func (p *Player) parseStats(s *goquery.Document) {
 
 						p.Heroes[heroes[code]] = append(p.Heroes[heroes[code]], exStat)
 					}
-					// fmt.Printf("\t\t%s\t%s\n", s.Find("td:nth-child(1)").Text(), s.Find("td:nth-child(2)").Text())
 				})
 			})
 		}
 
 		for _, heroCode := range heroes {
-
 			heroName, e := sel.Find(fmt.Sprintf(namePath, heroCode)).Attr("option-id")
 
 			if !e {
