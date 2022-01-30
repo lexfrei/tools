@@ -6,6 +6,6 @@ services:
       context: ../../..
       dockerfile: ./build/vk2tg/Dockerfile
     environment:
-      - V2T_TG_TOKEN=xxx
-      - V2T_VK_TOKEN=xxx
-      - V2T_TG_USER=xxx
+      - V2T_TG_TOKEN=1605187798:AAGRas1SsU1ztAoEyUgBs5GsnmXeadmTh9w
+      - V2T_VK_TOKEN=f704b6484be67d574718a8049ba04097c7359c652e7c24fbdb2ce98ae03a8690e2a7ffbe27bd26eab73a0
+      - V2T_TG_USER=74194657
