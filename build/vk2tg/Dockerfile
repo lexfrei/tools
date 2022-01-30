@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/library/golang:1.17.6@sha256:8c0269dfae137ae9756875400aa949203fbe3b67bdb000a57d8b3e9213a3798d AS build
+FROM registry.hub.docker.com/library/golang:1.17.6@sha256:2adfd0d7f507cfe0dab9aefaf3e0b973b9c8cce48caa43431dca7f8a2cef5557 AS build
 
 RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd \
     && apt-get update \
