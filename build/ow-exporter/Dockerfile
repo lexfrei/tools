@@ -5,11 +5,9 @@ RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd \
     && apt-get install -y --no-install-recommends upx-ucl=3.96-2
 
 WORKDIR /go/src/github.com/lexfrei/tools/
-COPY go.mod go.sum /go/src/github.com/lexfrei/tools/
-RUN go mod download -x
 COPY . /go/src/github.com/lexfrei/tools/
-RUN go get ./... \
-    && CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go \
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go \
     && upx --best --lzma ow-exporter
 
 FROM scratch
