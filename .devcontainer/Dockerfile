@@ -1,5 +1,5 @@
 FROM hadolint/hadolint@sha256:1b47f3192d2c69c622863b84d5cccbfa0c1fac9022bfc297aa931e6d44e51608 AS hadolint
-FROM rancher/kubectl:v1.22.2@sha256:ee717db42f08236b52e57726b2684a1e560a838c20cab5adb81e214a470400ee AS kubectl
+FROM rancher/kubectl:v1.23.3@sha256:e7c9f61123e2253cf037f00879cfe253e1d544543ad6026cceb6135c3a4d2e22 AS kubectl
 
 FROM registry.hub.docker.com/library/golang:1.17.6@sha256:301609ebecc0ec4cd3174294220a4d9c92aab9015b3a2958297d7663aac627a1
 
