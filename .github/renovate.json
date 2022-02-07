@@ -46,7 +46,6 @@
             "matchDatasources": [
                 "docker"
             ],
-            "pinDigests": true,
             "labels": [
                 "docker-update"
             ],

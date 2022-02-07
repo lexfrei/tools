@@ -19,6 +19,9 @@ spec:
           envFrom:
             - secretRef:
                 name: vk2tg
+          env:
+            - name: V2T_REDIS_ADDR
+              value: "localhost:6379"
           imagePullPolicy: Always
           resources:
             limits:
@@ -33,6 +36,26 @@ spec:
               drop:
                 - all
             readOnlyRootFilesystem: true
+        - name: redis
+          image: redis
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          volumeMounts:
+            - name: redis-pv
+              mountPath: /data
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+spec:
+  storageClassName: longhorn-main
+  capacity:
+    storage: 128Mi
+  accessModes:
+    - ReadWriteOnce
 ---
 apiVersion: v1
 kind: Secret
