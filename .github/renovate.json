@@ -1,7 +1,4 @@
 {
-    "extends": [
-        ":pinDependencies"
-    ],
     "major": {
         "stabilityDays": 3
     },
