@@ -16,9 +16,22 @@ github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
+# github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
+## explicit
+github.com/dgryski/go-rendezvous
 # github.com/fsnotify/fsnotify v1.5.1
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify
+# github.com/go-redis/redis/v8 v8.11.4
+## explicit; go 1.13
+github.com/go-redis/redis/v8
+github.com/go-redis/redis/v8/internal
+github.com/go-redis/redis/v8/internal/hashtag
+github.com/go-redis/redis/v8/internal/hscan
+github.com/go-redis/redis/v8/internal/pool
+github.com/go-redis/redis/v8/internal/proto
+github.com/go-redis/redis/v8/internal/rand
+github.com/go-redis/redis/v8/internal/util
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
@@ -89,7 +102,7 @@ github.com/prometheus/procfs/internal/util
 # github.com/rogpeppe/go-internal v1.8.1
 ## explicit; go 1.16
 github.com/rogpeppe/go-internal/fmtsort
-# github.com/spf13/afero v1.8.0
+# github.com/spf13/afero v1.8.1
 ## explicit; go 1.13
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -124,7 +137,7 @@ go.uber.org/ratelimit
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27
+# golang.org/x/sys v0.0.0-20220204135822-1c1b9b1eba6a
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -169,7 +182,7 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/ini.v1 v1.66.3
 ## explicit
 gopkg.in/ini.v1
-# gopkg.in/telebot.v3 v3.0.0-20220130115853-f0291132d3c3
+# gopkg.in/telebot.v3 v3.0.0-20220205194740-8adfab48e8b2
 ## explicit; go 1.13
 gopkg.in/telebot.v3
 # gopkg.in/yaml.v2 v2.4.0

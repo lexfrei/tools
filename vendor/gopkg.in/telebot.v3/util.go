@@ -143,6 +143,8 @@ func extractOptions(how []interface{}) *SendOptions {
 				opts.DisableWebPagePreview = true
 			case Silent:
 				opts.DisableNotification = true
+			case AllowWithoutReply:
+				opts.AllowWithoutReply = true
 			case ForceReply:
 				if opts.ReplyMarkup == nil {
 					opts.ReplyMarkup = &ReplyMarkup{}
@@ -158,6 +160,8 @@ func extractOptions(how []interface{}) *SendOptions {
 					opts.ReplyMarkup = &ReplyMarkup{}
 				}
 				opts.ReplyMarkup.RemoveKeyboard = true
+			case Protected:
+				opts.Protected = true
 			default:
 				panic("telebot: unsupported flag-option")
 			}
@@ -209,10 +213,6 @@ func (b *Bot) embedSendOptions(params map[string]string, opt *SendOptions) {
 		}
 	}
 
-	if opt.DisableContentDetection {
-		params["disable_content_type_detection"] = "true"
-	}
-
 	if opt.AllowWithoutReply {
 		params["allow_sending_without_reply"] = "true"
 	}
@@ -221,6 +221,10 @@ func (b *Bot) embedSendOptions(params map[string]string, opt *SendOptions) {
 		processButtons(opt.ReplyMarkup.InlineKeyboard)
 		replyMarkup, _ := json.Marshal(opt.ReplyMarkup)
 		params["reply_markup"] = string(replyMarkup)
+	}
+
+	if opt.Protected {
+		params["protect_content"] = "true"
 	}
 }
 
@@ -269,6 +273,21 @@ func isUserInList(user *User, list []User) bool {
 func intsToStrs(ns []int) (s []string) {
 	for _, n := range ns {
 		s = append(s, strconv.Itoa(n))
+	}
+	return
+}
+
+// extractCommandsParams extracts parameters for commands-related methods from the given options.
+func extractCommandsParams(opts ...interface{}) (params CommandParams) {
+	for _, opt := range opts {
+		switch value := opt.(type) {
+		case []Command:
+			params.Commands = value
+		case string:
+			params.LanguageCode = value
+		case CommandScope:
+			params.Scope = &value
+		}
 	}
 	return
 }

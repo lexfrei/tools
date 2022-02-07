@@ -29,17 +29,24 @@ type VTClinent struct {
 	chVKPosts  chan *vkapi.WallPost
 	logger     *log.Logger
 	stateFile  string
+	storage    storage
 }
 
 type config struct {
-	TGUser       int64         `yaml:"tgUser"`
+	LastPostDate int64         `yaml:"lastPostDate"`
+	LastPostID   int           `yaml:"lastPostId"`
 	Paused       bool          `yaml:"paused"`
+	Period       time.Duration `yaml:"period"`
 	Silent       bool          `yaml:"silent"`
 	TGToken      string        `yaml:"tgToken"`
+	TGUser       int64         `yaml:"tgUser"`
 	VKToken      string        `yaml:"vkToken"`
-	Period       time.Duration `yaml:"period"`
-	LastPostID   int           `yaml:"lastPostId"`
-	LastPostDate int64         `yaml:"lastPostDate"`
+
+	// Storage
+	StorageEnabled bool `yaml:"storageEnabled"`
+
+	// Hidden items
+	serviceName string
 }
 
 func NewVTClient(tgToken, vkToken string, tgRecepient int64, period time.Duration) *VTClinent {
@@ -62,12 +69,6 @@ func NewVTClient(tgToken, vkToken string, tgRecepient int64, period time.Duratio
 
 func (vtCli *VTClinent) WithLogger(logger *log.Logger) *VTClinent {
 	vtCli.logger = logger
-
-	return vtCli
-}
-
-func (vtCli *VTClinent) WithConfig(path string) *VTClinent {
-	vtCli.stateFile = path
 
 	return vtCli
 }
@@ -179,6 +180,9 @@ func (vtCli *VTClinent) VKWatcher() {
 				vtCli.logger.Printf("Post %d: Selected as latest", vkWall.Posts[index].ID)
 				vtCli.config.LastPostDate = vkWall.Posts[index].Date
 				vtCli.config.LastPostID = vkWall.Posts[index].ID
+				if vtCli.config.StorageEnabled {
+					vtCli.storage.SetLastPost(vkWall.Posts[index].ID)
+				}
 			}
 
 			if !strings.Contains(vkWall.Posts[index].Text, "#поиск") {

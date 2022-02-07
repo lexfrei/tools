@@ -43,7 +43,6 @@ func main() {
 
 	for w := 1; w <= workersCount; w++ {
 		go worker(ctx, &conf, cards, jobIndex, result)
-		conf.wg.Add(1)
 	}
 
 	for index := range cards {
@@ -173,6 +172,7 @@ func worker(
 	indexChan <-chan int,
 	result map[string][]string,
 ) {
+	conf.wg.Add(1)
 	defer conf.wg.Done()
 
 	for index := range indexChan {

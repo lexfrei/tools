@@ -1,5 +1,8 @@
 version: '3.8'
 
+volumes:
+  redis_data: {}
+
 services:
   vk2tg:
     build:
@@ -9,3 +12,30 @@ services:
       - V2T_TG_TOKEN=xxx
       - V2T_VK_TOKEN=xxx
       - V2T_TG_USER=xxx
+      - V2T_REDIS_ADDR=redis:6379
+    links:
+      - "redis"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - ALLOW_EMPTY_PASSWORD=yes
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - redis_data:/data

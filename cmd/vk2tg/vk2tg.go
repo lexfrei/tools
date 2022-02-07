@@ -9,10 +9,13 @@ import (
 	vt "github.com/lexfrei/tools/internal/pkg/vk2tg"
 )
 
-const period = 10 * time.Second
+const (
+	period      = 10 * time.Second
+	serviceName = "VK2TG"
+)
 
 func main() {
-	logger := log.New(os.Stdout, "VK2TG: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := log.New(os.Stdout, serviceName+": ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	user, err := strconv.ParseInt(os.Getenv("V2T_TG_USER"), 10, 64)
 	if err != nil {
@@ -27,6 +30,14 @@ func main() {
 	).WithLogger(
 		logger,
 	)
+
+	if os.Getenv("V2T_REDIS_ADDR") != "" {
+		vtClient.WithRedis(
+			serviceName,
+			os.Getenv("V2T_REDIS_ADDR"),
+			os.Getenv("V2T_REDIS_PASS"),
+		)
+	}
 
 	if err = vtClient.Start(); err != nil {
 		logger.Fatalln(err)

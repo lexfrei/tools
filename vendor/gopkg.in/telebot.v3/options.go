@@ -22,6 +22,12 @@ const (
 	// Silent = SendOptions.DisableNotification
 	Silent
 
+	// AllowWithoutReply = SendOptions.AllowWithoutReply
+	AllowWithoutReply
+
+	// Protected = SendOptions.Protected
+	Protected
+
 	// ForceReply = ReplyMarkup.ForceReply
 	ForceReply
 
@@ -69,11 +75,11 @@ type SendOptions struct {
 	// Entities is a list of special entities that appear in message text, which can be specified instead of parse_mode.
 	Entities Entities
 
-	// DisableContentDetection abilities to disable server-side file content type detection.
-	DisableContentDetection bool
-
 	// AllowWithoutReply allows sending messages not a as reply if the replied-to message has already been deleted.
 	AllowWithoutReply bool
+
+	// Protects the contents of the sent message from forwarding and saving
+	Protected bool
 }
 
 func (og *SendOptions) copy() *SendOptions {
@@ -319,3 +325,28 @@ func (b Btn) Reply() *ReplyButton {
 		Poll:     b.Poll,
 	}
 }
+
+// CommandParams controls parameters for commands-related methods (setMyCommands, deleteMyCommands and getMyCommands).
+type CommandParams struct {
+	Commands     []Command     `json:"commands,omitempty"`
+	Scope        *CommandScope `json:"scope,omitempty"`
+	LanguageCode string        `json:"language_code,omitempty"`
+}
+
+// CommandScope object represents a scope to which bot commands are applied.
+type CommandScope struct {
+	Type   string `json:"type"`
+	ChatID int64  `json:"chat_id,omitempty"`
+	UserID int64  `json:"user_id,omitempty"`
+}
+
+// CommandScope types
+const (
+	CommandScopeDefault         = "default"
+	CommandScopeAllPrivateChats = "all_private_chats"
+	CommandScopeAllGroupChats   = "all_group_chats"
+	CommandScopeAllChatAdmin    = "all_chat_administrators"
+	CommandScopeChat            = "chat"
+	CommandScopeChatAdmin       = "chat_administrators"
+	CommandScopeChatMember      = "chat_member"
+)
