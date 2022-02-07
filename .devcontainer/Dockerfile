@@ -1,7 +1,7 @@
-FROM registry.hub.docker.com/hadolint/hadolint:v2.8.0 AS hadolint
-FROM registry.hub.docker.com/rancher/kubectl:v1.22.2 AS kubectl
+FROM registry.hub.docker.com/hadolint/hadolint:v2.8.0@sha256:1b47f3192d2c69c622863b84d5cccbfa0c1fac9022bfc297aa931e6d44e51608 AS hadolint
+FROM registry.hub.docker.com/rancher/kubectl:v1.22.2@sha256:ee717db42f08236b52e57726b2684a1e560a838c20cab5adb81e214a470400ee AS kubectl
 
-FROM registry.hub.docker.com/library/golang:1.17.6
+FROM registry.hub.docker.com/library/golang:1.17.6@sha256:301609ebecc0ec4cd3174294220a4d9c92aab9015b3a2958297d7663aac627a1
 
 COPY --from=hadolint /bin/hadolint /bin/hadolint
 COPY --from=kubectl /bin/kubectl /bin/kubectl
