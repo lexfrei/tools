@@ -1,7 +1,7 @@
 FROM registry.hub.docker.com/hadolint/hadolint:v2.8.0 AS hadolint
 FROM registry.hub.docker.com/rancher/kubectl:v1.23.3 AS kubectl
 
-FROM registry.hub.docker.com/library/golang:1.17.6
+FROM registry.hub.docker.com/library/golang:1.17.7
 
 COPY --from=hadolint /bin/hadolint /bin/hadolint
 COPY --from=kubectl /bin/kubectl /bin/kubectl
