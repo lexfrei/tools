@@ -1,14 +1,11 @@
 package main
 
 import (
+	"crypto/rand"
 	"log"
-	"math/rand"
+	"math/big"
 	"time"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 //nolint:gomnd // not interesting
 func main() {
@@ -16,6 +13,8 @@ func main() {
 }
 
 func getRandomDate(days uint) string {
-	//nolint:gosec,gomnd // not interesting
-	return time.Unix(time.Now().Unix()-rand.Int63n(int64(days*86400)), 0).Format("20060102")
+	//nolint:gomnd // not interesting
+	val, _ := rand.Int(rand.Reader, big.NewInt(int64(days*86400)))
+
+	return time.Unix(time.Now().Unix()-val.Int64(), 0).Format("20060102")
 }
