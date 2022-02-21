@@ -10,7 +10,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/kr/pretty"
 	owp "github.com/lexfrei/tools/internal/pkg/owparser"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -98,8 +97,6 @@ func getStats(u *url.URL) {
 	playerEndorsment.WithLabelValues(player.Name, player.Platform, "sportsmanship").Set(player.Endorsment.Sportsmanship)
 	playerEndorsment.WithLabelValues(player.Name, player.Platform, "shotcaller").Set(player.Endorsment.Shotcaller)
 	playerEndorsment.WithLabelValues(player.Name, player.Platform, "teammate").Set(player.Endorsment.Teammate)
-
-	pretty.Println(player)
 }
 
 //nolint:deadcode,unused // for the future use

@@ -93,25 +93,17 @@ func (vtCli *VTClinent) Start() error {
 		return errors.Wrap(err, "Can't longin to TG")
 	}
 
-	var commands []tb.Command
-
 	vtCli.tgClient.Handle("/status", vtCli.status)
-
-	commands = append(commands,
-		tb.Command{Text: "status", Description: "Show status"})
-
 	vtCli.tgClient.Handle("/pause", vtCli.pause)
-
-	commands = append(commands,
-		tb.Command{Text: "pause", Description: "(Un)pause bot"})
-
 	vtCli.tgClient.Handle("/mute", vtCli.mute)
 
-	commands = append(commands,
-		tb.Command{Text: "mute", Description: "(Un)mute bot"})
-
-	err = vtCli.tgClient.SetCommands(commands)
-
+	err = vtCli.tgClient.SetCommands(
+		[]tb.Command{
+			{Text: "mute", Description: "(Un)mute bot"},
+			{Text: "pause", Description: "(Un)pause bot"},
+			{Text: "status", Description: "Show current status"},
+		},
+	)
 	if err != nil {
 		return errors.Wrap(err, "can't set commands")
 	}

@@ -68,9 +68,3 @@ func (vtCli *VTClinent) WithRedis(serviceName, redisAddr, redisPassword string) 
 
 	return vtCli
 }
-
-func (vtCli *VTClinent) WithConfig(path string) *VTClinent {
-	vtCli.stateFile = path
-
-	return vtCli
-}
