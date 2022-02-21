@@ -28,7 +28,6 @@ type VTClinent struct {
 	ticker     *time.Ticker
 	chVKPosts  chan *vkapi.WallPost
 	logger     *log.Logger
-	stateFile  string
 	storage    storage
 }
 
