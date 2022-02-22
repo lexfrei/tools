@@ -55,7 +55,9 @@ func newRedisStorage(serviceName, addr, pass string) *redisStorage {
 	}
 
 	pong := ""
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
 	for pong != "PONG" {
 		pong, _ = rStorage.cli.Ping(ctx).Result()
