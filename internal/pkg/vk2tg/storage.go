@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -48,12 +49,21 @@ func newRedisStorage(serviceName, addr, pass string) *redisStorage {
 		DB:       0,
 	})
 
-	rs := &redisStorage{
+	rStorage := &redisStorage{
 		serviceName: serviceName,
 		cli:         cli,
 	}
 
-	return rs
+	pong := ""
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+
+	for pong != "PONG" {
+		pong, _ = rStorage.cli.Ping(ctx).Result()
+
+		time.Sleep(time.Second)
+	}
+
+	return rStorage
 }
 
 func (vtCli *VTClinent) WithRedis(serviceName, redisAddr, redisPassword string) *VTClinent {
