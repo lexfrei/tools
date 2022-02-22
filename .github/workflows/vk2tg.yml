@@ -5,7 +5,7 @@ on:
     paths:
       - "build/vk2tg/**"
       - "cmd/vk2tgr/**"
-      - "internal/pkg/vk2tg"
+      - "internal/pkg/vk2tg/**"
       - "go.mod"
       - "go.sum"
       - ".github/workflows/vk2tg.yml"
