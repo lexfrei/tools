@@ -163,7 +163,7 @@ func (vtCli *VTClinent) VKWatcher() {
 		for index := len(vkWall.Posts) - 1; index >= 0; index-- {
 			vtCli.logger.Printf("Post %d: Processing", vkWall.Posts[index].ID)
 
-			if vtCli.config.LastPostID > vkWall.Posts[index].ID {
+			if vtCli.config.LastPostID >= vkWall.Posts[index].ID {
 				vtCli.logger.Printf("Post %d: Not a new post, skipped", vkWall.Posts[index].ID)
 
 				continue
