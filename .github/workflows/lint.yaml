@@ -1,13 +1,15 @@
 name: Lint
 
-on:
-  push
+on: push
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.0.0
+      - uses: actions/setup-go@v2
+        with:
+          check-latest: true
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2.5.2
       - name: hadolint
