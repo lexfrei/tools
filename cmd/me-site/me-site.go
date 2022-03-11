@@ -36,15 +36,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(responseWriter http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			http.Error(w, "Method is not supported", http.StatusNotFound)
+			http.Error(responseWriter, "Method is not supported", http.StatusNotFound)
 
 			return
 		}
 
 		years, _ := math.Modf(time.Until(birthDate).Seconds() / -31207680)
-		err = siteTemplate.Execute(w, years)
+		err = siteTemplate.Execute(responseWriter, years)
 		if err != nil {
 			log.Panicln(err)
 		}
