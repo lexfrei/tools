@@ -59,12 +59,12 @@ func main() {
 	}
 }
 
-func faviconHandler(w http.ResponseWriter, r *http.Request) {
+func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method is not supported", http.StatusNotFound)
+		http.Error(responseWriter, "Method is not supported", http.StatusNotFound)
 
 		return
 	}
 
-	fmt.Fprint(w, favicon)
+	fmt.Fprint(responseWriter, favicon)
 }
