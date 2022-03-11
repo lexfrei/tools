@@ -26,24 +26,25 @@ func main() {
 	m.AddFunc("text/css", css.Minify)
 	site, _ := m.String("text/html", site)
 
-	bd, err := time.Parse("02.01.2006", "04.08.1993")
+	birthDate, err := time.Parse("02.01.2006", "04.08.1993")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	t, err := template.New("webpage").Parse(site)
+	siteTemplate, err := template.New("webpage").Parse(site)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
+		if r.Method != http.MethodGet {
 			http.Error(w, "Method is not supported", http.StatusNotFound)
+
 			return
 		}
 
-		y, _ := math.Modf(time.Until(bd).Seconds() / -31207680)
-		err = t.Execute(w, y)
+		years, _ := math.Modf(time.Until(birthDate).Seconds() / -31207680)
+		err = siteTemplate.Execute(w, years)
 		if err != nil {
 			log.Panicln(err)
 		}
@@ -51,15 +52,17 @@ func main() {
 
 	http.HandleFunc("/favicon.png", faviconHandler)
 
-	fmt.Printf("Starting server at port 8080\n")
+	log.Printf("Starting server at port 8080\n")
+
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Method is not supported", http.StatusNotFound)
+
 		return
 	}
 
