@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/himidori/golang-vk-api v0.0.0-20210404104913-eff438684eb7
 	github.com/kr/pretty v0.3.0
 	github.com/pkg/errors v0.9.1
