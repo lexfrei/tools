@@ -45,10 +45,25 @@ linters-settings:
 linters:
   enable-all: true
   disable:
+    - exhaustivestruct
+    - gochecknoglobals
+    - gochecknoinits
+    - golint
     - interfacer
     - maligned
     - scopelint
-    - gochecknoglobals
-    - gochecknoinits
-    - exhaustivestruct
-    - golint
+    # https://github.com/golangci/golangci-lint/issues/2649
+    - bodyclose
+    - contextcheck
+    - gocritic
+    - gosimple
+    - govet
+    - nilerr
+    - noctx
+    - rowserrcheck
+    - staticcheck
+    - stylecheck
+    - tparallel
+    - unparam
+    - unused
+    - wastedassign

@@ -40,7 +40,7 @@ RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master
     go install github.com/godoctor/godoctor@latest && \
     go install github.com/josharian/impl@latest && \
     go install github.com/lukehoban/go-outline@latest && \
-    go install github.com/spf13/cobra/cobra@latest && \
+    go install github.com/spf13/cobra-cli@latest && \
     go install github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest && \
     go install golang.org/x/tools/gopls@latest && \
     go install mvdan.cc/gofumpt@latest
