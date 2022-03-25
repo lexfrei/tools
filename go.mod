@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	github.com/tdewolff/minify/v2 v2.10.0
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	golang.org/x/net v0.0.0-20220325170049-de3da57026de
 	golang.org/x/text v0.3.7
 	gopkg.in/telebot.v3 v3.0.0
 )
