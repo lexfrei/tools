@@ -144,7 +144,7 @@ github.com/tdewolff/parse/v2/strconv
 # go.uber.org/ratelimit v0.2.0
 ## explicit; go 1.14
 go.uber.org/ratelimit
-# golang.org/x/net v0.0.0-20220401154927-543a649e0bdd
+# golang.org/x/net v0.0.0-20220403103023-749bd193bc2b
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/html
