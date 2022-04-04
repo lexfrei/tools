@@ -99,7 +99,7 @@ func getStats(u *url.URL) {
 	playerEndorsment.WithLabelValues(player.Name, player.Platform, "teammate").Set(player.Endorsment.Teammate)
 }
 
-//nolint:deadcode,unused // for the future use
+//nolint:deadcode // for the future use
 func normalize(str string) string {
 	result, _, _ := transform.String(
 		transform.Chain(
