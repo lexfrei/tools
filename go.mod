@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.4.0
-	github.com/spf13/viper v1.10.1
+	github.com/spf13/viper v1.11.0
 	github.com/tdewolff/minify/v2 v2.11.1
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5
 	golang.org/x/text v0.3.7
@@ -34,6 +34,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.0-beta.8 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.33.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
@@ -45,8 +46,9 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/tdewolff/parse/v2 v2.5.28 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
-	golang.org/x/sys v0.0.0-20220403205710-6acee93ad0eb // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
