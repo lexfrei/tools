@@ -20,7 +20,7 @@
                 "gomodUpdateImportPaths"
             ],
             "labels": [
-                "go-major-update"
+                "go major update"
             ]
         },
         {
@@ -38,7 +38,7 @@
                 "gomodUpdateImportPaths"
             ],
             "labels": [
-                "go-minor-update"
+                "go minor update"
             ]
         },
         {
@@ -46,7 +46,7 @@
                 "docker"
             ],
             "labels": [
-                "docker-update"
+                "docker update"
             ],
             "automerge": true
         },
@@ -56,7 +56,7 @@
                 "actions"
             ],
             "labels": [
-                "actions-update"
+                "actions update"
             ]
         }
     ],
