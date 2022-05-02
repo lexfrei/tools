@@ -14,6 +14,8 @@ import (
 	"github.com/tdewolff/minify/v2/html"
 )
 
+const year float64 = 31207680
+
 //go:embed index.html
 var site string
 
@@ -43,7 +45,7 @@ func main() {
 			return
 		}
 
-		years, _ := math.Modf(time.Now().Sub(birthDate).Seconds() / 31207680)
+		years, _ := math.Modf(time.Now().Sub(birthDate).Seconds() / year)
 		err = siteTemplate.Execute(responseWriter, years)
 		if err != nil {
 			log.Panicln(err)

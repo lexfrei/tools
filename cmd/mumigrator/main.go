@@ -11,16 +11,13 @@ import (
 	"strconv"
 
 	"github.com/SevereCloud/vksdk/v2/api"
+	"github.com/SevereCloud/vksdk/v2/object"
 	"github.com/pkg/errors"
 )
 
-func main() {
-	esc := regexp.MustCompile(`(?m)\~|\*|\s|\\|/|\||\?|\(|\)|\.`)
-	pwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+const photosCount = 1000
 
+func main() {
 	token := ""
 	userID := 7154600
 	vkClient := api.NewVK(token)
@@ -32,41 +29,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for i := range albums.Items {
-		photos, err := vkClient.PhotosGetExtended(api.Params{
-			"album_id": albums.Items[i].ID,
-			"count":    1000,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for ii := range photos.Items {
-			var url string
-			if len(photos.Items[ii].OrigPhoto.URL) > 0 {
-				url = photos.Items[ii].OrigPhoto.URL
-			} else {
-				if len(photos.Items[ii].MaxSize().URL) > 0 {
-					url = photos.Items[ii].MaxSize().URL
-				} else {
-					for sizeID := range photos.Items[ii].Sizes {
-						if photos.Items[ii].Sizes[sizeID].BaseImage.Type == "x" {
-							url = photos.Items[ii].Sizes[sizeID].BaseImage.URL
-						}
-					}
-				}
-			}
-
-			err := downloadAndSave(
-				context.TODO(),
-				url,
-				filepath.Clean(filepath.Join(pwd, esc.ReplaceAllString(albums.Items[i].Title, "_"))),
-				strconv.Itoa(ii)+".jpg",
-			)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		}
+	err = albumsProcessing(albums, userID, vkClient)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -98,4 +63,67 @@ func downloadAndSave(ctx context.Context, url, dpath, fpath string) error {
 	}
 
 	return nil
+}
+
+func albumsProcessing(albums api.PhotosGetAlbumsResponse, userID int, vkClient *api.VK) error {
+	albums, err := vkClient.PhotosGetAlbums(api.Params{
+		"user_ids": userID,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for albumID := range albums.Items {
+		esc := regexp.MustCompile(`(?m)\~|\*|\s|\\|/|\||\?|\(|\)|\.`)
+
+		photos, err := vkClient.PhotosGetExtended(api.Params{
+			"album_id": albums.Items[albumID].ID,
+			"count":    photosCount,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for photoID := range photos.Items {
+			pwd, err := os.Getwd()
+			if err != nil {
+				return errors.Wrap(err, "can't get pwd")
+			}
+
+			url, err := getPhotoURL(&photos.Items[photoID])
+			if err != nil {
+				return errors.Wrap(err, "can't get url")
+			}
+
+			err = downloadAndSave(
+				context.TODO(),
+				url,
+				filepath.Clean(filepath.Join(pwd, esc.ReplaceAllString(albums.Items[albumID].Title, "_"))),
+				strconv.Itoa(photoID)+".jpg",
+			)
+			if err != nil {
+				return errors.Wrap(err, "can't save photo")
+			}
+		}
+	}
+
+	return nil
+}
+
+func getPhotoURL(photo *object.PhotosPhotoFull) (string, error) {
+	if len(photo.OrigPhoto.URL) > 0 {
+		return photo.OrigPhoto.URL, nil
+	}
+
+	if len(photo.MaxSize().URL) > 0 {
+		return photo.MaxSize().URL, nil
+	}
+
+	for sizeID := range photo.Sizes {
+		if photo.Sizes[sizeID].BaseImage.Type == "x" {
+			return photo.Sizes[sizeID].BaseImage.URL, nil
+		}
+	}
+
+	return "", errors.New("photo url with fine size not found")
 }
