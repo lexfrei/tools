@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
 	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/SevereCloud/vksdk/v2 v2.14.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/himidori/golang-vk-api v0.0.0-20210404104913-eff438684eb7
 	github.com/kr/pretty v0.3.0
@@ -13,13 +14,12 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/tdewolff/minify/v2 v2.11.1
-	golang.org/x/net v0.0.0-20220412020605-290c469a71a5
+	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
 	golang.org/x/text v0.3.7
 	gopkg.in/telebot.v3 v3.0.0
 )
 
 require (
-	github.com/SevereCloud/vksdk/v2 v2.14.0 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
