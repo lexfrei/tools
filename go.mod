@@ -13,7 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
-	github.com/tdewolff/minify/v2 v2.11.2
+	github.com/tdewolff/minify/v2 v2.11.5
 	golang.org/x/net v0.0.0-20220524220425-1d687d428aca
 	golang.org/x/text v0.3.7
 	gopkg.in/telebot.v3 v3.0.0
@@ -46,7 +46,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/tdewolff/parse/v2 v2.5.29 // indirect
+	github.com/tdewolff/parse/v2 v2.5.31 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
