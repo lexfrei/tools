@@ -10,7 +10,7 @@ require (
 	github.com/himidori/golang-vk-api v0.0.0-20210404104913-eff438684eb7
 	github.com/kr/pretty v0.3.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/tdewolff/minify/v2 v2.11.2
