@@ -2,7 +2,7 @@ package tools
 
 import "regexp"
 
-//nolint:varcheck,deadcode // for the future use
+//nolint:varcheck,deadcode,unused // for the future use
 var (
 	restrictedCharsInWindows = []rune("<>:\"/\\|?*")
 	restrictedCharsInLinux   = []rune("/")

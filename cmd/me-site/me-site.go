@@ -45,7 +45,7 @@ func main() {
 			return
 		}
 
-		years, _ := math.Modf(time.Now().Sub(birthDate).Seconds() / year)
+		years, _ := math.Modf(time.Since(birthDate).Seconds() / year)
 		err = siteTemplate.Execute(responseWriter, years)
 		if err != nil {
 			log.Panicln(err)

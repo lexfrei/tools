@@ -111,16 +111,18 @@ func downloadAndSave(
 	return nil
 }
 
-func getAllCards(ctx context.Context) (cards []scryfall.Card, err error) {
+func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 	client, err := scryfall.NewClient()
 	if err != nil {
-		return
+		return nil, errors.Wrap(err, "can't create scryfall client")
 	}
 
 	lbd, err := client.ListBulkData(ctx)
 	if err != nil {
-		return
+		return nil, errors.Wrap(err, "can't get bulk data form scryfall")
 	}
+
+	cards := []scryfall.Card{}
 
 	for index := range lbd {
 		if lbd[index].Type != cmd.DataType {

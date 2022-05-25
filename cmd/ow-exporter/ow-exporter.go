@@ -21,8 +21,11 @@ import (
 var (
 	playerRank = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "rank",
-			Help: "player rank representation",
+			Name:        "rank",
+			Help:        "player rank representation",
+			Namespace:   "",
+			Subsystem:   "",
+			ConstLabels: prometheus.Labels{},
 		},
 		[]string{
 			"user",
@@ -32,8 +35,11 @@ var (
 	)
 	playerEndorsment = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "endorsment",
-			Help: "player endorsments representation",
+			Name:        "endorsment",
+			Help:        "player endorsments representation",
+			Namespace:   "",
+			Subsystem:   "",
+			ConstLabels: prometheus.Labels{},
 		},
 		[]string{
 			"user",
@@ -43,8 +49,11 @@ var (
 	)
 	stats = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "stat",
-			Help: "player stats representation",
+			Name:        "stat",
+			Help:        "player stats representation",
+			Namespace:   "",
+			Subsystem:   "",
+			ConstLabels: prometheus.Labels{},
 		},
 		[]string{
 			"user",
@@ -75,7 +84,18 @@ func main() {
 		}
 	}()
 
-	handler := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
+	handler := promhttp.HandlerFor(
+		registry,
+		promhttp.HandlerOpts{
+			ErrorLog:            nil,
+			ErrorHandling:       0,
+			Registry:            nil,
+			DisableCompression:  false,
+			MaxRequestsInFlight: 0,
+			Timeout:             0,
+			EnableOpenMetrics:   false,
+		},
+	)
 	http.Handle("/metrics", handler)
 	log.Fatal(http.ListenAndServe(":9420", nil))
 }
@@ -99,7 +119,7 @@ func getStats(u *url.URL) {
 	playerEndorsment.WithLabelValues(player.Name, player.Platform, "teammate").Set(player.Endorsment.Teammate)
 }
 
-//nolint:deadcode // for the future use
+//nolint:deadcode,unused // for the future use
 func normalize(str string) string {
 	result, _, _ := transform.String(
 		transform.Chain(

@@ -16,8 +16,21 @@ import (
 
 func NewPlayerByLink(playerURL *url.URL) *Player {
 	return &Player{
-		url:    *playerURL,
-		Heroes: map[string][]Stat{},
+		url:      *playerURL,
+		Heroes:   map[string][]Stat{},
+		Platform: "",
+		Name:     "",
+		Endorsment: Endorsment{
+			Level:         0,
+			Shotcaller:    0,
+			Teammate:      0,
+			Sportsmanship: 0,
+		},
+		Rank: Rank{
+			Tank: 0,
+			DD:   0,
+			Heal: 0,
+		},
 	}
 }
 
@@ -179,37 +192,35 @@ func (p *Player) parseStats(doc *goquery.Document) {
 }
 
 //nolint:gomnd,varnamelen // MAGIC
-func timeToSec(s string) (time float64) {
+func timeToSec(s string) float64 {
 	switch len(s) {
 	case 8:
-		time = float64(
+		return float64(
 			(((int(s[0])-48)*10+int(s[1])-48)*60+((int(s[3])-48)*10+(int(s[4])-48)))*60 + (int(s[6])-48)*10 + int(s[7]) - 48,
 		)
 	case 5:
-		time = float64(
+		return float64(
 			((int(s[0])-48)*10+(int(s[1])-48))*60 + (int(s[3])-48)*10 + int(s[4]) - 48,
 		)
 	case 2:
-		time = float64(
+		return float64(
 			(int(s[0])-48)*10 + int(s[1]) - 48,
 		)
 	default:
-		time = 0
+		return 0
 	}
-
-	return
 }
 
-func stringToFloat64(s string) (u float64) {
+func stringToFloat64(str string) float64 {
 	// no reason to check this err
-	u, _ = strconv.ParseFloat(s, 64)
+	floatingVar, _ := strconv.ParseFloat(str, 64)
 
-	return
+	return floatingVar
 }
 
-func stringToInt(s string) (i int) {
+func stringToInt(s string) int {
 	// no reason to check this err
-	i, _ = strconv.Atoi(s)
+	integer, _ := strconv.Atoi(s)
 
-	return
+	return integer
 }

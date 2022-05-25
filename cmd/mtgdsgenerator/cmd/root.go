@@ -19,7 +19,7 @@ var (
 )
 
 // rootCmd represents the base command when called without any subcommands.
-//nolint:exhaustivestruct // Not needed here
+//nolint:exhaustivestruct,exhaustruct // Not needed here
 var rootCmd = &cobra.Command{
 	Use: "mtgdsgenerator",
 }
