@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math"
 	"net/http"
 	"time"
 
@@ -45,7 +44,7 @@ func main() {
 			return
 		}
 
-		years, _ := math.Modf(time.Since(birthDate).Seconds() / year)
+		years := countFullYearsSinceBirth(birthDate)
 		err = siteTemplate.Execute(responseWriter, years)
 		if err != nil {
 			log.Panicln(err)
@@ -69,4 +68,13 @@ func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprint(responseWriter, favicon)
+}
+
+func countFullYearsSinceBirth(birthDate time.Time) int {
+	now := time.Now()
+	if now.Month() < birthDate.Month() || (birthDate.Month() == now.Month() && now.Day() < birthDate.Day()) {
+		return now.Year() - birthDate.Year() - 1
+	}
+
+	return now.Year() - birthDate.Year()
 }
