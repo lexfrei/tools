@@ -13,9 +13,17 @@ import (
 	"github.com/tdewolff/minify/v2/html"
 )
 
+// utc3seconds is the timezone for UTC+3.
+const utc3seconds = 3 * 60 * 60
+
+// utc3 is the timezone of the city of moscow.
+var utc3 = time.FixedZone("UTC+3", utc3seconds)
+
+// site is the HTML template for the website.
 //go:embed index.html
 var site string
 
+// favicon is the favicon.png.
 //go:embed favicon.png
 var favicon string
 
@@ -25,7 +33,7 @@ func main() {
 	m.AddFunc("text/css", css.Minify)
 	site, _ := m.String("text/html", site)
 
-	birthDate, err := time.Parse("02.01.2006", "04.08.1993")
+	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", utc3)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,7 +78,7 @@ func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
 
 // countFullYearsSinceBirth returns the number of full years since the birth date.
 func countFullYearsSinceBirth(birthDate time.Time) int {
-	now := time.Now()
+	now := time.Now().In(utc3)
 	if now.Month() < birthDate.Month() || (birthDate.Month() == now.Month() && now.Day() < birthDate.Day()) {
 		return now.Year() - birthDate.Year() - 1
 	}
