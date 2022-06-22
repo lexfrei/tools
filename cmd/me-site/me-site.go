@@ -50,7 +50,7 @@ func main() {
 			return
 		}
 
-		err = siteTemplate.Execute(responseWriter, countFullYearsSinceBirth(birthDate))
+		err = siteTemplate.Execute(responseWriter, countFullYearsSinceBirth(birthDate, utc3))
 		if err != nil {
 			log.Panicln(err)
 		}
@@ -77,8 +77,8 @@ func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
 }
 
 // countFullYearsSinceBirth returns the number of full years since the birth date.
-func countFullYearsSinceBirth(birthDate time.Time) int {
-	now := time.Now().In(utc3)
+func countFullYearsSinceBirth(birthDate time.Time, tz *time.Location) int {
+	now := time.Now().In(tz)
 	if now.Month() < birthDate.Month() || (birthDate.Month() == now.Month() && now.Day() < birthDate.Day()) {
 		return now.Year() - birthDate.Year() - 1
 	}
