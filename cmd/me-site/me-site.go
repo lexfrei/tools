@@ -13,8 +13,6 @@ import (
 	"github.com/tdewolff/minify/v2/html"
 )
 
-const year float64 = 31207680
-
 //go:embed index.html
 var site string
 
@@ -44,8 +42,7 @@ func main() {
 			return
 		}
 
-		years := countFullYearsSinceBirth(birthDate)
-		err = siteTemplate.Execute(responseWriter, years)
+		err = siteTemplate.Execute(responseWriter, countFullYearsSinceBirth(birthDate))
 		if err != nil {
 			log.Panicln(err)
 		}
@@ -60,6 +57,7 @@ func main() {
 	}
 }
 
+// faviconHandler returns the favicon.png.
 func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(responseWriter, "Method is not supported", http.StatusNotFound)
@@ -70,6 +68,7 @@ func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(responseWriter, favicon)
 }
 
+// countFullYearsSinceBirth returns the number of full years since the birth date.
 func countFullYearsSinceBirth(birthDate time.Time) int {
 	now := time.Now()
 	if now.Month() < birthDate.Month() || (birthDate.Month() == now.Month() && now.Day() < birthDate.Day()) {
