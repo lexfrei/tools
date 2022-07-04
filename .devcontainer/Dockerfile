@@ -44,4 +44,4 @@ RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master
     go install github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest && \
     go install golang.org/x/tools/gopls@latest && \
     go install mvdan.cc/gofumpt@latest && \
-    go install -github.com/davidrjenni/reftools/cmd/fillstruct@latest
+    go install github.com/davidrjenni/reftools/cmd/fillstruct@latest
