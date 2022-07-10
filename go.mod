@@ -13,7 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
-	github.com/tdewolff/minify/v2 v2.11.12
+	github.com/tdewolff/minify/v2 v2.12.0
 	golang.org/x/net v0.0.0-20220708220712-1185a9018129
 	golang.org/x/text v0.3.7
 	gopkg.in/telebot.v3 v3.0.0
