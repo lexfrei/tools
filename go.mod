@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/SevereCloud/vksdk/v2 v2.14.1
+	github.com/SevereCloud/vksdk/v2 v2.15.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/himidori/golang-vk-api v0.0.0-20210404104913-eff438684eb7
 	github.com/kr/pretty v0.3.0
@@ -30,7 +30,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/klauspost/compress v1.15.6 // indirect
+	github.com/klauspost/compress v1.15.8 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
