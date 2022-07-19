@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.CR_PAT }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.0
         if: github.ref == 'refs/heads/master'
         with:
           push: true
@@ -68,7 +68,7 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
 
       - name: Build
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.0
         if: github.ref == !'refs/heads/master'
         with:
           context: .
