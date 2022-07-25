@@ -7,3 +7,4 @@ This monorepo contains some useful (for me) tools:
 3. ow-exporter -- prometheus exporter for overwatch
 4. vk2tg -- wall forwarder from VK to Telegram
 5. [vkphotosdownloader](cmd/vkphotosdownloader/README.md) -- download photos from VK
+6. a200 -- nginx server which responses 200 to all requests

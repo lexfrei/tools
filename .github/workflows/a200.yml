@@ -56,8 +56,8 @@ jobs:
         if: github.ref == 'refs/heads/master'
         with:
           push: true
-          context: .
-          file: ./build/vk2tg/Dockerfile
+          context: ./build/a200/
+          file: ./build/a200/Dockerfile
           platforms: linux/arm64, linux/amd64
           tags: ${{ steps.docker_meta.outputs.tags }}
 
@@ -65,7 +65,7 @@ jobs:
         uses: docker/build-push-action@v3.1.0
         if: github.ref == !'refs/heads/master'
         with:
-          context: .
-          file: ./build/exporter/Dockerfile
+          context: ./build/a200/
+          file: ./build/a200/Dockerfile
           platforms: linux/arm64, linux/amd64
           tags: ${{ steps.docker_meta.outputs.tags }}
