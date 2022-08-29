@@ -45,11 +45,16 @@ linters-settings:
 linters:
   enable-all: true
   disable:
+    - deadcode
     - exhaustivestruct
     - exhaustruct
     - gochecknoglobals
     - gochecknoinits
     - golint
+    - ifshort
     - interfacer
     - maligned
+    - nosnakecase
     - scopelint
+    - structcheck
+    - varcheck

@@ -18,6 +18,9 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+// http port.
+var port = "9420"
+
 var (
 	playerRank = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -84,7 +87,9 @@ func main() {
 		}
 	}()
 
-	handler := promhttp.HandlerFor(
+	mux := http.NewServeMux()
+
+	mux.Handle("/metrics", promhttp.HandlerFor(
 		registry,
 		promhttp.HandlerOpts{
 			ErrorLog:            nil,
@@ -95,9 +100,15 @@ func main() {
 			Timeout:             0,
 			EnableOpenMetrics:   false,
 		},
-	)
-	http.Handle("/metrics", handler)
-	log.Fatal(http.ListenAndServe(":9420", nil))
+	))
+
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Minute,
+		WriteTimeout: 10 * time.Minute,
+	}
+	log.Fatal(srv.ListenAndServe())
 }
 
 func getStats(u *url.URL) {

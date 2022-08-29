@@ -13,6 +13,9 @@ import (
 	"github.com/tdewolff/minify/v2/html"
 )
 
+// http port.
+const port = "8080"
+
 // utc3seconds is the timezone for UTC+3.
 const utc3seconds = 3 * 60 * 60
 
@@ -20,30 +23,42 @@ const utc3seconds = 3 * 60 * 60
 var utc3 = time.FixedZone("UTC+3", utc3seconds)
 
 // site is the HTML template for the website.
+//
 //go:embed index.html
 var site string
 
 // favicon is the favicon.png.
+//
 //go:embed favicon.png
 var favicon string
 
 func main() {
-	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
-	m.AddFunc("text/css", css.Minify)
-	site, _ := m.String("text/html", site)
+	// Create a minifier.
+	minifier := minify.New()
 
+	// Minify the HTML.
+	minifier.AddFunc("text/html", html.Minify)
+	// Minify the CSS.
+	minifier.AddFunc("text/css", css.Minify)
+	// Minify the template.
+	site, _ := minifier.String("text/html", site)
+
+	// set birth date
 	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", utc3)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Render the template
 	siteTemplate, err := template.New("webpage").Parse(site)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/", func(responseWriter http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+
+	// Serve the website
+	mux.HandleFunc("/", func(responseWriter http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(responseWriter, "Method is not supported", http.StatusNotFound)
 
@@ -56,13 +71,18 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/favicon.png", faviconHandler)
+	// Serve the favicon
+	mux.HandleFunc("/favicon.png", faviconHandler)
 
-	log.Printf("Starting server at port 8080\n")
+	log.Println("Listening on port 8080")
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Minute,
+		WriteTimeout: 10 * time.Minute,
 	}
+	log.Fatal(srv.ListenAndServe())
 }
 
 // faviconHandler returns the favicon.png.

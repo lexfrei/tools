@@ -15,6 +15,7 @@ import (
 )
 
 // Moscow
+//
 //nolint:gomnd // just a time
 var zone = time.FixedZone("UTC+3", 3*60*60)
 

@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 Aleksey Sviridkin <f@lex.la>
-
 */
 package cmd
 
@@ -19,6 +18,7 @@ var (
 )
 
 // rootCmd represents the base command when called without any subcommands.
+//
 //nolint:exhaustivestruct // Not needed here
 var rootCmd = &cobra.Command{
 	Use: "mtgdsgenerator",
