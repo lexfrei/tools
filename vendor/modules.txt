@@ -174,7 +174,7 @@ github.com/vmihailenco/tagparser/v2/internal/parser
 # go.uber.org/ratelimit v0.2.0
 ## explicit; go 1.14
 go.uber.org/ratelimit
-# golang.org/x/net v0.0.0-20220927171203-f486391704dc
+# golang.org/x/net v0.0.0-20220930213112-107f3e3c3b0b
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/html
