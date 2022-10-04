@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
 	github.com/tdewolff/minify/v2 v2.12.2
-	golang.org/x/net v0.0.0-20220930213112-107f3e3c3b0b
+	golang.org/x/net v0.0.0-20221004154528-8021a29435af
 	golang.org/x/text v0.3.7
 	gopkg.in/telebot.v3 v3.0.0
 )
