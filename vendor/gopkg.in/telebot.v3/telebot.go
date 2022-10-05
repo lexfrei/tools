@@ -6,7 +6,7 @@
 //
 //		import (
 //			"time"
-//			tele "gopkg.in/tucnak/telebot.v3"
+//			tele "gopkg.in/telebot.v3"
 //		)
 //
 //		func main() {
@@ -240,3 +240,7 @@ var (
 	Slot = &Dice{Type: "🎰"}
 	Bowl = &Dice{Type: "🎳"}
 )
+
+// M is a shortcut for map[string]interface{}. Use it for passing
+// arguments to the layout functions.
+type M = map[string]interface{}
