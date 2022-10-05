@@ -15,6 +15,7 @@ type User struct {
 	Username     string `json:"username"`
 	LanguageCode string `json:"language_code"`
 	IsBot        bool   `json:"is_bot"`
+	IsPremium    bool   `json:"is_premium"`
 
 	// Returns only in getMe
 	CanJoinGroups   bool `json:"can_join_groups"`
@@ -40,10 +41,6 @@ type Chat struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Username  string `json:"username"`
-
-	// Still shows whether the user is a member
-	// of the chat at the moment of the request.
-	Still bool `json:"is_member,omitempty"`
 
 	// Returns only in getChat
 	Bio              string        `json:"bio,omitempty"`

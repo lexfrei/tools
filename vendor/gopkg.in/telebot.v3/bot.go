@@ -37,7 +37,7 @@ func NewBot(pref Settings) (*Bot, error) {
 		Token:   pref.Token,
 		URL:     pref.URL,
 		Poller:  pref.Poller,
-		OnError: pref.OnError,
+		onError: pref.OnError,
 
 		Updates:  make(chan Update, pref.Updates),
 		handlers: make(map[string]HandlerFunc),
@@ -70,7 +70,7 @@ type Bot struct {
 	URL     string
 	Updates chan Update
 	Poller  Poller
-	OnError func(error, Context)
+	onError func(error, Context)
 
 	group       *Group
 	handlers    map[string]HandlerFunc
@@ -79,6 +79,7 @@ type Bot struct {
 	parseMode   ParseMode
 	stop        chan chan struct{}
 	client      *http.Client
+	stopClient  chan struct{}
 }
 
 // Settings represents a utility struct for passing certain
@@ -148,6 +149,10 @@ type Command struct {
 	Description string `json:"description"`
 }
 
+func (b *Bot) OnError(err error, c Context) {
+	b.onError(err, c)
+}
+
 // Group returns a new group.
 func (b *Bot) Group() *Group {
 	return &Group{b: b}
@@ -207,6 +212,12 @@ func (b *Bot) Start() {
 		panic("telebot: can't start without a poller")
 	}
 
+	// do nothing if called twice
+	if b.stopClient != nil {
+		return
+	}
+	b.stopClient = make(chan struct{})
+
 	stop := make(chan struct{})
 	stopConfirm := make(chan struct{})
 
@@ -225,6 +236,7 @@ func (b *Bot) Start() {
 			close(stop)
 			<-stopConfirm
 			close(confirm)
+			b.stopClient = nil
 			return
 		}
 	}
@@ -232,6 +244,9 @@ func (b *Bot) Start() {
 
 // Stop gracefully shuts the poller down.
 func (b *Bot) Stop() {
+	if b.stopClient != nil {
+		close(b.stopClient)
+	}
 	confirm := make(chan struct{})
 	b.stop <- confirm
 	<-confirm
@@ -1473,20 +1488,10 @@ func (b *Bot) SetCommands(opts ...interface{}) error {
 }
 
 // DeleteCommands deletes the list of the bot's commands for the given scope and user language.
-func (b *Bot) DeleteCommands(opts ...interface{}) ([]Command, error) {
+func (b *Bot) DeleteCommands(opts ...interface{}) error {
 	params := extractCommandsParams(opts...)
-	data, err := b.Raw("deleteMyCommands", params)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp struct {
-		Result []Command
-	}
-	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, wrapError(err)
-	}
-	return resp.Result, nil
+	_, err := b.Raw("deleteMyCommands", params)
+	return err
 }
 
 // Logout logs out from the cloud Bot API server before launching the bot locally.
