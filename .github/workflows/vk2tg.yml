@@ -33,7 +33,7 @@ jobs:
           platforms: "arm64,amd64"
 
       - name: Checkout
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.1.0
 
       - name: Set up Docker Context for Buildx
         id: buildx-context
