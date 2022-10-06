@@ -42,7 +42,7 @@ func (b *Bot) Raw(method string, payload interface{}) ([]byte, error) {
 		}
 	}()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", url, &buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &buf)
 	if err != nil {
 		return nil, wrapError(err)
 	}
@@ -61,20 +61,7 @@ func (b *Bot) Raw(method string, payload interface{}) ([]byte, error) {
 	}
 
 	if b.verbose {
-		body, _ := json.Marshal(payload)
-		body = bytes.ReplaceAll(body, []byte(`\"`), []byte(`"`))
-		body = bytes.ReplaceAll(body, []byte(`"{`), []byte(`{`))
-		body = bytes.ReplaceAll(body, []byte(`}"`), []byte(`}`))
-
-		indent := func(b []byte) string {
-			buf.Reset()
-			json.Indent(&buf, b, "", "\t")
-			return buf.String()
-		}
-
-		log.Printf("[verbose] telebot: sent request\n"+
-			"Method: %v\nParams: %v\nResponse: %v",
-			method, indent(body), indent(data))
+		verbose(method, payload, data)
 	}
 
 	// returning data as well
@@ -250,4 +237,95 @@ func (b *Bot) getUpdates(offset, limit int, timeout time.Duration, allowed []str
 		return nil, wrapError(err)
 	}
 	return resp.Result, nil
+}
+
+// extractOk checks given result for error. If result is ok returns nil.
+// In other cases it extracts API error. If error is not presented
+// in errors.go, it will be prefixed with `unknown` keyword.
+func extractOk(data []byte) error {
+	var e struct {
+		Ok          bool                   `json:"ok"`
+		Code        int                    `json:"error_code"`
+		Description string                 `json:"description"`
+		Parameters  map[string]interface{} `json:"parameters"`
+	}
+	if json.NewDecoder(bytes.NewReader(data)).Decode(&e) != nil {
+		return nil // FIXME
+	}
+	if e.Ok {
+		return nil
+	}
+
+	err := Err(e.Description)
+	switch err {
+	case nil:
+	case ErrGroupMigrated:
+		migratedTo, ok := e.Parameters["migrate_to_chat_id"]
+		if !ok {
+			return NewError(e.Code, e.Description)
+		}
+
+		return GroupError{
+			err:        err.(*Error),
+			MigratedTo: int64(migratedTo.(float64)),
+		}
+	default:
+		return err
+	}
+
+	switch e.Code {
+	case http.StatusTooManyRequests:
+		retryAfter, ok := e.Parameters["retry_after"]
+		if !ok {
+			return NewError(e.Code, e.Description)
+		}
+
+		err = FloodError{
+			err:        NewError(e.Code, e.Description),
+			RetryAfter: int(retryAfter.(float64)),
+		}
+	default:
+		err = fmt.Errorf("telegram: %s (%d)", e.Description, e.Code)
+	}
+
+	return err
+}
+
+// extractMessage extracts common Message result from given data.
+// Should be called after extractOk or b.Raw() to handle possible errors.
+func extractMessage(data []byte) (*Message, error) {
+	var resp struct {
+		Result *Message
+	}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		var resp struct {
+			Result bool
+		}
+		if err := json.Unmarshal(data, &resp); err != nil {
+			return nil, wrapError(err)
+		}
+		if resp.Result {
+			return nil, ErrTrueResult
+		}
+		return nil, wrapError(err)
+	}
+	return resp.Result, nil
+}
+
+func verbose(method string, payload interface{}, data []byte) {
+	body, _ := json.Marshal(payload)
+	body = bytes.ReplaceAll(body, []byte(`\"`), []byte(`"`))
+	body = bytes.ReplaceAll(body, []byte(`"{`), []byte(`{`))
+	body = bytes.ReplaceAll(body, []byte(`}"`), []byte(`}`))
+
+	indent := func(b []byte) string {
+		var buf bytes.Buffer
+		json.Indent(&buf, b, "", "  ")
+		return buf.String()
+	}
+
+	log.Printf(
+		"[verbose] telebot: sent request\nMethod: %v\nParams: %v\nResponse: %v",
+		method, indent(body), indent(data),
+	)
 }
