@@ -16,7 +16,7 @@ require (
 	github.com/tdewolff/minify/v2 v2.12.4
 	golang.org/x/net v0.0.0-20221004154528-8021a29435af
 	golang.org/x/text v0.3.7
-	gopkg.in/telebot.v3 v3.1.0
+	gopkg.in/telebot.v3 v3.1.2
 )
 
 require (
