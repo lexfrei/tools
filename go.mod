@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
 	github.com/tdewolff/minify/v2 v2.12.4
-	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b
+	golang.org/x/net v0.0.0-20221017152216-f25eb7ecb193
 	golang.org/x/text v0.3.8
 	gopkg.in/telebot.v3 v3.1.2
 )
@@ -50,7 +50,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
-	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
