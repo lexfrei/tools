@@ -11,7 +11,7 @@ require (
 	github.com/kr/pretty v0.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.13.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	github.com/tdewolff/minify/v2 v2.12.4
 	golang.org/x/net v0.1.0
