@@ -14,7 +14,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3.3.1
       - name: hadolint
-        uses: hadolint/hadolint-action@v2.1.0
+        uses: hadolint/hadolint-action@v3.0.0
         with:
           dockerfile: build/vk2tg/Dockerfile
       - uses: snyk/actions/setup@master
