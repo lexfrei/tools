@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	vkapi "github.com/himidori/golang-vk-api"
-	"github.com/pkg/errors"
 	tb "gopkg.in/telebot.v3"
 )
 

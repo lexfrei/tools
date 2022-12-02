@@ -12,8 +12,8 @@ import (
 	"sync"
 
 	scryfall "github.com/BlueMonday/go-scryfall"
+	"github.com/cockroachdb/errors"
 	"github.com/lexfrei/tools/cmd/mtgdsgenerator/cmd"
-	"github.com/pkg/errors"
 )
 
 type config struct {
