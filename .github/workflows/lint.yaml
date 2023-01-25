@@ -6,15 +6,15 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.3.0
       - uses: actions/setup-go@v3
         with:
           go-version: "~1.18"
           check-latest: true
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.3.1
+        uses: golangci/golangci-lint-action@v3.4.0
       - name: hadolint
-        uses: hadolint/hadolint-action@v3.0.0
+        uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: build/vk2tg/Dockerfile
       - uses: snyk/actions/setup@master
