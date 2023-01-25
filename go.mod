@@ -6,7 +6,7 @@ require (
 	github.com/BlueMonday/go-scryfall v0.3.0
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/SevereCloud/vksdk/v2 v2.15.0
-	github.com/cockroachdb/errors v1.9.0
+	github.com/cockroachdb/errors v1.9.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/himidori/golang-vk-api v0.0.0-20210404104913-eff438684eb7
 	github.com/kr/pretty v0.3.1
