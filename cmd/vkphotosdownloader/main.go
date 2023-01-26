@@ -9,6 +9,8 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"sync"
+	"time"
 
 	"github.com/SevereCloud/vksdk/v2/api"
 	"github.com/SevereCloud/vksdk/v2/object"
@@ -43,42 +45,26 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var wg sync.WaitGroup
+
+	ctx := context.Background()
+
 	// Get all photos from each album.
 	for albumID := range albums {
-		photos, err := getAllPhotosFronVKAlbum(&albums[albumID], vkClient)
-		if err != nil {
-			log.Fatal(err)
-		}
+		wg.Add(1)
 
-		for photoID := range photos {
-			url, err := getPhotoURL(&photos[photoID])
-			if err != nil {
-				log.Println(err)
-
-				continue
-			}
-
-			// Download photo.
-			err = downloadAndSave(
-				context.Background(),
-				url,
-				path.Join(
-					directory,
-					strconv.Itoa(albums[albumID].ID),
-				),
-				strconv.Itoa(photos[photoID].ID)+".jpg",
-			)
-			if err != nil {
-				log.Println(err)
-
-				continue
-			}
-		}
+		go downloadAlbum(ctx, &wg, &albums[albumID], vkClient, directory)
 	}
+
+	wg.Wait()
 }
 
 // getPhotoURL returns url of photo.
 func getPhotoURL(photo *object.PhotosPhoto) (string, error) {
+	if photo == nil {
+		return "", errors.New("photo argument is nil")
+	}
+
 	if len(photo.MaxSize().URL) > 0 {
 		return photo.MaxSize().URL, nil
 	}
@@ -93,31 +79,46 @@ func getPhotoURL(photo *object.PhotosPhoto) (string, error) {
 }
 
 // downloadAndSave downloads file from url and saves it to file.
-func downloadAndSave(ctx context.Context, url, directoryPath, filePath string) error {
+func downloadAndSave(ctx context.Context, url, directoryPath, fileName string) error {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return errors.Wrap(err, "cant create request")
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "cant download file")
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return errors.Wrap(err, "cant read body")
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	err = os.MkdirAll(directoryPath, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "cant create directory")
+	// Check if the directory already exists
+	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
+		err = os.MkdirAll(directoryPath, os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "cant create directory")
+		}
 	}
 
-	err = os.WriteFile(filepath.Join(directoryPath, filePath), body, os.ModePerm)
+	filePath := filepath.Join(directoryPath, fileName)
+
+	// Use io.Copy to stream data
+	file, err := os.Create(filePath)
 	if err != nil {
-		return errors.Wrap(err, "cant write file")
+		return errors.Wrap(err, "cant create file")
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "cant save file")
 	}
 
 	return nil
@@ -170,4 +171,47 @@ func getMyVKUserID(vkClient *api.VK) (int, error) {
 	}
 
 	return me[0].ID, nil
+}
+
+// downloadAlbum downloads all photos from album.
+func downloadAlbum(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	album *object.PhotosPhotoAlbumFull,
+	vkClient *api.VK,
+	directory string,
+) {
+	defer wg.Done()
+
+	photos, err := getAllPhotosFronVKAlbum(album, vkClient)
+	if err != nil {
+		log.Println(err)
+
+		return
+	}
+
+	for photoID := range photos {
+		url, err := getPhotoURL(&photos[photoID])
+		if err != nil {
+			log.Printf("can't get url of photo %d: %s", photos[photoID].ID, err)
+
+			continue
+		}
+
+		// Download photo with context
+		err = downloadAndSave(
+			ctx,
+			url,
+			path.Join(
+				directory,
+				strconv.Itoa(album.ID),
+			),
+			strconv.Itoa(photos[photoID].ID)+".jpg",
+		)
+		if err != nil {
+			log.Printf("can't download photo %d: %s", photos[photoID].ID, err)
+
+			continue
+		}
+	}
 }
