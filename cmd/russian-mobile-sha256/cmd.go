@@ -7,11 +7,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/cockroachdb/errors"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	rds := newRedisStorage("localhost:6379", "")
+	rds, err := newRedisStorage("localhost:6379", "")
+	if err != nil {
+		log.Println(err)
+
+		return
+	}
 
 	for i := 79000000000; i < 80000000000; i++ {
 		h := sha256.New()
@@ -24,23 +30,19 @@ func main() {
 	}
 }
 
-func newRedisStorage(addr, pass string) *redis.Client {
+func newRedisStorage(addr, pass string) (*redis.Client, error) {
 	cli := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: pass,
 		DB:       0,
 	})
 
-	pong := ""
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	for pong != "PONG" {
-		pong, _ = cli.Ping(ctx).Result()
-
-		time.Sleep(time.Second)
+	if _, err := cli.Ping(ctx).Result(); err != nil {
+		return nil, errors.Wrap(err, "ping redis")
 	}
 
-	return cli
+	return cli, nil
 }

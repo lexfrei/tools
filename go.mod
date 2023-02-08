@@ -1,13 +1,13 @@
 module github.com/lexfrei/tools
 
-go 1.19
+go 1.20
 
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
 	github.com/SevereCloud/vksdk/v2 v2.15.0
 	github.com/cockroachdb/errors v1.9.1
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/himidori/golang-vk-api v0.0.0-20210404104913-eff438684eb7
+	github.com/redis/go-redis/v9 v9.0.2
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/tdewolff/minify/v2 v2.12.4
@@ -21,7 +21,7 @@ require (
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/getsentry/sentry-go v0.17.0 // indirect
+	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -43,9 +43,8 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

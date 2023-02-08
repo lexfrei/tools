@@ -34,7 +34,6 @@ func main() {
 	}
 
 	result := make(map[string][]string)
-	defer generateReport(result)
 
 	log.Printf("Spawning %d workers...\n", cmd.Parallel)
 
@@ -51,20 +50,28 @@ func main() {
 
 	close(jobIndex)
 	conf.wg.Wait()
+
+	err = generateReport(result)
+	if err != nil {
+		log.Fatalf("error generating report: %s", err)
+	}
 }
 
-func generateReport(result map[string][]string) {
+func generateReport(result map[string][]string) error {
 	log.Println("Generating report...")
 
 	jsondata, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err)
+		return errors.Wrap(err, "cant marshal json")
 	}
 
 	err = os.WriteFile("./cards.json", jsondata, os.ModePerm)
+
 	if err != nil {
-		log.Println(err)
+		return errors.Wrap(err, "cant write file")
 	}
+
+	return nil
 }
 
 func downloadAndSave(
@@ -80,31 +87,43 @@ func downloadAndSave(
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, iURIs.Normal, http.NoBody)
 	if err != nil {
-		return errors.Wrap(err, "cant create request")
+		return errors.Wrap(err, "cannot create request")
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "cant download file")
+		return errors.Wrap(err, "cannot download file")
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "cant read body")
+		return errors.Wrap(err, "cannot read body")
+	}
+
+	if len(body) == 0 {
+		return errors.New("empty response body")
 	}
 
 	err = os.MkdirAll(path.Dir(*filepath), os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "cant create directory")
+		return errors.Wrap(err, "cannot create directory")
 	}
 
 	err = os.WriteFile(*filepath, body, os.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "cant write file")
+		return errors.Wrap(err, "cannot write file")
 	}
 
 	conf.mu.Lock()
+	if _, ok := result[*cardid]; !ok {
+		result[*cardid] = []string{}
+	}
+
 	result[*cardid] = append(result[*cardid], *filepath)
 	conf.mu.Unlock()
 
