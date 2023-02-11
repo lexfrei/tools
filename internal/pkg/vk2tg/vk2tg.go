@@ -9,8 +9,9 @@ import (
 	"sync"
 	"time"
 
+	vkapi "github.com/SevereCloud/vksdk/v2/api"
+	vkObject "github.com/SevereCloud/vksdk/v2/object"
 	"github.com/cockroachdb/errors"
-	vkapi "github.com/himidori/golang-vk-api"
 	tb "gopkg.in/telebot.v3"
 )
 
@@ -22,18 +23,18 @@ var zone = time.FixedZone("UTC+3", 3*60*60)
 type VTClinent struct {
 	config     *config
 	tgClient   *tb.Bot
-	vkClient   *vkapi.VKClient
+	vkClient   *vkapi.VK
 	LastUpdate time.Time
 	StartTime  time.Time
 	WG         *sync.WaitGroup
 	ticker     *time.Ticker
-	chVKPosts  chan *vkapi.WallPost
+	chVKPosts  chan *vkObject.WallWallpost
 	logger     *log.Logger
 	storage    storage
 }
 
 type config struct {
-	LastPostDate int64         `yaml:"lastPostDate"`
+	LastPostDate int           `yaml:"lastPostDate"`
 	LastPostID   int           `yaml:"lastPostId"`
 	Paused       bool          `yaml:"paused"`
 	Period       time.Duration `yaml:"period"`
@@ -55,7 +56,7 @@ func NewVTClient(tgToken, vkToken string, tgRecepient int64, period time.Duratio
 	vtcli.config.TGToken = tgToken
 	vtcli.config.VKToken = vkToken
 	vtcli.config.TGUser = tgRecepient
-	vtcli.chVKPosts = make(chan *vkapi.WallPost)
+	vtcli.chVKPosts = make(chan *vkObject.WallWallpost, 10)
 	vtcli.WG = &sync.WaitGroup{}
 	vtcli.config.Silent = false
 	vtcli.config.Paused = false
@@ -78,10 +79,7 @@ func (vtCli *VTClinent) Start() error {
 
 	var err error
 
-	vtCli.vkClient, err = vkapi.NewVKClientWithToken(vtCli.config.VKToken, nil, true)
-	if err != nil {
-		return errors.Wrap(err, "Can't longin to VK")
-	}
+	vtCli.vkClient = vkapi.NewVK(vtCli.config.VKToken)
 
 	vtCli.tgClient, err = tb.NewBot(
 		tb.Settings{
@@ -150,41 +148,46 @@ func (vtCli *VTClinent) VKWatcher() {
 	for range vtCli.ticker.C {
 		vtCli.LastUpdate = time.Now()
 
-		vkWall, err := vtCli.vkClient.WallGet("cosplay_second", 10, nil)
+		vkWall, err := vtCli.vkClient.WallGet(
+			vkapi.Params{
+				"owner_id": -57692133,
+				"count":    10,
+			},
+		)
 		if err != nil {
 			vtCli.logger.Printf("failed to fetch posts: %s", err)
 
 			continue
 		}
 
-		if vkWall.Posts[0].ID == vtCli.config.LastPostID {
+		if vkWall.Items[0].ID == vtCli.config.LastPostID {
 			continue
 		}
 
-		for index := len(vkWall.Posts) - 1; index >= 0; index-- {
-			vtCli.logger.Printf("Post %d: Processing", vkWall.Posts[index].ID)
+		for index := vkWall.Count - 1; index >= 0; index-- {
+			vtCli.logger.Printf("Post %d: Processing", vkWall.Items[index].ID)
 
-			if vtCli.config.LastPostID >= vkWall.Posts[index].ID {
-				vtCli.logger.Printf("Post %d: Not a new post, skipped", vkWall.Posts[index].ID)
+			if vtCli.config.LastPostID >= vkWall.Items[index].ID {
+				vtCli.logger.Printf("Post %d: Not a new post, skipped", vkWall.Items[index].ID)
 
 				continue
 			} else {
-				vtCli.logger.Printf("Post %d: Selected as latest", vkWall.Posts[index].ID)
-				vtCli.config.LastPostDate = vkWall.Posts[index].Date
-				vtCli.config.LastPostID = vkWall.Posts[index].ID
+				vtCli.logger.Printf("Post %d: Selected as latest", vkWall.Items[index].ID)
+				vtCli.config.LastPostDate = vkWall.Items[index].Date
+				vtCli.config.LastPostID = vkWall.Items[index].ID
 				if vtCli.config.StorageEnabled {
-					vtCli.storage.SetLastPost(vkWall.Posts[index].ID)
+					vtCli.storage.SetLastPost(vkWall.Items[index].ID)
 				}
 			}
 
-			if !strings.Contains(vkWall.Posts[index].Text, "#поиск") {
-				vtCli.logger.Printf("Post %d: Post does not contain required substring, skipping", vkWall.Posts[index].ID)
+			if !strings.Contains(vkWall.Items[index].Text, "#поиск") {
+				vtCli.logger.Printf("Post %d: Post does not contain required substring, skipping", vkWall.Items[index].ID)
 
 				continue
 			}
 
-			vtCli.logger.Printf("Post %d: Sending to TG", vkWall.Posts[index].ID)
-			vtCli.chVKPosts <- vkWall.Posts[index]
+			vtCli.logger.Printf("Post %d: Sending to TG", vkWall.Items[index].ID)
+			vtCli.chVKPosts <- &vkWall.Items[index]
 		}
 	}
 }
@@ -202,14 +205,14 @@ func (vtCli *VTClinent) TGSender() {
 
 		for attachmentsIndex := range post.Attachments {
 			if post.Attachments[attachmentsIndex].Type == "photo" {
-				var maxSize int
+				var maxSize float64
 
 				for sizeIndex := range post.Attachments[attachmentsIndex].Photo.Sizes {
 					//nolint:lll // whis can't be shorter
 					if maxSize < post.Attachments[attachmentsIndex].Photo.Sizes[sizeIndex].Width*post.Attachments[attachmentsIndex].Photo.Sizes[sizeIndex].Height {
 						maxSize = post.Attachments[attachmentsIndex].Photo.Sizes[sizeIndex].Width *
 							post.Attachments[attachmentsIndex].Photo.Sizes[sizeIndex].Height
-						url = &post.Attachments[attachmentsIndex].Photo.Sizes[sizeIndex].Url
+						url = &post.Attachments[attachmentsIndex].Photo.Sizes[sizeIndex].URL
 					}
 				}
 
@@ -257,7 +260,7 @@ func (vtCli *VTClinent) sendMessage(u *tb.User, options ...interface{}) error {
 
 func (vtCli *VTClinent) status(tbContext tb.Context) error {
 	msg := fmt.Sprintf("I'm fine\nLast post date:\t%s\nReceived in:\t%s\nUptime:\t%s\nPaused:\t%t\nSound:\t%t",
-		time.Unix(vtCli.config.LastPostDate, 0).In(zone).Format(time.RFC822),
+		time.Unix(int64(vtCli.config.LastPostDate), 0).In(zone).Format(time.RFC822),
 		vtCli.LastUpdate.In(zone).Format(time.RFC822),
 		time.Since(vtCli.StartTime).Round(time.Second),
 		vtCli.config.Paused,
@@ -307,7 +310,7 @@ func (vtCli *VTClinent) mute(tbContext tb.Context) error {
 	return nil
 }
 
-func (vtCli *VTClinent) generateOptionsForPost(post *vkapi.WallPost) *tb.SendOptions {
+func (vtCli *VTClinent) generateOptionsForPost(post *vkObject.WallWallpost) *tb.SendOptions {
 	return &tb.SendOptions{
 		ReplyTo: &tb.Message{},
 		ReplyMarkup: &tb.ReplyMarkup{
