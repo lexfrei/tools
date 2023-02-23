@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
@@ -74,18 +75,13 @@ func generateReport(result map[string][]string) error {
 	return nil
 }
 
-func downloadAndSave(
-	ctx context.Context,
-	conf *config,
-	iURIs *scryfall.ImageURIs,
-	filepath, cardid *string,
-	result map[string][]string,
-) error {
-	if iURIs.Normal == "" {
-		return errors.Errorf("normal image url not found for %s", *cardid)
+func downloadAndSave(ctx context.Context, imageurl, filepath string) error {
+	_, err := url.ParseRequestURI(imageurl)
+	if err != nil {
+		return errors.Wrap(err, "invalid url")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, iURIs.Normal, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageurl, http.NoBody)
 	if err != nil {
 		return errors.Wrap(err, "cannot create request")
 	}
@@ -109,23 +105,15 @@ func downloadAndSave(
 		return errors.New("empty response body")
 	}
 
-	err = os.MkdirAll(path.Dir(*filepath), os.ModePerm)
+	err = os.MkdirAll(path.Dir(filepath), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot create directory")
 	}
 
-	err = os.WriteFile(*filepath, body, os.ModePerm)
+	err = os.WriteFile(filepath, body, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot write file")
 	}
-
-	conf.mu.Lock()
-	if _, ok := result[*cardid]; !ok {
-		result[*cardid] = []string{}
-	}
-
-	result[*cardid] = append(result[*cardid], *filepath)
-	conf.mu.Unlock()
 
 	return nil
 }
@@ -208,11 +196,17 @@ func worker(
 		if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
 			if cards[index].ImageURIs != nil {
 				imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
-				if err := downloadAndSave(ctx, conf, cards[index].ImageURIs, &imagePath, &IDString, result); err != nil {
-					log.Println(err)
+
+				err := downloadAndSave(ctx, cards[index].ImageURIs.Normal, imagePath)
+				if err != nil {
+					log.Printf("error downloading %s: %s", IDString, err)
 
 					continue
 				}
+
+				conf.mu.Lock()
+				result[IDString] = append(result[IDString], imagePath)
+				conf.mu.Unlock()
 
 				continue
 			}
@@ -223,11 +217,18 @@ func worker(
 					string(cards[index].Lang) + "/" +
 					cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
 
-				if err := downloadAndSave(ctx, conf, &cards[index].CardFaces[faceIndex].ImageURIs, &imagePath, &IDString, result); err != nil {
-					log.Println(err)
+				err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath)
+				if err != nil {
+					log.Printf("error downloading %s: %s", IDString, err)
 
 					continue
 				}
+
+				conf.mu.Lock()
+				result[IDString] = append(result[IDString], imagePath)
+				conf.mu.Unlock()
+
+				continue
 			}
 		}
 	}
