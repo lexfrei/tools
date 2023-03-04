@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
-	github.com/SevereCloud/vksdk/v2 v2.15.0
+	github.com/SevereCloud/vksdk/v2 v2.16.0
 	github.com/cockroachdb/errors v1.9.1
 	github.com/redis/go-redis/v9 v9.0.2
 	github.com/spf13/cobra v1.6.1
@@ -25,7 +25,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/klauspost/compress v1.15.15 // indirect
+	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
