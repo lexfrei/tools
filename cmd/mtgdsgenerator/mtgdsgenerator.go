@@ -17,6 +17,9 @@ import (
 	"github.com/lexfrei/tools/cmd/mtgdsgenerator/cmd"
 )
 
+// config holds the configuration for the server.
+// It has a waitgroup for waiting for the server to shutdown,
+// and a mutex for synchronizing access to the configuration.
 type config struct {
 	wg sync.WaitGroup
 	mu sync.Mutex
@@ -57,6 +60,8 @@ func main() {
 		log.Fatalf("error generating report: %s", err)
 	}
 }
+
+// GenerateReport is a function that generates a report when passed a map of card names to slices of card types
 
 func generateReport(result map[string][]string) error {
 	log.Println("Generating report...")
