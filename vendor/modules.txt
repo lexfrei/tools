@@ -160,7 +160,7 @@ github.com/spf13/viper/internal/encoding/yaml
 # github.com/subosito/gotenv v1.4.2
 ## explicit; go 1.18
 github.com/subosito/gotenv
-# github.com/tdewolff/minify/v2 v2.12.4
+# github.com/tdewolff/minify/v2 v2.12.5
 ## explicit; go 1.13
 github.com/tdewolff/minify/v2
 github.com/tdewolff/minify/v2/css
