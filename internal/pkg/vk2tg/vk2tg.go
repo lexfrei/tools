@@ -108,7 +108,6 @@ func (vtCli *VTClinent) Start() error {
 
 	go vtCli.tgClient.Start()
 
-	//nolint:gomnd // workers amount
 	vtCli.WG.Add(2)
 
 	go vtCli.VKWatcher()
@@ -171,13 +170,14 @@ func (vtCli *VTClinent) VKWatcher() {
 				vtCli.logger.Printf("Post %d: Not a new post, skipped", vkWall.Items[index].ID)
 
 				continue
-			} else {
-				vtCli.logger.Printf("Post %d: Selected as latest", vkWall.Items[index].ID)
-				vtCli.config.LastPostDate = vkWall.Items[index].Date
-				vtCli.config.LastPostID = vkWall.Items[index].ID
-				if vtCli.config.StorageEnabled {
-					vtCli.storage.SetLastPost(vkWall.Items[index].ID)
-				}
+			}
+
+			vtCli.logger.Printf("Post %d: Selected as latest", vkWall.Items[index].ID)
+			vtCli.config.LastPostDate = vkWall.Items[index].Date
+			vtCli.config.LastPostID = vkWall.Items[index].ID
+
+			if vtCli.config.StorageEnabled {
+				vtCli.storage.SetLastPost(vkWall.Items[index].ID)
 			}
 
 			if !strings.Contains(vkWall.Items[index].Text, "#поиск") {

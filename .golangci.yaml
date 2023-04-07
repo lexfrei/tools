@@ -35,11 +35,13 @@ linters-settings:
     ignore-decls:
       - wg sync.WaitGroup
       - mu sync.Mutex
+      - ok bool
 
   gomnd:
     ignored-numbers:
-      - "100"
       - "10"
+      - "100"
+      - "2"
       - "64"
 
 linters:
@@ -48,6 +50,7 @@ linters:
     - deadcode
     - exhaustivestruct
     - exhaustruct
+    - gci
     - gochecknoglobals
     - gochecknoinits
     - golint
@@ -58,3 +61,8 @@ linters:
     - scopelint
     - structcheck
     - varcheck
+    - nonamedreturns
+
+run:
+  skip-dirs:
+    - vendor
