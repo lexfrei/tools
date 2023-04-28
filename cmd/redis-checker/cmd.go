@@ -7,76 +7,94 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"time"
+	"sync"
 
+	"github.com/cockroachdb/errors"
 	"github.com/redis/go-redis/v9"
 )
 
-func main() {
-	firstPort := 6378
-	lastPort := 6460
+const (
+	firstPort = 6378
+	lastPort  = 6460
+	firstHost = 1
+	lastHost  = 80
+)
 
-	firstHost := 1
-	lastHost := 80
-
-	RedisPortsAvailibePerHost := make(map[int][]int)
-
-	var AvailibleHosts int
-
-	for host := firstHost; host <= lastHost; host++ {
-		if pingDB(context.TODO(), host, firstPort) {
-			AvailibleHosts++
-
-			for port := firstPort; port <= lastPort; port++ {
-				dbcount := getDBCount(context.TODO(), host, port)
-
-				for db := 0; db < dbcount; db++ {
-					if checkRedisIsEmpty(context.TODO(), host, port, db) {
-						RedisPortsAvailibePerHost[port] = append(RedisPortsAvailibePerHost[port], host)
-
-						break
-					}
-				}
-			}
-		}
-	}
-
-	for port, hosts := range RedisPortsAvailibePerHost {
-		if len(hosts) == AvailibleHosts {
-			log.Printf("Port %d is available on all hosts\n", port)
-		}
-	}
-
-	// dump to json file
-	jsonBytes, err := json.Marshal(RedisPortsAvailibePerHost)
-	if err != nil {
-		log.Println(err)
-
-		return
-	}
-
-	// write to file
-	//nolint:gomnd // coz this is just a unix permission
-	err = os.WriteFile("redis-ports.json", jsonBytes, 0o600)
-	if err != nil {
-		log.Println(err)
-
-		return
-	}
+type PortHosts struct {
+	Port  int   `json:"port"`
+	Hosts []int `json:"hosts"`
 }
 
-func pingDB(ctx context.Context, host, port int) bool {
-	client := redis.NewClient(&redis.Options{
-		Addr:        fmt.Sprintf("172.21.%d.248:%d", host, port),
-		Password:    "", // no password set
-		DB:          0,  // use the default database
-		DialTimeout: 1 * time.Second,
-	})
+func main() {
+	ctx := context.Background()
 
-	// check if Redis is running
-	pingCmd := client.Ping(ctx)
+	portHostsList := getEmptyPortHosts(ctx)
 
-	return pingCmd.Err() != nil
+	jsonData, err := json.MarshalIndent(portHostsList, "", "  ")
+	if err != nil {
+		log.Fatalf("Failed to generate JSON: %v", err)
+	}
+
+	//nolint:gomnd // 0o600 is octal a UNIX permission
+	err = os.WriteFile("empty_ports_hosts.json", jsonData, 0o600)
+	if err != nil {
+		log.Fatalf("Failed to write JSON to file: %v", err)
+	}
+
+	log.Println("JSON file generated successfully")
+}
+
+func getEmptyPortHosts(ctx context.Context) []PortHosts {
+	var portHostsList []PortHosts
+
+	wg := sync.WaitGroup{}
+
+	for port := firstPort; port <= lastPort; port++ {
+		wg.Add(1)
+
+		go func(port int) {
+			defer wg.Done()
+
+			emptyHosts := getEmptyHostsForPort(ctx, port)
+			if len(emptyHosts) > 0 {
+				portHostsList = append(portHostsList, PortHosts{Port: port, Hosts: emptyHosts})
+			}
+		}(port)
+	}
+
+	wg.Wait()
+
+	return portHostsList
+}
+
+func getEmptyHostsForPort(ctx context.Context, port int) []int {
+	var emptyHosts []int
+
+	for host := firstHost; host <= lastHost; host++ {
+		isAvailable, err := isRedisAvailable(ctx, host, port)
+		if err != nil || !isAvailable {
+			continue
+		}
+
+		if isRedisEmpty(ctx, host, port) {
+			emptyHosts = append(emptyHosts, host)
+		}
+	}
+
+	return emptyHosts
+}
+
+func isRedisAvailable(ctx context.Context, host, port int) (bool, error) {
+	err := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("172.21.%d.248:%d", host, port),
+		Password: "", // no password set
+		DB:       0,  // use the default database
+	}).Ping(ctx).Err()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to ping redis")
+	}
+
+	return true, nil
 }
 
 func getDBCount(ctx context.Context, host, port int) int {
@@ -91,20 +109,22 @@ func getDBCount(ctx context.Context, host, port int) int {
 		return 0
 	}
 
-	i, err := strconv.Atoi(result["databases"])
+	count, err := strconv.Atoi(result["databases"])
 	if err != nil {
 		return 0
 	}
 
-	return i
+	return count
 }
 
-func checkRedisIsEmpty(ctx context.Context, host, port, dbcount int) bool {
+func isRedisEmpty(ctx context.Context, host, port int) bool {
+	dbcount := getDBCount(ctx, host, port)
+
 	for db := 0; db < dbcount; db++ {
 		client := redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("172.21.%d.248:%d", host, port),
 			Password: "", // no password set
-			DB:       db, // use the default database
+			DB:       db, // use the specified database
 		})
 
 		// check if database is empty
