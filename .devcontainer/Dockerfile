@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/rancher/kubectl:v1.27.0 AS kubectl
+FROM registry.hub.docker.com/rancher/kubectl:v1.27.1 AS kubectl
 
 FROM registry.hub.docker.com/library/golang:1.20.4
 
