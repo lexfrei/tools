@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/json"
 	"html/template"
 	"log"
@@ -9,6 +10,9 @@ import (
 	"sort"
 	"time"
 )
+
+//go:embed template.html
+var templateString string
 
 type PortHosts struct {
 	Port  int   `json:"port"`
@@ -28,7 +32,7 @@ func main() {
 }
 
 func displayTable(writer http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("template.html")
+	tmpl, err := template.New("webpage").Parse(templateString)
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
 		http.Error(writer, "Internal server error", http.StatusInternalServerError)
