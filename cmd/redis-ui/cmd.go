@@ -31,7 +31,7 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func displayTable(writer http.ResponseWriter, r *http.Request) {
+func displayTable(writer http.ResponseWriter, _ *http.Request) {
 	tmpl, err := template.New("webpage").Parse(templateString)
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
