@@ -48,6 +48,11 @@ import (
 func main() {
 	cmd.Execute()
 
+	// Validate input. Additional border can't be less than 0, but can be more than 100.
+	if cmd.AdditionalBorder < 0 {
+		log.Fatal("additional border can't be less than 0")
+	}
+
 	var (
 		borderClr = convertStringToColor(cmd.BorderColor)
 		err       error
@@ -68,7 +73,7 @@ func main() {
 
 			err = AddBorderToImage(file, cmd.Prefix, borderClr, cmd.AdditionalBorder)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("failed to add border to %s: %v", file, err)
 			}
 		}
 	}
@@ -92,43 +97,13 @@ func AddBorderToImage(filePath, prefix string, borderColor color.Color, percent 
 		return errors.Wrap(err, "failed to decode JPEG")
 	}
 
-	// Create the new image with a border.
-	borderSize := max(img.Bounds().Dx(), img.Bounds().Dy())
-	extraSpace := borderSize * percent / 100
-	newSize := borderSize + 2*extraSpace
-	newImage := image.NewRGBA(image.Rect(0, 0, newSize, newSize))
+	// Calculate the new image size.
+	newImage := generateImageWithBorder(img, borderColor, percent)
 
-	// Fill the image with the border color.
-	for x := 0; x < newSize; x++ {
-		for y := 0; y < newSize; y++ {
-			newImage.Set(x, y, borderColor)
-		}
-	}
-
-	// Copy the old image into the center of the new one.
-	rect := img.Bounds()
-	rect = rect.Add(image.Pt((newSize-rect.Dx())/2, (newSize-rect.Dy())/2))
-	draw.Draw(newImage, rect, img, image.Point{}, draw.Over)
-
-	// Generate file name for the new image.
-	// absolute directory path + prefix + file name + color + extension
-	absParantDir, err := filepath.Abs(filepath.Dir(filePath))
+	// Create a new file name.
+	newFileName, err := generateNewFileName(filePath, prefix)
 	if err != nil {
-		return errors.Wrap(err, "failed to get absolute path")
-	}
-
-	fileName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
-
-	newFileName := absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + ".jpg"
-
-	// If file with the same name exists, add a number to the end of the file name.
-	if _, err := os.Stat(newFileName); err == nil {
-		for i := 1; ; i++ {
-			newFileName = absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + "_" + strconv.Itoa(i) + ".jpg"
-			if _, err := os.Stat(newFileName); os.IsNotExist(err) {
-				break
-			}
-		}
+		return errors.Wrap(err, "failed to generate new file name")
 	}
 
 	// Open a file for writing.
@@ -139,7 +114,12 @@ func AddBorderToImage(filePath, prefix string, borderColor color.Color, percent 
 	defer outputFile.Close()
 
 	// Encode the new image to JPEG and write it to the file.
-	return errors.Wrap(jpeg.Encode(outputFile, newImage, nil), "failed to encode JPEG")
+	err = jpeg.Encode(outputFile, newImage, &jpeg.Options{Quality: 100})
+	if err != nil {
+		return errors.Wrap(err, "failed to encode JPEG")
+	}
+
+	return nil
 }
 
 func max(a, b int) int {
@@ -151,6 +131,7 @@ func max(a, b int) int {
 }
 
 // convertStringToColor converts a string to a color.Color.
+// It returns white if the string is not recognized.
 func convertStringToColor(colorString string) color.Color {
 	colorMap := map[string]color.RGBA{
 		"white":     {255, 255, 255, 255},
@@ -209,4 +190,52 @@ func getAllJPGFiles(dirPath string) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+// generateImageWithBorder generates a new image with a border.
+func generateImageWithBorder(img image.Image, borderColor color.Color, paspartuPercent int) image.Image {
+	// Create the new image with a border.
+	borderSize := max(img.Bounds().Dx(), img.Bounds().Dy())
+	extraSpace := borderSize * paspartuPercent / 100
+	newSize := borderSize + 2*extraSpace
+	newImage := image.NewRGBA(image.Rect(0, 0, newSize, newSize))
+
+	// Fill the image with the border color.
+	for x := 0; x < newSize; x++ {
+		for y := 0; y < newSize; y++ {
+			newImage.Set(x, y, borderColor)
+		}
+	}
+
+	// Copy the old image into the center of the new one.
+	rect := img.Bounds()
+	rect = rect.Add(image.Pt((newSize-rect.Dx())/2, (newSize-rect.Dy())/2))
+	draw.Draw(newImage, rect, img, image.Point{}, draw.Over)
+
+	return newImage
+}
+
+// generateNewFileName generates a new file name for the new image.
+func generateNewFileName(filePath, prefix string) (string, error) {
+	// Generate file name for the new image.
+	absParantDir, err := filepath.Abs(filepath.Dir(filePath))
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get absolute path")
+	}
+
+	fileName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
+
+	newFileName := absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + ".jpg"
+
+	// If file with the same name exists, add a number to the end of the file name.
+	if _, err := os.Stat(newFileName); err == nil {
+		for i := 1; ; i++ {
+			newFileName = absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + "_" + strconv.Itoa(i) + ".jpg"
+			if _, err := os.Stat(newFileName); os.IsNotExist(err) {
+				break
+			}
+		}
+	}
+
+	return newFileName, nil
 }
