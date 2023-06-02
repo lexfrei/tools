@@ -1,0 +1,5 @@
+project_name: borders
+
+monorepo:
+  tag_prefix: borders
+  dir: cmd/borders
