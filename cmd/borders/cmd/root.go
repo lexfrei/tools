@@ -41,22 +41,30 @@ var rootCmd = &cobra.Command{
 	Use:   "borders",
 	Short: "Add borders to images to make them square",
 	Long: `Add borders to images to make them square
-	Example: borders -c #FF0000 -a 10 to add 10% red border to all images in current directory
-	Example: borders -f /path/to/image.jpg -c white to add white border to image.jpg
+Examples:
+	to add 10% red border to all images in current directory:
+		borders -c #FF0000 -a 10
+	to add white border to image.jpg
+		borders -f /path/to/image.jpg -c white
 
-	Or you can pass no arguments and it will process all images in current directory
+Or you can pass no arguments and it will process all images in current directory
 
-	All flags are optional:
-	-c, --color - border color, default is white
-	-f, --file - path to the input file, default is empty, if empty it will process all images in current directory
-	-d, --directory - path to the directory with images, default is current directory
-	-a, --additional - additional border size in percents, default is 0
-	
-	Possible colors:
-		black, white, red, green, blue, yellow, cyan, magenta, gray,
-		darkgray, lightgray, orange, pink, purple, violet, brown
-	Or any hex color like #ff0000`,
+All flags are optional:
+-c, --color - border color, default is white
+-f, --file - path to the input file, default is empty, if empty it will process all images in current directory
+-d, --directory - path to the directory with images, default is current directory
+-a, --additional - additional border size in percents, default is 0
+-p, --prefix - prefix for the output file, default is "bordered", if empty it will overwrite the input file
+
+Possible colors:
+	black, white, red, green, blue, yellow, cyan, magenta, gray,
+	darkgray, lightgray, orange, pink, purple, violet, brown
+Or any hex color like #ff0000`,
 	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Your application logic goes here
+		return nil
+	},
 }
 
 var (
@@ -68,6 +76,8 @@ var (
 	Directory string
 	// AdditionalBorder is the additional border size in percents.
 	AdditionalBorder int
+	// Prefix is the prefix for the output file.
+	Prefix string
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -88,6 +98,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&InputFile, "file", "f", "", "input file")
 	rootCmd.PersistentFlags().StringVarP(&Directory, "directory", "d", ".", "directory with images")
 	rootCmd.PersistentFlags().IntVarP(&AdditionalBorder, "additional-border", "a", 0, "additional border size in percents")
+	rootCmd.PersistentFlags().StringVarP(&Prefix, "prefix", "p", "bordered", "prefix for the output file")
 
 	rootCmd.Flags().BoolP("help", "h", false, "Help message for toggle")
 }

@@ -54,14 +54,19 @@ func main() {
 	)
 
 	if cmd.InputFile != "" {
-		err = AddBorderToImage(cmd.InputFile, borderClr, cmd.AdditionalBorder)
+		err = AddBorderToImage(cmd.InputFile, cmd.Prefix, borderClr, cmd.AdditionalBorder)
 	} else {
 		files, err := getAllJPGFiles(cmd.Directory)
 		if err != nil {
 			log.Fatal(err)
 		}
 		for _, file := range files {
-			err = AddBorderToImage(file, borderClr, cmd.AdditionalBorder)
+			// skip if file name starts with prefix
+			if strings.HasPrefix(filepath.Base(file), cmd.Prefix) {
+				continue
+			}
+
+			err = AddBorderToImage(file, cmd.Prefix, borderClr, cmd.AdditionalBorder)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -73,7 +78,7 @@ func main() {
 	}
 }
 
-func AddBorderToImage(filePath string, borderColor color.Color, percent int) error {
+func AddBorderToImage(filePath, prefix string, borderColor color.Color, percent int) error {
 	// Open the file.
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -105,8 +110,29 @@ func AddBorderToImage(filePath string, borderColor color.Color, percent int) err
 	rect = rect.Add(image.Pt((newSize-rect.Dx())/2, (newSize-rect.Dy())/2))
 	draw.Draw(newImage, rect, img, image.Point{}, draw.Over)
 
+	// Generate file name for the new image.
+	// absolute directory path + prefix + file name + color + extension
+	absParantDir, err := filepath.Abs(filepath.Dir(filePath))
+	if err != nil {
+		return errors.Wrap(err, "failed to get absolute path")
+	}
+
+	fileName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
+
+	newFileName := absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + ".jpg"
+
+	// If file with the same name exists, add a number to the end of the file name.
+	if _, err := os.Stat(newFileName); err == nil {
+		for i := 1; ; i++ {
+			newFileName = absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + "_" + strconv.Itoa(i) + ".jpg"
+			if _, err := os.Stat(newFileName); os.IsNotExist(err) {
+				break
+			}
+		}
+	}
+
 	// Open a file for writing.
-	outputFile, err := os.Create("new_" + filePath)
+	outputFile, err := os.Create(newFileName)
 	if err != nil {
 		return errors.Wrap(err, "failed to create file")
 	}
