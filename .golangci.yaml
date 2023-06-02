@@ -49,6 +49,7 @@ linters:
   enable-all: true
   disable:
     - deadcode
+    - depguard
     - exhaustivestruct
     - exhaustruct
     - gci
@@ -58,11 +59,11 @@ linters:
     - ifshort
     - interfacer
     - maligned
+    - nonamedreturns
     - nosnakecase
     - scopelint
     - structcheck
     - varcheck
-    - nonamedreturns
 
 run:
   skip-dirs:
