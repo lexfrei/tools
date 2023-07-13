@@ -1,5 +1,48 @@
 project_name: borders
 
-monorepo:
-  tag_prefix: borders
-  dir: cmd/borders
+release:
+  name_template: "{{.ProjectName}}-v{{.Version}}"
+
+changelog:
+  skip: true
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}"
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - "386"
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: "386"
+    binary: "{{ .ProjectName }}_v{{ .Version }}"
+    main: ./cmd/borders
+archives:
+  - format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
+  algorithm: sha256
+signs:
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "F57F85FC7975F22BBC3F25049C173EB1B531AA1F"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+      
