@@ -40,26 +40,19 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "borders",
 	Short: "Add borders to images to make them square",
-	Long: `Add borders to images to make them square
+	Long: `Add borders to images to make them square (or any other proportions)
+
 Examples:
 	to add 10% red border to all images in current directory:
 		borders -c #FF0000 -a 10
 	to add white border to image.jpg
 		borders -f /path/to/image.jpg -c white
 
-Or you can pass no arguments and it will process all images in current directory
-
-All flags are optional:
--c, --color - border color, default is white
--f, --file - path to the input file, default is empty, if empty it will process all images in current directory
--d, --directory - path to the directory with images, default is current directory
--a, --additional - additional border size in percents, default is 0
--p, --prefix - prefix for the output file, default is "bordered", if empty it will overwrite the input file
-
 Possible colors:
 	black, white, red, green, blue, yellow, cyan, magenta, gray,
 	darkgray, lightgray, orange, pink, purple, violet, brown
-Or any hex color like #ff0000`,
+Or any hex color like #ff0000
+Or "avg" to get average color of the image`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Your application logic goes here
@@ -78,6 +71,8 @@ var (
 	AdditionalBorder int
 	// Prefix is the prefix for the output file.
 	Prefix string
+	// Minimal is the flag for minimal needed border size for instagram.
+	Minimal bool
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -93,12 +88,14 @@ func Execute() {
 	}
 }
 
+//nolint:lll // it's ok
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&BorderColor, "color", "c", "white", "border color")
 	rootCmd.PersistentFlags().StringVarP(&InputFile, "file", "f", "", "input file")
 	rootCmd.PersistentFlags().StringVarP(&Directory, "directory", "d", ".", "directory with images")
 	rootCmd.PersistentFlags().IntVarP(&AdditionalBorder, "additional-border", "a", 0, "additional border size in percents")
 	rootCmd.PersistentFlags().StringVarP(&Prefix, "prefix", "p", "bordered", "prefix for the output file")
+	rootCmd.PersistentFlags().BoolVarP(&Minimal, "minimal", "m", false, "minimal needed border size for instagram, non square images will be created")
 
 	rootCmd.Flags().BoolP("help", "h", false, "Help message for toggle")
 }
