@@ -45,16 +45,17 @@ import (
 	"github.com/lexfrei/tools/cmd/borders/cmd"
 )
 
+//nolint:funlen,gocyclo,cyclop // it's main func
 func main() {
 	cmd.Execute()
 
-	// Validate input. Additional border can't be less than 0, but can be more than 100.
 	if cmd.AdditionalBorder < 0 {
 		log.Fatal("additional border can't be less than 0")
 	}
 
 	var err error
 
+	//nolint:nestif // it's ok
 	if cmd.InputFile != "" {
 		img, err := openImageFile(cmd.InputFile)
 		if err != nil {

@@ -64,6 +64,11 @@ linters:
     - scopelint
     - structcheck
     - varcheck
+    # disabled because of generics. You can track the evolution of the generics support
+    # https://github.com/golangci/golangci-lint/issues/2649
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
 
 run:
   skip-dirs:
