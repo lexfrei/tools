@@ -1,6 +1,6 @@
 FROM registry.hub.docker.com/rancher/kubectl:v1.27.4 AS kubectl
 
-FROM registry.hub.docker.com/library/golang:1.20.7
+FROM registry.hub.docker.com/library/golang:1.21.0
 
 COPY --from=kubectl /bin/kubectl /bin/kubectl
 
