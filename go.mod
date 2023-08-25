@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
 	github.com/SevereCloud/vksdk/v2 v2.16.0
-	github.com/cockroachdb/errors v1.10.0
+	github.com/cockroachdb/errors v1.11.0
 	github.com/redis/go-redis/v9 v9.1.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
