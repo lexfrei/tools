@@ -13,8 +13,8 @@ github.com/andres-erbsen/clock
 # github.com/cespare/xxhash/v2 v2.2.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/cockroachdb/errors v1.11.0
-## explicit; go 1.20
+# github.com/cockroachdb/errors v1.11.1
+## explicit; go 1.19
 github.com/cockroachdb/errors
 github.com/cockroachdb/errors/assert
 github.com/cockroachdb/errors/barriers
