@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/BlueMonday/go-scryfall v0.3.0
-	github.com/SevereCloud/vksdk/v2 v2.16.0
+	github.com/SevereCloud/vksdk/v2 v2.16.1
 	github.com/cockroachdb/errors v1.11.1
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/spf13/cobra v1.7.0
@@ -25,7 +25,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -39,11 +39,11 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/tdewolff/parse/v2 v2.6.8 // indirect
-	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.4.0 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/ratelimit v0.2.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
