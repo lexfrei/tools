@@ -1,14 +1,11 @@
 FROM registry.hub.docker.com/library/golang:1.21.3 AS build
 
-RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends upx-ucl=3.96-2
+RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd
 
 WORKDIR /go/src/github.com/lexfrei/tools/
 COPY . /go/src/github.com/lexfrei/tools/
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go \
-    && upx --best --lzma ow-exporter
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go
 
 FROM scratch
 
