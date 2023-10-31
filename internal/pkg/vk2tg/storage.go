@@ -11,7 +11,7 @@ import (
 
 type storage interface {
 	GetLastPost() int
-	SetLastPost(int)
+	SetLastPost(postID int)
 }
 
 type redisStorage struct {

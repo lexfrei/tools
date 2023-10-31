@@ -197,7 +197,7 @@ func worker(
 
 		log.Printf("%.2f%% %s", float64(index)*float64(100)/float64(len(cards)), IDString)
 
-		//nolint:lll // This line can't be shorter
+		//nolint:lll,goconst // This line can't be shorter
 		if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
 			if cards[index].ImageURIs != nil {
 				imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"

@@ -45,7 +45,7 @@ import (
 	"github.com/lexfrei/tools/cmd/borders/cmd"
 )
 
-//nolint:funlen,gocyclo,cyclop // it's main func
+//nolint:funlen,gocyclo,cyclop,goconst // it's main func
 func main() {
 	cmd.Execute()
 
