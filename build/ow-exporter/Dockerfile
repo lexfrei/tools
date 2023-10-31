@@ -1,11 +1,13 @@
-FROM registry.hub.docker.com/library/golang:1.21.3 AS build
+FROM registry.hub.docker.com/library/golang:1.21.3-alpine3.18 AS build
 
-RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd
+RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
+    apk add --no-cache upx=4.0.2-r0
 
 WORKDIR /go/src/github.com/lexfrei/tools/
 COPY . /go/src/github.com/lexfrei/tools/
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go && \
+    upx --best --lzma ow-exporter
 
 FROM scratch
 
