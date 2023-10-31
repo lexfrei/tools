@@ -45,7 +45,11 @@ import (
 	"github.com/lexfrei/tools/cmd/borders/cmd"
 )
 
-//nolint:funlen,gocyclo,cyclop,goconst // it's main func
+const (
+	jpgExtension = ".jpg"
+)
+
+//nolint:funlen,gocyclo,cyclop // it's main func
 func main() {
 	cmd.Execute()
 
@@ -164,7 +168,7 @@ func getAllJPGFiles(dirPath string) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if filepath.Ext(path) == ".jpg" || filepath.Ext(path) == ".jpeg" {
+		if filepath.Ext(path) == jpgExtension || filepath.Ext(path) == ".jpeg" {
 			files = append(files, path)
 		}
 
@@ -217,12 +221,13 @@ func generateNewFileName(filePath, prefix string) (string, error) {
 
 	fileName := strings.TrimSuffix(filepath.Base(filePath), filepath.Ext(filePath))
 
-	newFileName := absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + ".jpg"
+	newFileName := absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + jpgExtension
 
 	// If file with the same name exists, add a number to the end of the file name.
 	if _, err := os.Stat(newFileName); err == nil {
 		for i := 1; ; i++ {
-			newFileName = absParantDir + "/" + prefix + "_" + fileName + "_" + cmd.BorderColor + "_" + strconv.Itoa(i) + ".jpg"
+			newFileName = absParantDir + "/" +
+				prefix + "_" + fileName + "_" + cmd.BorderColor + "_" + strconv.Itoa(i) + jpgExtension
 			if _, err := os.Stat(newFileName); os.IsNotExist(err) {
 				break
 			}
