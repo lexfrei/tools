@@ -189,51 +189,58 @@ func worker(
 	conf.wg.Add(1)
 	defer conf.wg.Done()
 
-	for index := range indexChan {
-		IDString := cards[index].Name + " " +
-			cards[index].Set + " " +
-			string(cards[index].Lang) + " " +
-			cards[index].CollectorNumber
+	// exit if context is canceled
+	select {
+	case <-ctx.Done():
+		return
 
-		log.Printf("%.2f%% %s", float64(index)*float64(100)/float64(len(cards)), IDString)
+	default:
+		for index := range indexChan {
+			IDString := cards[index].Name + " " +
+				cards[index].Set + " " +
+				string(cards[index].Lang) + " " +
+				cards[index].CollectorNumber
 
-		//nolint:lll,goconst // This line can't be shorter
-		if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
-			if cards[index].ImageURIs != nil {
-				imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
+			log.Printf("%.2f%% %s", float64(index)*float64(100)/float64(len(cards)), IDString)
 
-				err := downloadAndSave(ctx, cards[index].ImageURIs.Normal, imagePath)
-				if err != nil {
-					log.Printf("error downloading %s: %s", IDString, err)
+			//nolint:lll,goconst // This line can't be shorter
+			if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
+				if cards[index].ImageURIs != nil {
+					imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
 
-					continue
-				}
+					err := downloadAndSave(ctx, cards[index].ImageURIs.Normal, imagePath)
+					if err != nil {
+						log.Printf("error downloading %s: %s", IDString, err)
 
-				conf.mu.Lock()
-				result[IDString] = append(result[IDString], imagePath)
-				conf.mu.Unlock()
+						continue
+					}
 
-				continue
-			}
-
-			for faceIndex := range cards[index].CardFaces {
-				imagePath := "./images" + "/" +
-					cards[index].Set + "/" +
-					string(cards[index].Lang) + "/" +
-					cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
-
-				err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath)
-				if err != nil {
-					log.Printf("error downloading %s: %s", IDString, err)
+					conf.mu.Lock()
+					result[IDString] = append(result[IDString], imagePath)
+					conf.mu.Unlock()
 
 					continue
 				}
 
-				conf.mu.Lock()
-				result[IDString] = append(result[IDString], imagePath)
-				conf.mu.Unlock()
+				for faceIndex := range cards[index].CardFaces {
+					imagePath := "./images" + "/" +
+						cards[index].Set + "/" +
+						string(cards[index].Lang) + "/" +
+						cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
 
-				continue
+					err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath)
+					if err != nil {
+						log.Printf("error downloading %s: %s", IDString, err)
+
+						continue
+					}
+
+					conf.mu.Lock()
+					result[IDString] = append(result[IDString], imagePath)
+					conf.mu.Unlock()
+
+					continue
+				}
 			}
 		}
 	}
