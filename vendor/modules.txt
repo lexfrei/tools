@@ -7,8 +7,6 @@ github.com/SevereCloud/vksdk/v2
 github.com/SevereCloud/vksdk/v2/api
 github.com/SevereCloud/vksdk/v2/internal
 github.com/SevereCloud/vksdk/v2/object
-# github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129
-## explicit
 # github.com/benbjohnson/clock v1.3.5
 ## explicit; go 1.15
 github.com/benbjohnson/clock
@@ -173,12 +171,12 @@ github.com/spf13/viper/internal/encoding/yaml
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv
-# github.com/tdewolff/minify/v2 v2.20.5
+# github.com/tdewolff/minify/v2 v2.20.6
 ## explicit; go 1.18
 github.com/tdewolff/minify/v2
 github.com/tdewolff/minify/v2/css
 github.com/tdewolff/minify/v2/html
-# github.com/tdewolff/parse/v2 v2.7.3
+# github.com/tdewolff/parse/v2 v2.7.4
 ## explicit; go 1.13
 github.com/tdewolff/parse/v2
 github.com/tdewolff/parse/v2/buffer
