@@ -189,7 +189,6 @@ func worker(
 	conf.wg.Add(1)
 	defer conf.wg.Done()
 
-	// exit if context is canceled
 	select {
 	case <-ctx.Done():
 		return
@@ -223,13 +222,10 @@ func worker(
 				}
 
 				for faceIndex := range cards[index].CardFaces {
-					imagePath := "./images" + "/" +
-						cards[index].Set + "/" +
-						string(cards[index].Lang) + "/" +
+					imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" +
 						cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
 
-					err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath)
-					if err != nil {
+					if err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath); err != nil {
 						log.Printf("error downloading %s: %s", IDString, err)
 
 						continue
