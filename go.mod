@@ -10,7 +10,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
 	github.com/tdewolff/minify/v2 v2.20.7
-	gopkg.in/telebot.v3 v3.1.4
+	gopkg.in/telebot.v3 v3.2.1
 )
 
 require (
