@@ -283,6 +283,7 @@ func (b *Bot) Send(to Recipient, what interface{}, opts ...interface{}) (*Messag
 }
 
 // SendAlbum sends multiple instances of media as a single message.
+// To include the caption, make sure the first Inputtable of an album has it.
 // From all existing options, it only supports tele.Silent.
 func (b *Bot) SendAlbum(to Recipient, a Album, opts ...interface{}) ([]Message, error) {
 	if to == nil {
@@ -679,7 +680,7 @@ func (b *Bot) Delete(msg Editable) error {
 //
 // Currently, Telegram supports only a narrow range of possible
 // actions, these are aligned as constants of this package.
-func (b *Bot) Notify(to Recipient, action ChatAction) error {
+func (b *Bot) Notify(to Recipient, action ChatAction, threadID ...int) error {
 	if to == nil {
 		return ErrBadRecipient
 	}
@@ -687,6 +688,10 @@ func (b *Bot) Notify(to Recipient, action ChatAction) error {
 	params := map[string]string{
 		"chat_id": to.Recipient(),
 		"action":  string(action),
+	}
+
+	if len(threadID) > 0 {
+		params["message_thread_id"] = strconv.Itoa(threadID[0])
 	}
 
 	_, err := b.Raw("sendChatAction", params)
