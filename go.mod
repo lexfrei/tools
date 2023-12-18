@@ -8,7 +8,7 @@ require (
 	github.com/cockroachdb/errors v1.11.1
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.1
+	github.com/spf13/viper v1.18.2
 	github.com/tdewolff/minify/v2 v2.20.9
 	gopkg.in/telebot.v3 v3.2.1
 )
