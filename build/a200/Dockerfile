@@ -1,4 +1,4 @@
-FROM nginx:1.25.3
+FROM nginx:1.25.4
 
 LABEL maintainer="<me>"
 
