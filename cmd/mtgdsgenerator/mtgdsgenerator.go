@@ -72,7 +72,6 @@ func generateReport(result map[string][]string) error {
 	}
 
 	err = os.WriteFile("./cards.json", jsondata, os.ModePerm)
-
 	if err != nil {
 		return errors.Wrap(err, "cant write file")
 	}

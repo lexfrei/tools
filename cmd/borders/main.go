@@ -86,6 +86,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		for range files {
 			img, err := openImageFile(cmd.InputFile)
 			if err != nil {
@@ -167,7 +168,7 @@ func convertStringToColor(colorString string, img image.Image) color.Color {
 func getAllJPGFiles(dirPath string) ([]string, error) {
 	var files []string
 
-	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dirPath, func(path string, _ os.FileInfo, _ error) error {
 		if filepath.Ext(path) == jpgExtension || filepath.Ext(path) == ".jpeg" {
 			files = append(files, path)
 		}

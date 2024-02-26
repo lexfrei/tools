@@ -54,7 +54,7 @@ Possible colors:
 Or any hex color like #ff0000
 Or "avg" to get average color of the image`,
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		// Your application logic goes here
 		return nil
 	},

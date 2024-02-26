@@ -65,7 +65,7 @@ func getPhotoURL(photo *object.PhotosPhoto) (string, error) {
 		return "", errors.New("photo argument is nil")
 	}
 
-	if len(photo.MaxSize().URL) > 0 {
+	if photo.MaxSize().URL != "" {
 		return photo.MaxSize().URL, nil
 	}
 

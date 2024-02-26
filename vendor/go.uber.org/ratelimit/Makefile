@@ -6,18 +6,8 @@ GO_FILES := $(shell \
 	-o -name '*.go' -print | cut -b3-)
 
 .PHONY: bench
-bench: bin/benchstat bin/benchart
-	go test -timeout 3h -count=5 -run=xxx -bench=BenchmarkRateLimiter ./... | tee stat.txt
-	@$(GOBIN)/benchstat stat.txt
-	@$(GOBIN)/benchstat -csv stat.txt > stat.csv
-	@$(GOBIN)/benchart 'RateLimiter;xAxisType=log' stat.csv stat.html
-	@open stat.html
-
-bin/benchstat: tools/go.mod
-	@cd tools && go install golang.org/x/perf/cmd/benchstat
-
-bin/benchart: tools/go.mod
-	@cd tools && go install github.com/storozhukBM/benchart
+bench:
+	go test -bench=. ./...
 
 bin/golint: tools/go.mod
 	@cd tools && go install golang.org/x/lint/golint
