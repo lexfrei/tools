@@ -4,9 +4,11 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
-	"log"
-	"net/http"
+	"log/slog"
+	"os"
 	"time"
+
+	echo "github.com/labstack/echo/v4"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -16,11 +18,11 @@ import (
 // http port.
 const port = "8080"
 
-// utc3seconds is the timezone for UTC+3.
-const utc3seconds = 3 * 60 * 60
+// utcPlus4 is the timezone for UTC+4.
+const utcPlus4 = 4 * 60 * 60
 
-// utc3 is the timezone of the city of moscow.
-var utc3 = time.FixedZone("UTC+3", utc3seconds)
+// timeZoneUTCPlus4 is the timezone of the city of Tbilisi.
+var timeZoneUTCPlus4 = time.FixedZone("UTC+4", utcPlus4)
 
 // site is the HTML template for the website.
 //
@@ -32,7 +34,14 @@ var site string
 //go:embed favicon.png
 var favicon string
 
+// logLevel is the log level.
+var logLevel = slog.LevelInfo
+
 func main() {
+	programLevel := new(slog.LevelVar) // Info by default
+	programLevel.Set(logLevel)
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})))
+
 	// Create a minifier.
 	minifier := minify.New()
 
@@ -44,56 +53,43 @@ func main() {
 	site, _ := minifier.String("text/html", site)
 
 	// set birth date
-	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", utc3)
+	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", timeZoneUTCPlus4)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("Failed to parse birth date", err)
 	}
 
 	// Render the template
 	siteTemplate, err := template.New("webpage").Parse(site)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("Failed to parse the template", err)
 	}
 
-	mux := http.NewServeMux()
+	server := echo.New()
+	server.HideBanner = true
+	server.HidePort = true
 
-	// Serve the website
-	mux.HandleFunc("/", func(responseWriter http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(responseWriter, "Method is not supported", http.StatusNotFound)
-
-			return
-		}
-
-		err = siteTemplate.Execute(responseWriter, countFullYearsSinceBirth(birthDate, utc3))
+	server.GET("/", func(context echo.Context) error {
+		err = siteTemplate.Execute(context.Response().Writer, countFullYearsSinceBirth(birthDate, timeZoneUTCPlus4))
 		if err != nil {
-			log.Panicln(err)
+			slog.Error("Template execution failed", "error", err)
 		}
+
+		return nil
 	})
 
 	// Serve the favicon
-	mux.HandleFunc("/favicon.png", faviconHandler)
+	server.GET("/favicon.png", faviconHandler)
 
-	log.Println("Listening on port 8080")
+	slog.Info("Starting the server", "port", port)
 
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      mux,
-		ReadTimeout:  10 * time.Minute,
-		WriteTimeout: 10 * time.Minute,
-	}
-	log.Fatal(srv.ListenAndServe())
+	slog.Error("Server failed", server.Start(":"+port))
 }
 
 // faviconHandler returns the favicon.png.
-func faviconHandler(responseWriter http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(responseWriter, "Method is not supported", http.StatusNotFound)
+func faviconHandler(context echo.Context) error {
+	fmt.Fprint(context.Response().Writer, favicon)
 
-		return
-	}
-
-	fmt.Fprint(responseWriter, favicon)
+	return nil
 }
 
 // countFullYearsSinceBirth returns the number of full years since the birth date.
