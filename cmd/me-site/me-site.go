@@ -34,6 +34,11 @@ var site string
 //go:embed favicon.png
 var favicon string
 
+// // robots is the robots.txt.
+// //
+// //go:embed robots.txt
+// var robots string
+
 // logLevel is the log level.
 var logLevel = slog.LevelInfo
 
@@ -80,6 +85,9 @@ func main() {
 	// Serve the favicon
 	server.GET("/favicon.png", faviconHandler)
 
+	// Serve the robots.txt
+	// server.GET("/robots.txt", robotsHandler)
+
 	slog.Info("Starting the server", "port", port)
 
 	slog.Error("Server failed", server.Start(":"+port))
@@ -92,9 +100,17 @@ func faviconHandler(context echo.Context) error {
 	return nil
 }
 
+// // robotsHandler returns the robots.txt.
+// func robotsHandler(context echo.Context) error {
+// 	fmt.Fprint(context.Response().Writer, robots)
+
+// 	return nil
+// }
+
 // countFullYearsSinceBirth returns the number of full years since the birth date.
 func countFullYearsSinceBirth(birthDate time.Time, tz *time.Location) int {
 	now := time.Now().In(tz)
+
 	if now.Month() < birthDate.Month() || (birthDate.Month() == now.Month() && now.Day() < birthDate.Day()) {
 		return now.Year() - birthDate.Year() - 1
 	}
