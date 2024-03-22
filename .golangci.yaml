@@ -64,7 +64,3 @@ linters:
     - scopelint
     - structcheck
     - varcheck
-
-run:
-  skip-dirs:
-    - vendor

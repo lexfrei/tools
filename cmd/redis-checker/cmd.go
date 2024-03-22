@@ -120,7 +120,7 @@ func getDBCount(ctx context.Context, host, port int) int {
 func isRedisEmpty(ctx context.Context, host, port int) bool {
 	dbcount := getDBCount(ctx, host, port)
 
-	for db := 0; db < dbcount; db++ {
+	for db := range dbcount {
 		client := redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("172.21.%d.248:%d", host, port),
 			Password: "", // no password set
