@@ -10,7 +10,7 @@ require (
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/tdewolff/minify/v2 v2.20.20
+	github.com/tdewolff/minify/v2 v2.20.32
 	gopkg.in/telebot.v3 v3.2.1
 )
 
@@ -44,7 +44,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tdewolff/parse/v2 v2.7.13 // indirect
+	github.com/tdewolff/parse/v2 v2.7.14 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
