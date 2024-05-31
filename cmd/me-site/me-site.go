@@ -60,13 +60,13 @@ func main() {
 	// set birth date
 	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", timeZoneUTCPlus4)
 	if err != nil {
-		slog.Error("Failed to parse birth date", err)
+		slog.Error("Failed to parse birth date", "error", err)
 	}
 
 	// Render the template
 	siteTemplate, err := template.New("webpage").Parse(site)
 	if err != nil {
-		slog.Error("Failed to parse the template", err)
+		slog.Error("Failed to parse the template", "error", err)
 	}
 
 	server := echo.New()
@@ -90,7 +90,7 @@ func main() {
 
 	slog.Info("Starting the server", "port", port)
 
-	slog.Error("Server failed", server.Start(":"+port))
+	slog.Error("Server failed", "error", server.Start(":"+port))
 }
 
 // faviconHandler returns the favicon.png.

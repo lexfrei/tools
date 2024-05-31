@@ -35,7 +35,7 @@ func main() {
 		log.Fatalf("Failed to generate JSON: %v", err)
 	}
 
-	//nolint:gomnd // 0o600 is octal a UNIX permission
+	//nolint:mnd // 0o600 is octal a UNIX permission
 	err = os.WriteFile("empty_ports_hosts.json", jsonData, 0o600)
 	if err != nil {
 		log.Fatalf("Failed to write JSON to file: %v", err)

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//nolint:forbidigo,gomnd // this file is a draft for the game of life
+//nolint:forbidigo,mnd // this file is a draft for the game of life
 func main() {
 	fmt.Println("Game of Life")
 
@@ -76,7 +76,7 @@ func randBool() bool {
 
 	_, err := rand.Read(dataBytes)
 	if err != nil {
-		slog.Info("error generating random bool: %v", err)
+		slog.Info("error generating random bool", "error", err)
 
 		return false
 	}
@@ -102,7 +102,7 @@ func countNeighbours(field [][]bool, x, y int) int {
 	return count
 }
 
-//nolint:gomnd // 3 is not a magic number
+//nolint:mnd // 3 is not a magic number
 func nextGeneration(field [][]bool) [][]bool {
 	next := make([][]bool, len(field))
 

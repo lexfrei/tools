@@ -14,7 +14,7 @@ func main() {
 	key1 := os.Args[1]
 	hey2 := os.Args[2]
 
-	if len(key1) == 0 || len(hey2) == 0 {
+	if key1 == "" || hey2 == "" {
 		log.Fatal("key1 and key2 must be provided")
 	}
 

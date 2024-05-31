@@ -46,7 +46,7 @@ func dummyFunc(_, _ int) error {
 // randomError returns a random error from the list of runtime errors.
 func randomError() error {
 	// Get random 1..3
-	//nolint:gomnd,gosec // not interesting
+	//nolint:mnd,gosec // not interesting
 	switch rand.Intn(3) {
 	case 1:
 		return errFromRuntimeOne

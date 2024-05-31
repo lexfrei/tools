@@ -22,7 +22,7 @@ type PortHosts struct {
 func main() {
 	http.HandleFunc("/", displayTable)
 
-	//nolint:gomnd // 3 seconds is a reasonable timeout
+	//nolint:mnd // 3 seconds is a reasonable timeout
 	server := &http.Server{
 		Addr:              ":8080",
 		ReadHeaderTimeout: 3 * time.Second,

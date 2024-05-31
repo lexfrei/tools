@@ -38,7 +38,7 @@ linters-settings:
       - mu sync.Mutex
       - ok bool
 
-  gomnd:
+  mnd:
     ignored-numbers:
       - "10"
       - "100"
@@ -48,19 +48,11 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - deadcode
+    - execinquery
+    - gomnd
     - depguard
-    - exhaustivestruct
     - exhaustruct
     - gci
     - gochecknoglobals
     - gochecknoinits
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
     - nonamedreturns
-    - nosnakecase
-    - scopelint
-    - structcheck
-    - varcheck

@@ -71,6 +71,7 @@ func generateReport(result map[string][]string) error {
 		return errors.Wrap(err, "cant marshal json")
 	}
 
+	//nolint:gosec // This permission is fine
 	err = os.WriteFile("./cards.json", jsondata, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cant write file")
@@ -114,6 +115,7 @@ func downloadAndSave(ctx context.Context, imageurl, filepath string) error {
 		return errors.Wrap(err, "cannot create directory")
 	}
 
+	//nolint:gosec // This permission is fine
 	err = os.WriteFile(filepath, body, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot write file")

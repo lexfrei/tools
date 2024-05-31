@@ -152,7 +152,7 @@ func convertStringToColor(colorString string, img image.Image) color.Color {
 
 		// Extract the red, green, and blue components from the integer
 		// and return the color
-		//nolint:gomnd // 0xFF is a magic number and it's ok
+		//nolint:mnd // 0xFF is a magic number and it's ok
 		return color.RGBA{uint8(rgbInt >> 16), uint8((rgbInt >> 8) & 0xFF), uint8(rgbInt & 0xFF), 255}
 	}
 
@@ -240,7 +240,7 @@ func generateNewFileName(filePath, prefix string) (string, error) {
 
 // getAverageColor calculates the average color of an image.
 //
-//nolint:gomnd // 8 is a magic number and it's ok
+//nolint:mnd // 8 is a magic number and it's ok
 func getAverageColor(img image.Image) color.Color {
 	bounds := img.Bounds()
 
@@ -311,7 +311,7 @@ func saveImageFile(img image.Image, filePath, prefix string) error {
 // generateOptimalProporions generates optimal proportions for the new image.
 // https://www.adobe.com/express/discover/sizes/instagram
 //
-//nolint:gomnd // magic proportions for instagram
+//nolint:mnd // magic proportions for instagram
 func generateOptimalProporions(img image.Image) float32 {
 	// if vertical image
 	if img.Bounds().Dx() < img.Bounds().Dy() {
