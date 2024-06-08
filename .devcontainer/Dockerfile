@@ -1,6 +1,6 @@
 FROM docker.io/rancher/kubectl:v1.30.0 AS kubectl
 
-FROM docker.io/library/golang:1.22.3
+FROM docker.io/library/golang:1.22.4
 
 COPY --from=kubectl /bin/kubectl /bin/kubectl
 
