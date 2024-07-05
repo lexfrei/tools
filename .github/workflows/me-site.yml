@@ -28,7 +28,7 @@ jobs:
             type=sha
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3.0.0
+        uses: docker/setup-qemu-action@v3.1.0
         with:
           platforms: "arm64,amd64"
 
