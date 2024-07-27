@@ -1,4 +1,4 @@
-FROM docker.io/rancher/kubectl:v1.30.2 AS kubectl
+FROM docker.io/rancher/kubectl:v1.30.3 AS kubectl
 
 FROM docker.io/library/golang:1.22.5
 
