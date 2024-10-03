@@ -1,4 +1,4 @@
-FROM nginx:1.27.1
+FROM nginx:1.27.2
 
 LABEL maintainer="<me>"
 
