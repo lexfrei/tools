@@ -16,10 +16,12 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://api.scryfall.com"
-	defaultTimeout = 30 * time.Second
+	Version = "0.7.0"
+
+	defaultBaseURL      = "https://api.scryfall.com"
+	defaultUserAgent    = "go-scryfall/" + Version
+	defaultTimeout      = 30 * time.Second
 	defaultReqPerSecond = 10
-	userAgent      = "go-scryfall"
 
 	dateFormat      = "2006-01-02"
 	timestampFormat = "2006-01-02T15:04:05.999Z07:00"
@@ -72,6 +74,10 @@ func (d *Date) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (d *Date) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%s\"", d.Format(dateFormat))), nil
+}
+
 // Timestamp is a timestamp returned by the Scryfall API.
 type Timestamp struct {
 	time.Time
@@ -107,10 +113,11 @@ func (e *Error) Error() string {
 
 type clientOptions struct {
 	baseURL      string
+	userAgent    string
 	clientSecret string
 	grantSecret  string
 	client       *http.Client
-	limiter ratelimit.Limiter
+	limiter      ratelimit.Limiter
 }
 
 // ClientOption configures the Scryfall API client.
@@ -120,6 +127,13 @@ type ClientOption func(*clientOptions)
 func WithBaseURL(baseURL string) ClientOption {
 	return func(o *clientOptions) {
 		o.baseURL = baseURL
+	}
+}
+
+// WithUserAgent returns an option which overrides the default HTTP user agent.
+func WithUserAgent(userAgent string) ClientOption {
+	return func(o *clientOptions) {
+		o.userAgent = userAgent
 	}
 }
 
@@ -159,16 +173,18 @@ func WithLimiter(limiter ratelimit.Limiter) ClientOption {
 // Client is a Scryfall API client.
 type Client struct {
 	baseURL       *url.URL
+	userAgent     string
 	authorization string
 
-	client *http.Client
+	client  *http.Client
 	limiter ratelimit.Limiter
 }
 
 // NewClient returns a new Scryfall API client.
 func NewClient(options ...ClientOption) (*Client, error) {
 	co := &clientOptions{
-		baseURL: defaultBaseURL,
+		baseURL:   defaultBaseURL,
+		userAgent: defaultUserAgent,
 		client: &http.Client{
 			Timeout: defaultTimeout,
 		},
@@ -197,15 +213,18 @@ func NewClient(options ...ClientOption) (*Client, error) {
 
 	c := &Client{
 		baseURL:       baseURL,
+		userAgent:     co.userAgent,
 		authorization: authorization,
 		client:        co.client,
-		limiter: co.limiter,
+		limiter:       co.limiter,
 	}
 	return c, nil
 }
 
 func (c *Client) doReq(ctx context.Context, req *http.Request, respBody interface{}) error {
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Accept", "application/json")
+
 	if len(c.authorization) != 0 {
 		req.Header.Set("Authorization", c.authorization)
 	}
@@ -214,7 +233,7 @@ func (c *Client) doReq(ctx context.Context, req *http.Request, respBody interfac
 	if c.limiter != nil {
 		c.limiter.Take()
 	}
-	
+
 	resp, err := c.client.Do(reqWithContext)
 	if err != nil {
 		return err
