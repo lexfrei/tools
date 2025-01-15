@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/BlueMonday/go-scryfall v0.7.0
-	github.com/SevereCloud/vksdk/v2 v2.17.0
+	github.com/SevereCloud/vksdk/v3 v3.0.1
 	github.com/cockroachdb/errors v1.11.3
 	github.com/google/go-github/v68 v68.0.0
 	github.com/hashicorp/go-version v1.7.0
