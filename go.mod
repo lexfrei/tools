@@ -8,7 +8,7 @@ require (
 	github.com/BlueMonday/go-scryfall v0.7.0
 	github.com/SevereCloud/vksdk/v2 v2.17.0
 	github.com/cockroachdb/errors v1.11.3
-	github.com/google/go-github/v68 v68.0.0
+	github.com/google/go-github/v69 v69.2.0
 	github.com/hashicorp/go-version v1.7.0
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/mikefarah/yq/v4 v4.44.6
