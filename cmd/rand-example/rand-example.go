@@ -13,7 +13,7 @@ func main() {
 }
 
 func getRandomDate(days uint) string {
-	//nolint:mnd // not interesting
+	//nolint:mnd,gosec // not interesting
 	val, _ := rand.Int(rand.Reader, big.NewInt(int64(days*86400)))
 
 	return time.Unix(time.Now().Unix()-val.Int64(), 0).Format("20060102")

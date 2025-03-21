@@ -3,7 +3,7 @@ package main
 import "log"
 
 func main() {
-	for i := 0; i <= 100; i++ {
+	for i := range 100 {
 		log.Printf("%d\tabs\n", i)
 	}
 }
