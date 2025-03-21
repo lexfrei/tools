@@ -2,7 +2,7 @@ module github.com/lexfrei/tools
 
 go 1.22.0
 
-toolchain go1.23.4
+toolchain go1.24.1
 
 require (
 	github.com/BlueMonday/go-scryfall v0.7.0
