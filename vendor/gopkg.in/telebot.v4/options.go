@@ -34,6 +34,9 @@ const (
 
 	// RemoveKeyboard = ReplyMarkup.RemoveKeyboard
 	RemoveKeyboard
+
+	// IgnoreThread is used to ignore the thread when responding to a message via context.
+	IgnoreThread
 )
 
 // Placeholder is used to set input field placeholder as a send option.
@@ -86,6 +89,12 @@ type SendOptions struct {
 
 	// ReplyParams Describes the message to reply to
 	ReplyParams *ReplyParams
+
+	// Unique identifier of the business connection
+	BusinessConnectionID string
+
+	// Unique identifier of the message effect to be added to the message; for private chats only
+	EffectID string
 }
 
 func (og *SendOptions) copy() *SendOptions {
@@ -111,6 +120,8 @@ func (b *Bot) extractOptions(how []interface{}) *SendOptions {
 			}
 		case *ReplyParams:
 			opts.ReplyParams = opt
+		case *Topic:
+			opts.ThreadID = opt.ThreadID
 		case Option:
 			switch opt {
 			case NoPreview:
@@ -202,7 +213,15 @@ func (b *Bot) embedSendOptions(params map[string]string, opt *SendOptions) {
 	}
 
 	if opt.HasSpoiler {
-		params["spoiler"] = "true"
+		params["has_spoiler"] = "true"
+	}
+
+	if opt.BusinessConnectionID != "" {
+		params["business_connection_id"] = opt.BusinessConnectionID
+	}
+
+	if opt.EffectID != "" {
+		params["message_effect_id"] = opt.EffectID
 	}
 }
 

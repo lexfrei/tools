@@ -266,10 +266,7 @@ func (b *Bot) NewMarkup() *ReplyMarkup {
 // NewContext returns a new native context object,
 // field by the passed update.
 func (b *Bot) NewContext(u Update) Context {
-	return &nativeContext{
-		b: b,
-		u: u,
-	}
+	return NewContext(b, u)
 }
 
 // Send accepts 2+ arguments, starting with destination chat, followed by
@@ -301,6 +298,53 @@ func (b *Bot) Send(to Recipient, what interface{}, opts ...interface{}) (*Messag
 	default:
 		return nil, ErrUnsupportedWhat
 	}
+}
+
+// SendPaid sends multiple instances of paid media as a single message.
+// To include the caption, make sure the first PaidInputtable of an album has it.
+func (b *Bot) SendPaid(to Recipient, stars int, a PaidAlbum, opts ...interface{}) (*Message, error) {
+	if to == nil {
+		return nil, ErrBadRecipient
+	}
+
+	params := map[string]string{
+		"chat_id":    to.Recipient(),
+		"star_count": strconv.Itoa(stars),
+	}
+	sendOpts := b.extractOptions(opts)
+
+	media := make([]string, len(a))
+	files := make(map[string]File)
+
+	for i, x := range a {
+		repr := x.MediaFile().process(strconv.Itoa(i), files)
+		if repr == "" {
+			return nil, fmt.Errorf("telebot: paid media entry #%d does not exist", i)
+		}
+
+		im := x.InputMedia()
+		im.Media = repr
+
+		if i == 0 {
+			params["caption"] = im.Caption
+			if im.CaptionAbove {
+				params["show_caption_above_media"] = "true"
+			}
+		}
+
+		data, _ := json.Marshal(im)
+		media[i] = string(data)
+	}
+
+	params["media"] = "[" + strings.Join(media, ",") + "]"
+	b.embedSendOptions(params, sendOpts)
+
+	data, err := b.sendFiles("sendPaidMedia", files, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return extractMessage(data)
 }
 
 // SendAlbum sends multiple instances of media as a single message.
@@ -504,6 +548,9 @@ func (b *Bot) Edit(msg Editable, what interface{}, opts ...interface{}) (*Messag
 		}
 		if v.AlertRadius != 0 {
 			params["proximity_alert_radius"] = strconv.Itoa(v.AlertRadius)
+		}
+		if v.LivePeriod != 0 {
+			params["live_period"] = strconv.Itoa(v.LivePeriod)
 		}
 	default:
 		return nil, ErrUnsupportedWhat
@@ -1146,8 +1193,11 @@ func (b *Bot) MenuButton(chat *User) (*MenuButton, error) {
 //   - MenuButtonType for simple menu buttons (default, commands)
 //   - MenuButton complete structure for web_app menu button type
 func (b *Bot) SetMenuButton(chat *User, mb interface{}) error {
-	params := map[string]interface{}{
-		"chat_id": chat.Recipient(),
+	params := map[string]interface{}{}
+
+	// chat_id is optional
+	if chat != nil {
+		params["chat_id"] = chat.Recipient()
 	}
 
 	switch v := mb.(type) {
@@ -1250,6 +1300,28 @@ func (b *Bot) SetMyShortDescription(desc, language string) error {
 // MyShortDescription the current bot short description for the given user language.
 func (b *Bot) MyShortDescription(language string) (*BotInfo, error) {
 	return b.botInfo(language, "getMyShortDescription")
+}
+
+func (b *Bot) StarTransactions(offset, limit int) ([]StarTransaction, error) {
+	params := map[string]int{
+		"offset": offset,
+		"limit":  limit,
+	}
+
+	data, err := b.Raw("getStarTransactions", params)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Result struct {
+			Transactions []StarTransaction `json:"transactions"`
+		}
+	}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, wrapError(err)
+	}
+	return resp.Result.Transactions, nil
 }
 
 func (b *Bot) botInfo(language, key string) (*BotInfo, error) {

@@ -12,7 +12,7 @@ import (
 	vkapi "github.com/SevereCloud/vksdk/v3/api"
 	vkObject "github.com/SevereCloud/vksdk/v3/object"
 	"github.com/cockroachdb/errors"
-	tb "gopkg.in/telebot.v3"
+	tb "gopkg.in/telebot.v4"
 )
 
 // Moscow
