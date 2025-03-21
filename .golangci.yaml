@@ -48,11 +48,10 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - execinquery
-    - gomnd
     - depguard
     - exhaustruct
     - gci
     - gochecknoglobals
     - gochecknoinits
     - nonamedreturns
+    - tenv

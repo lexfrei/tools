@@ -6,15 +6,12 @@ require (
 	github.com/BlueMonday/go-scryfall v0.9.0
 	github.com/SevereCloud/vksdk/v2 v2.17.0
 	github.com/cockroachdb/errors v1.11.3
-	github.com/google/go-github/v68 v68.0.0
-	github.com/hashicorp/go-version v1.7.0
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.0
 	github.com/tdewolff/minify/v2 v2.22.3
 	gopkg.in/telebot.v3 v3.3.8
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -56,4 +53,5 @@ require (
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
