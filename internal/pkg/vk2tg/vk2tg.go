@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	vkapi "github.com/SevereCloud/vksdk/v2/api"
-	vkObject "github.com/SevereCloud/vksdk/v2/object"
+	vkapi "github.com/SevereCloud/vksdk/v3/api"
+	vkObject "github.com/SevereCloud/vksdk/v3/object"
 	"github.com/cockroachdb/errors"
 	tb "gopkg.in/telebot.v3"
 )

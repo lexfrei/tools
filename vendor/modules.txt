@@ -1,12 +1,12 @@
 # github.com/BlueMonday/go-scryfall v0.9.0
 ## explicit; go 1.17
 github.com/BlueMonday/go-scryfall
-# github.com/SevereCloud/vksdk/v2 v2.17.0
-## explicit; go 1.21
-github.com/SevereCloud/vksdk/v2
-github.com/SevereCloud/vksdk/v2/api
-github.com/SevereCloud/vksdk/v2/internal
-github.com/SevereCloud/vksdk/v2/object
+# github.com/SevereCloud/vksdk/v3 v3.1.0
+## explicit; go 1.22
+github.com/SevereCloud/vksdk/v3
+github.com/SevereCloud/vksdk/v3/api
+github.com/SevereCloud/vksdk/v3/internal
+github.com/SevereCloud/vksdk/v3/object
 # github.com/benbjohnson/clock v1.3.5
 ## explicit; go 1.15
 github.com/benbjohnson/clock
