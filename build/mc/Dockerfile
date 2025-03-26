@@ -18,5 +18,8 @@ USER mcuser
 # Set the working directory
 WORKDIR /app
 
+# Java memory settings
+ENV JAVA_OPTS="-Xmx3G -Xms3G"
+
 # Set the command to run the server
-CMD ["java", "-Xmx3G", "-Xms3G", "-jar", "/server/server.jar", "nogui"]
+CMD ["java", "-jar", "/server/server.jar", "nogui"]
