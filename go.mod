@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/tdewolff/minify/v2 v2.22.4
 	gopkg.in/telebot.v4 v4.0.0-beta.4
 )
