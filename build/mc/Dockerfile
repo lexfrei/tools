@@ -1,4 +1,4 @@
-FROM openjdk:25-jdk-slim
+FROM docker.io/library/openjdk:25-jdk-slim
 
 LABEL application="Minecraft Server" version="1.21.5" org.opencontainers.image.authors="f@lex.la"
 
