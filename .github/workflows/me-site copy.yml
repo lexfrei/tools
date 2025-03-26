@@ -1,0 +1,72 @@
+name: Build Container Image for mc
+
+on:
+  push:
+    paths:
+      - "build/mc/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v5.7.0
+        with:
+          images: ghcr.io/lexfrei/mc
+          flavor: |
+            latest=true
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.6.0
+        with:
+          platforms: "arm64,amd64"
+
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Docker Context for Buildx
+        id: buildx-context
+        run: |
+          docker context create builders
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3.10.0
+        with:
+          endpoint: builders
+          config-inline: |
+            [registry."docker.io"]
+              mirrors = ["mirror.gcr.io"]
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.4.0
+        if: github.ref == 'refs/heads/master'
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6.15.0
+        if: github.ref == 'refs/heads/master'
+        with:
+          context: .
+          file: ./build/mc/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+
+      - name: Build
+        uses: docker/build-push-action@v6.15.0
+        if: github.ref == !'refs/heads/master'
+        with:
+          context: .
+          file: ./build/mc/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.docker_meta.outputs.tags }}
