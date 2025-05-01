@@ -3,7 +3,7 @@ module github.com/lexfrei/tools
 go 1.24.1
 
 require (
-	github.com/BlueMonday/go-scryfall v0.9.0
+	github.com/BlueMonday/go-scryfall v0.9.1
 	github.com/SevereCloud/vksdk/v3 v3.2.0
 	github.com/cockroachdb/errors v1.11.3
 	github.com/labstack/echo/v4 v4.13.3
