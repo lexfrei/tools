@@ -23,6 +23,7 @@ var (
 	svgMimeBytes    = []byte("image/svg+xml")
 	formMimeBytes   = []byte("application/x-www-form-urlencoded")
 	mathMimeBytes   = []byte("application/mathml+xml")
+	xmlMimeBytes    = []byte("text/xml")
 	dataSchemeBytes = []byte("data:")
 	jsSchemeBytes   = []byte("javascript:")
 	httpBytes       = []byte("http")
@@ -129,7 +130,7 @@ func (o *Minifier) Minify(m *minify.M, w io.Writer, r io.Reader, _ map[string]st
 					w.Write(t.Data)
 				}
 			}
-		case html.SvgToken:
+		case html.SVGToken:
 			if err := m.MinifyMimetype(svgMimeBytes, w, buffer.NewReader(t.Data), inlineParams); err != nil {
 				if err != minify.ErrNotExist {
 					return minify.UpdateErrorPosition(err, z, t.Offset)
@@ -145,11 +146,19 @@ func (o *Minifier) Minify(m *minify.M, w io.Writer, r io.Reader, _ map[string]st
 				w.Write(t.Data)
 			}
 			omitSpace = false
-		case html.TextToken:
-			if t.HasTemplate {
+		case html.XMLToken:
+			if err := m.MinifyMimetype(xmlMimeBytes, w, buffer.NewReader(t.Data), nil); err != nil {
+				if err != minify.ErrNotExist {
+					return minify.UpdateErrorPosition(err, z, t.Offset)
+				}
 				w.Write(t.Data)
-				omitSpace = parse.IsWhitespace(t.Data[len(t.Data)-1])
-			} else if rawTagHash != 0 {
+			}
+			omitSpace = false
+		case html.TemplateToken:
+			w.Write(t.Data)
+			omitSpace = false
+		case html.TextToken:
+			if rawTagHash != 0 && !t.HasTemplate {
 				if rawTagHash == Style || rawTagHash == Script || rawTagHash == Iframe {
 					var mimetype []byte
 					var params map[string]string
@@ -196,10 +205,10 @@ func (o *Minifier) Minify(m *minify.M, w io.Writer, r io.Reader, _ map[string]st
 							t.Data = t.Data[:len(t.Data)-1]
 							omitSpace = false
 							break
-						} else if next.TokenType == html.TextToken && !parse.IsAllWhitespace(next.Data) {
+						} else if next.TokenType == html.TextToken && !parse.IsAllWhitespace(next.Data) || next.TokenType == html.TemplateToken {
 							// stop looking when text encountered
 							break
-						} else if next.TokenType == html.StartTagToken || next.TokenType == html.EndTagToken || next.TokenType == html.SvgToken || next.TokenType == html.MathToken {
+						} else if next.TokenType == html.StartTagToken || next.TokenType == html.EndTagToken || next.TokenType == html.SVGToken || next.TokenType == html.MathToken || next.TokenType == html.XMLToken {
 							if o.KeepWhitespace {
 								break
 							}
@@ -208,14 +217,13 @@ func (o *Minifier) Minify(m *minify.M, w io.Writer, r io.Reader, _ map[string]st
 								t.Data = t.Data[:len(t.Data)-1]
 								omitSpace = false
 								break
-							} else if next.TokenType == html.StartTagToken || next.TokenType == html.SvgToken || next.TokenType == html.MathToken {
+							} else if next.TokenType == html.StartTagToken || next.TokenType == html.SVGToken || next.TokenType == html.MathToken || next.TokenType == html.XMLToken {
 								break
 							}
 						}
 						i++
 					}
 				}
-
 				w.Write(t.Data)
 			}
 		case html.StartTagToken, html.EndTagToken:
