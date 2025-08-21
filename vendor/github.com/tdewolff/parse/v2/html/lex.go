@@ -21,8 +21,10 @@ const (
 	EndTagToken
 	AttributeToken
 	TextToken
-	SvgToken
+	SVGToken
 	MathToken
+	XMLToken
+	TemplateToken
 )
 
 // String returns the string representation of a TokenType.
@@ -46,10 +48,14 @@ func (tt TokenType) String() string {
 		return "Attribute"
 	case TextToken:
 		return "Text"
-	case SvgToken:
-		return "Svg"
+	case SVGToken:
+		return "SVG"
 	case MathToken:
 		return "Math"
+	case XMLToken:
+		return "XML"
+	case TemplateToken:
+		return "Template"
 	}
 	return "Invalid(" + strconv.Itoa(int(tt)) + ")"
 }
@@ -161,7 +167,16 @@ func (l *Lexer) Next() (TokenType, []byte) {
 
 	for {
 		c = l.r.Peek(0)
-		if c == '<' {
+		if 0 < len(l.tmplBegin) && l.at(l.tmplBegin...) {
+			if 0 < l.r.Pos() {
+				l.text = l.r.Shift()
+				return TextToken, l.text
+			}
+			l.r.Move(len(l.tmplBegin))
+			l.moveTemplate()
+			l.hasTmpl = true
+			return TemplateToken, l.r.Shift()
+		} else if c == '<' {
 			c = l.r.Peek(1)
 			isEndTag := c == '/' && l.r.Peek(2) != '>' && (l.r.Peek(2) != 0 || l.r.PeekErr(2) == nil)
 			if !isEndTag && (c < 'a' || 'z' < c) && (c < 'A' || 'Z' < c) && c != '!' && c != '?' {
@@ -185,18 +200,10 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			} else if c == '!' {
 				l.r.Move(2)
 				return l.readMarkup()
-			} else if 0 < len(l.tmplBegin) && l.at(l.tmplBegin...) {
-				l.r.Move(len(l.tmplBegin))
-				l.moveTemplate()
-				l.hasTmpl = true
 			} else if c == '?' {
 				l.r.Move(1)
 				return CommentToken, l.shiftBogusComment()
 			}
-		} else if 0 < len(l.tmplBegin) && l.at(l.tmplBegin...) {
-			l.r.Move(len(l.tmplBegin))
-			l.moveTemplate()
-			l.hasTmpl = true
 		} else if c == 0 && l.r.Err() != nil {
 			if 0 < l.r.Pos() {
 				l.text = l.r.Shift()
@@ -369,8 +376,8 @@ func (l *Lexer) shiftStartTag() (TokenType, []byte) {
 		l.r.Move(1)
 	}
 	l.text = parse.ToLower(l.r.Lexeme()[1:])
-	if h := ToHash(l.text); h == Textarea || h == Title || h == Style || h == Xmp || h == Iframe || h == Script || h == Plaintext || h == Svg || h == Math {
-		if h == Svg || h == Math {
+	if h := ToHash(l.text); h == Textarea || h == Title || h == Style || h == Xmp || h == Iframe || h == Script || h == Plaintext || h == Svg || h == Math || h == Xml {
+		if h == Svg || h == Math || h == Xml {
 			data := l.shiftXML(h)
 			if l.err != nil {
 				return ErrorToken, nil
@@ -378,9 +385,11 @@ func (l *Lexer) shiftStartTag() (TokenType, []byte) {
 
 			l.inTag = false
 			if h == Svg {
-				return SvgToken, data
+				return SVGToken, data
+			} else if h == Math {
+				return MathToken, data
 			}
-			return MathToken, data
+			return XMLToken, data
 		}
 		l.rawTag = h
 	}
