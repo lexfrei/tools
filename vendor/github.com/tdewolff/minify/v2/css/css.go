@@ -59,10 +59,11 @@ type cssMinifier struct {
 
 // Minifier is a CSS minifier.
 type Minifier struct {
-	KeepCSS2     bool
-	Precision    int // number of significant digits
-	newPrecision int // precision for new numbers
+	KeepCSS2     bool // DEPRECATED, use Version = 2
+	Precision    int  // number of significant digits
+	newPrecision int  // precision for new numbers
 	Inline       bool
+	Version      int
 }
 
 // Minify minifies CSS data, it reads from r and writes to w.
@@ -146,6 +147,13 @@ func (o *Minifier) Minify(m *minify.M, w io.Writer, r io.Reader, params map[stri
 	if !o.Inline {
 		o.Inline = params != nil && params["inline"] == "1"
 	}
+	if o.Version <= 0 {
+		if o.KeepCSS2 {
+			o.Version = 2
+		} else {
+			o.Version = 3
+		}
+	}
 
 	z := parse.NewInput(r)
 	defer z.Restore()
@@ -180,7 +188,7 @@ func (c *cssMinifier) minifyGrammar() {
 
 				// write out the offending declaration (but save the semicolon)
 				vals := c.p.Values()
-				if len(vals) > 0 && vals[len(vals)-1].TokenType == css.SemicolonToken {
+				if 0 < len(vals) && vals[len(vals)-1].TokenType == css.SemicolonToken {
 					vals = vals[:len(vals)-1]
 					semicolonQueued = true
 				}
@@ -262,8 +270,6 @@ func (c *cssMinifier) minifyGrammar() {
 				comment := parse.TrimWhitespace(parse.ReplaceMultipleWhitespace(data[3 : len(data)-2]))
 				c.w.Write(comment)
 				c.w.Write(data[len(data)-2:])
-			} else if 5 < len(data) && (data[2] == '#' || data[2] == '@') {
-				c.w.Write(data) // sourceMappingURL
 			}
 		default:
 			c.w.Write(data)
@@ -385,7 +391,7 @@ func (c *cssMinifier) minifyDeclaration(property []byte, components []css.Token)
 
 	// Strip !important from the component list, this will be added later separately
 	important := false
-	if len(components) > 2 && components[len(components)-2].TokenType == css.DelimToken && components[len(components)-2].Data[0] == '!' && ToHash(components[len(components)-1].Data) == Important {
+	if 2 < len(components) && components[len(components)-2].TokenType == css.DelimToken && components[len(components)-2].Data[0] == '!' && ToHash(components[len(components)-1].Data) == Important {
 		components = components[:len(components)-2]
 		important = true
 	}
@@ -415,6 +421,9 @@ func (c *cssMinifier) minifyDeclaration(property []byte, components []css.Token)
 			c.w.Write(component.Data)
 		}
 		if important {
+			if c.o.Version <= 2 {
+				c.w.Write(spaceBytes)
+			}
 			c.w.Write(importantBytes)
 		}
 		return
@@ -458,6 +467,9 @@ func (c *cssMinifier) writeDeclaration(values []Token, important bool) {
 	}
 
 	if important {
+		if c.o.Version <= 2 {
+			c.w.Write(spaceBytes)
+		}
 		c.w.Write(importantBytes)
 	}
 }
@@ -475,14 +487,14 @@ func (c *cssMinifier) minifyTokens(prop Hash, fun Hash, values []Token) []Token 
 			if prop == Z_Index || prop == Counter_Increment || prop == Counter_Reset || prop == Orphans || prop == Widows {
 				break // integers
 			}
-			if c.o.KeepCSS2 {
+			if c.o.Version <= 2 {
 				values[i].Data = minify.Decimal(values[i].Data, c.o.Precision) // don't use exponents
 			} else {
 				values[i].Data = minify.Number(values[i].Data, c.o.Precision)
 			}
 		case css.PercentageToken:
 			n := len(values[i].Data) - 1
-			if c.o.KeepCSS2 {
+			if c.o.Version <= 2 {
 				values[i].Data = minify.Decimal(values[i].Data[:n], c.o.Precision) // don't use exponents
 			} else {
 				values[i].Data = minify.Number(values[i].Data[:n], c.o.Precision)
@@ -1128,7 +1140,7 @@ func (c *cssMinifier) minifyProperty(prop Hash, values []Token) []Token {
 		values[0] = minifyColor(values[0])
 	case Background_Color:
 		values[0] = minifyColor(values[0])
-		if !c.o.KeepCSS2 {
+		if c.o.Version == 0 {
 			if values[0].Ident == Transparent {
 				values[0].Data = initialBytes
 				values[0].Ident = Initial
@@ -1436,7 +1448,7 @@ func (c *cssMinifier) minifyDimension(value Token) (Token, []byte) {
 		}
 
 		num := value.Data[:n]
-		if c.o.KeepCSS2 {
+		if c.o.Version <= 2 {
 			num = minify.Decimal(num, c.o.Precision) // don't use exponents
 		} else {
 			num = minify.Number(num, c.o.Precision)
@@ -1454,7 +1466,7 @@ func (c *cssMinifier) minifyDimension(value Token) (Token, []byte) {
 	//	dim = value.Data[n:]
 	//	parse.ToLower(dim)
 
-	//	if c.o.KeepCSS2 {
+	//	if c.o.Version<=2 {
 	//		num = minify.Decimal(num, c.o.Precision) // don't use exponents
 	//	} else {
 	//		num = minify.Number(num, c.o.Precision)
@@ -1549,7 +1561,7 @@ func (c *cssMinifier) minifyDimension(value Token) (Token, []byte) {
 	//		for i := range dimensions {
 	//			if dimensions[i] != h { //&& (d < 1.0) == (multipliers[i] > 1.0) {
 	//				b, _ := strconvParse.AppendFloat([]byte{}, d*multipliers[i], -1)
-	//				if c.o.KeepCSS2 {
+	//				if c.o.Version<=2 {
 	//					b = minify.Decimal(b, c.o.newPrecision) // don't use exponents
 	//				} else {
 	//					b = minify.Number(b, c.o.newPrecision)

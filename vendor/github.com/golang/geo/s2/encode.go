@@ -15,6 +15,7 @@
 package s2
 
 import (
+	"bufio"
 	"encoding/binary"
 	"io"
 	"math"
@@ -124,23 +125,11 @@ type byteReader interface {
 	io.ByteReader
 }
 
-// byteReaderAdapter embellishes an io.Reader with a ReadByte method,
-// so that it implements the io.ByteReader interface.
-type byteReaderAdapter struct {
-	io.Reader
-}
-
-func (b byteReaderAdapter) ReadByte() (byte, error) {
-	buf := []byte{0}
-	_, err := io.ReadFull(b, buf)
-	return buf[0], err
-}
-
 func asByteReader(r io.Reader) byteReader {
 	if br, ok := r.(byteReader); ok {
 		return br
 	}
-	return byteReaderAdapter{r}
+	return bufio.NewReader(r)
 }
 
 type decoder struct {
@@ -167,14 +156,6 @@ func (d *decoder) readBool() (x bool) {
 }
 
 func (d *decoder) readInt8() (x int8) {
-	if d.err != nil {
-		return
-	}
-	d.err = binary.Read(d.r, binary.LittleEndian, &x)
-	return
-}
-
-func (d *decoder) readInt64() (x int64) {
 	if d.err != nil {
 		return
 	}
