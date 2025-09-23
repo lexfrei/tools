@@ -4,6 +4,7 @@ go 1.25
 
 require (
 	github.com/BlueMonday/go-scryfall v0.9.1
+	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/SevereCloud/vksdk/v3 v3.2.1
 	github.com/cockroachdb/errors v1.12.0
 	github.com/labstack/echo/v4 v4.13.4
@@ -15,6 +16,7 @@ require (
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect

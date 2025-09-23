@@ -224,10 +224,10 @@ func (p *Parser) parseNumber(numStr string) float64 {
 	return 0
 }
 
-// Example usage
-func main() {
+// Example usage function for testing
+func ExampleParser() {
 	// This would be called from the main ow-exporter application
-	parser := NewParser()
+	_ = NewParser()
 
 	// Read one of our saved profiles
 	// html := readFile("/Users/lex/git/github.com/lexfrei/tools/tmp/profile_de5bb4aca17492e0.html")
