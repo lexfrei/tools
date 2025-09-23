@@ -26,7 +26,9 @@ func main() {
 
 	// Get directory from environment variable.
 	directory := os.Getenv("VK_DIRECTORY")
-	if _, err := os.Stat(directory); os.IsNotExist(err) {
+
+	_, err := os.Stat(directory)
+	if os.IsNotExist(err) {
 		log.Fatal("VK_DIRECTORY is not exists")
 	}
 
@@ -70,8 +72,8 @@ func getPhotoURL(photo *object.PhotosPhoto) (string, error) {
 	}
 
 	for sizeID := range photo.Sizes {
-		if photo.Sizes[sizeID].BaseImage.Type == "x" {
-			return photo.Sizes[sizeID].BaseImage.URL, nil
+		if photo.Sizes[sizeID].Type == "x" {
+			return photo.Sizes[sizeID].URL, nil
 		}
 	}
 
@@ -100,7 +102,8 @@ func downloadAndSave(ctx context.Context, url, directoryPath, fileName string) e
 	}
 
 	// Check if the directory already exists
-	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
+	_, err = os.Stat(directoryPath)
+	if os.IsNotExist(err) {
 		err = os.MkdirAll(directoryPath, os.ModePerm)
 		if err != nil {
 			return errors.Wrap(err, "cant create directory")

@@ -187,6 +187,7 @@ func (vtCli *VTClinent) VKWatcher() {
 			}
 
 			vtCli.logger.Printf("Post %d: Sending to TG", vkWall.Items[index].ID)
+
 			vtCli.chVKPosts <- &vkWall.Items[index]
 		}
 	}
@@ -223,7 +224,8 @@ func (vtCli *VTClinent) TGSender() {
 		}
 
 		if len(album) > 0 {
-			if _, err := vtCli.tgClient.SendAlbum(&tb.User{ID: vtCli.config.TGUser}, album); err != nil {
+			_, err := vtCli.tgClient.SendAlbum(&tb.User{ID: vtCli.config.TGUser}, album)
+			if err != nil {
 				vtCli.logger.Printf("Can't send album: %s\n", err)
 			}
 		}
@@ -251,7 +253,8 @@ func (vtCli *VTClinent) TGSender() {
 }
 
 func (vtCli *VTClinent) sendMessage(u *tb.User, options ...interface{}) error {
-	if _, err := vtCli.tgClient.Send(u, options); err != nil {
+	_, err := vtCli.tgClient.Send(u, options)
+	if err != nil {
 		return errors.Wrap(err, "error on sending message")
 	}
 
@@ -267,7 +270,8 @@ func (vtCli *VTClinent) status(tbContext tb.Context) error {
 		!vtCli.config.Silent,
 	)
 
-	if _, err := vtCli.tgClient.Send(tbContext.Sender(), msg); err != nil {
+	_, err := vtCli.tgClient.Send(tbContext.Sender(), msg)
+	if err != nil {
 		return errors.Wrap(err, "error on sending message")
 	}
 
@@ -278,13 +282,15 @@ func (vtCli *VTClinent) pause(tbContext tb.Context) error {
 	if !vtCli.config.Paused {
 		vtCli.Pause()
 
-		if err := vtCli.sendMessage(tbContext.Sender(), "Paused! Send /pause to continue"); err != nil {
+		err := vtCli.sendMessage(tbContext.Sender(), "Paused! Send /pause to continue")
+		if err != nil {
 			vtCli.logger.Println(err)
 		}
 	} else {
 		vtCli.Resume()
 
-		if err := vtCli.sendMessage(tbContext.Sender(), "Unpaused! Send /pause to stop"); err != nil {
+		err := vtCli.sendMessage(tbContext.Sender(), "Unpaused! Send /pause to stop")
+		if err != nil {
 			vtCli.logger.Println(err)
 		}
 	}
@@ -296,13 +302,15 @@ func (vtCli *VTClinent) mute(tbContext tb.Context) error {
 	if !vtCli.config.Silent {
 		vtCli.Mute()
 
-		if err := vtCli.sendMessage(tbContext.Sender(), "Muted! Send /mute to go loud"); err != nil {
+		err := vtCli.sendMessage(tbContext.Sender(), "Muted! Send /mute to go loud")
+		if err != nil {
 			vtCli.logger.Println(err)
 		}
 	} else {
 		vtCli.Unmute()
 
-		if err := vtCli.sendMessage(tbContext.Sender(), "Unmuted! Send /mute to go silent"); err != nil {
+		err := vtCli.sendMessage(tbContext.Sender(), "Unmuted! Send /mute to go silent")
+		if err != nil {
 			vtCli.logger.Println(err)
 		}
 	}
