@@ -1,0 +1,21 @@
+name: Lint Markdown
+
+on:
+  push:
+    paths:
+      - '**.md'
+  pull_request:
+    paths:
+      - '**.md'
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5.0.0
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          globs: '**/*.md'

@@ -87,7 +87,7 @@ docker build -f build/me-site/Containerfile -t me-site .
 
 ### Project Structure
 
-```
+```text
 tools/
 ├── cmd/                    # CLI applications
 │   ├── me-site/           # Personal website
@@ -151,11 +151,12 @@ This project is licensed under the BSD 2-Clause License - see the [LICENSE](LICE
 
 ## 👤 Author
 
-**Aleksei Sviridkin**
-- Email: f@lex.la
+Aleksei Sviridkin
+
+- Email: <f@lex.la>
 - GitHub: [@lexfrei](https://github.com/lexfrei)
 - Role: SRE
 
 ---
 
-<p align="center">Made with ❤️ and Go</p>
+Made with ❤️ and Go
