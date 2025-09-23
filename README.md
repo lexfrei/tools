@@ -104,11 +104,25 @@ tools/
 
 ## 🐳 Container Images
 
-All container images are built automatically and available at GitHub Container Registry:
+All container images are built automatically and available at [GitHub Container Registry](https://github.com/lexfrei/tools/pkgs/container):
 
-- `ghcr.io/lexfrei/me-site:latest` - Personal website
-- `ghcr.io/lexfrei/vk2tg:latest` - VK to Telegram forwarder
-- `ghcr.io/lexfrei/a200:latest` - Always-200 nginx server
+- [`ghcr.io/lexfrei/me-site:latest`](https://github.com/lexfrei/tools/pkgs/container/me-site) - Personal website
+- [`ghcr.io/lexfrei/vk2tg:latest`](https://github.com/lexfrei/tools/pkgs/container/vk2tg) - VK to Telegram forwarder
+- [`ghcr.io/lexfrei/a200:latest`](https://github.com/lexfrei/tools/pkgs/container/a200) - Always-200 nginx server
+
+### 📦 Registry Access
+
+Images are publicly available and can be pulled without authentication:
+
+```bash
+# Pull any image
+docker pull ghcr.io/lexfrei/me-site:latest
+docker pull ghcr.io/lexfrei/vk2tg:latest
+docker pull ghcr.io/lexfrei/a200:latest
+
+# View all available tags
+docker manifest inspect ghcr.io/lexfrei/me-site:latest
+```
 
 ### Running Containers
 
