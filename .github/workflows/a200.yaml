@@ -48,7 +48,7 @@ jobs:
         if: github.ref == 'refs/heads/master'
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
 
       - name: Build and push
@@ -57,7 +57,7 @@ jobs:
         with:
           push: true
           context: ./build/a200/
-          file: ./build/a200/Dockerfile
+          file: ./build/a200/Containerfile
           platforms: linux/arm64, linux/amd64
           tags: ${{ steps.docker_meta.outputs.tags }}
 
@@ -66,6 +66,6 @@ jobs:
         if: github.ref == !'refs/heads/master'
         with:
           context: ./build/a200/
-          file: ./build/a200/Dockerfile
+          file: ./build/a200/Containerfile
           platforms: linux/arm64, linux/amd64
           tags: ${{ steps.docker_meta.outputs.tags }}
