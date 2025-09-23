@@ -1,7 +1,7 @@
 # 🛠️ Tools
 
 [![Go](https://img.shields.io/badge/Go-1.25.1-00ADD8?style=flat&logo=go)](https://golang.org/)
-[![License](https://img.shields.io/badge/License-BSD--2--Clause-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE)
 [![CI](https://github.com/lexfrei/tools/workflows/Lint%20Go/badge.svg)](https://github.com/lexfrei/tools/actions)
 
 > A collection of useful tools and utilities by [Aleksei Sviridkin](https://github.com/lexfrei)
@@ -147,7 +147,7 @@ This project follows [Semantic Commit Messages](https://www.conventionalcommits.
 
 ## 📝 License
 
-This project is licensed under the BSD 2-Clause License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
 
 ## 👤 Author
 
