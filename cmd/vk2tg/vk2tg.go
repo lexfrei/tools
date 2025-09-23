@@ -39,7 +39,8 @@ func main() {
 		)
 	}
 
-	if err = vtClient.Start(); err != nil {
+	err = vtClient.Start()
+	if err != nil {
 		logger.Fatalln(err)
 	}
 

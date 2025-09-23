@@ -181,6 +181,7 @@ func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 	return cards, nil
 }
 
+//nolint:funlen // This function handles complex card processing logic
 func worker(
 	ctx context.Context,
 	conf *config,
@@ -217,7 +218,9 @@ func worker(
 					}
 
 					conf.mu.Lock()
+
 					result[IDString] = append(result[IDString], imagePath)
+
 					conf.mu.Unlock()
 
 					continue
@@ -227,14 +230,17 @@ func worker(
 					imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" +
 						cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
 
-					if err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath); err != nil {
+					err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath)
+					if err != nil {
 						log.Printf("error downloading %s: %s", IDString, err)
 
 						continue
 					}
 
 					conf.mu.Lock()
+
 					result[IDString] = append(result[IDString], imagePath)
+
 					conf.mu.Unlock()
 
 					continue

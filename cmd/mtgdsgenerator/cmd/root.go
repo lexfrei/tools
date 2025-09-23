@@ -1,6 +1,8 @@
 /*
 Copyright © 2022 Aleksey Sviridkin <f@lex.la>
 */
+
+// Package cmd provides command line interface for mtgdsgenerator
 package cmd
 
 import (
@@ -64,7 +66,8 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	err := viper.ReadInConfig()
+	if err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }

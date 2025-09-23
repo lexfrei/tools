@@ -40,7 +40,8 @@ func newRedisStorage(addr, pass string) (*redis.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	if _, err := cli.Ping(ctx).Result(); err != nil {
+	_, err := cli.Ping(ctx).Result()
+	if err != nil {
 		return nil, errors.Wrap(err, "ping redis")
 	}
 
