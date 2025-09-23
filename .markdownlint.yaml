@@ -1,0 +1,11 @@
+# Markdownlint configuration
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Disable line length rule as it's too restrictive for technical documentation
+MD013: false
+
+# Disable blank lines around lists for better readability in documentation
+MD032: false
+
+# Disable blank lines around headings for compact documentation
+MD022: false
