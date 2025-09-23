@@ -18,4 +18,4 @@ jobs:
       - name: Run markdownlint
         uses: DavidAnson/markdownlint-cli2-action@v18
         with:
-          globs: '**/*.md'
+          globs: '**/*.md !vendor/**'

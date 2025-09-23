@@ -9,3 +9,7 @@ MD032: false
 
 # Disable blank lines around headings for compact documentation
 MD022: false
+
+# Ignore vendor directory - contains external dependencies we don't control
+ignores:
+  - "vendor/**"
