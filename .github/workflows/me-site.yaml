@@ -1,14 +1,14 @@
-name: Build Container Image for vk2tg
+name: Build Container Image for me-site
 
 on:
   push:
     paths:
-      - "build/vk2tg/**"
-      - "cmd/vk2tgr/**"
-      - "internal/pkg/vk2tg/**"
+      - "build/me-site/**"
+      - "cmd/me-site/**"
+      - "internal/pkg/owparser"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/vk2tg.yml"
+      - ".github/workflows/me-site.yaml"
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v5.8.0
         with:
-          images: ghcr.io/lexfrei/vk2tg
+          images: ghcr.io/lexfrei/me-site
           flavor: |
             latest=true
           tags: |
@@ -54,17 +54,17 @@ jobs:
         if: github.ref == 'refs/heads/master'
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
 
       - name: Build and push
         uses: docker/build-push-action@v6.18.0
         if: github.ref == 'refs/heads/master'
         with:
-          push: true
           context: .
-          file: ./build/vk2tg/Dockerfile
-          platforms: linux/arm64, linux/amd64
+          file: ./build/me-site/Containerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
           tags: ${{ steps.docker_meta.outputs.tags }}
 
       - name: Build
@@ -72,6 +72,6 @@ jobs:
         if: github.ref == !'refs/heads/master'
         with:
           context: .
-          file: ./build/exporter/Dockerfile
-          platforms: linux/arm64, linux/amd64
+          file: ./build/me-site/Containerfile
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker_meta.outputs.tags }}
