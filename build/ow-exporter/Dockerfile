@@ -1,7 +1,7 @@
-FROM docker.io/library/golang:1.22.3-alpine3.18 AS build
+FROM docker.io/library/golang:1.25.1-alpine3.22 AS build
 
 RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
-    apk add --no-cache upx=4.0.2-r0
+    apk add --no-cache upx=5.0.2-r0
 
 WORKDIR /go/src/github.com/lexfrei/tools/
 COPY . /go/src/github.com/lexfrei/tools/

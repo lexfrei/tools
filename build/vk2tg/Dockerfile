@@ -1,10 +1,10 @@
-FROM docker.io/library/golang:1.22.3-alpine3.18 AS build
+FROM docker.io/library/golang:1.25.1-alpine3.22 AS build
 
 RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
-    apk add --no-cache upx=4.0.2-r0
+    apk add --no-cache upx=5.0.2-r0
 
-WORKDIR /go/src/github.com/lexfrei/vk2tg/
-COPY . /go/src/github.com/lexfrei/vk2tg/
+WORKDIR /go/src/github.com/lexfrei/tools/
+COPY . /go/src/github.com/lexfrei/tools/
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" ./cmd/vk2tg/vk2tg.go && \
     upx --best --lzma vk2tg
@@ -13,7 +13,7 @@ FROM scratch
 
 COPY --from=build /tmp/passwd /etc/passwd
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /go/src/github.com/lexfrei/vk2tg/vk2tg /
+COPY --from=build /go/src/github.com/lexfrei/tools/vk2tg /
 
 USER nobody
 ENTRYPOINT ["/vk2tg"]
