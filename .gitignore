@@ -106,3 +106,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/go,visualstudiocode,windows,macos
 
 deployments/vk2tg/compose/local.env
+
+# Project-specific binaries
+ow-exporter
