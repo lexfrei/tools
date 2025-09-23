@@ -6,7 +6,7 @@ RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
 WORKDIR /go/src/github.com/lexfrei/tools/
 COPY . /go/src/github.com/lexfrei/tools/
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter/ow-exporter.go && \
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o ow-exporter ./cmd/ow-exporter && \
     upx --best --lzma ow-exporter
 
 FROM scratch

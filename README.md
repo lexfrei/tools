@@ -16,6 +16,7 @@ This monorepo contains various Go-based CLI tools and containerized services for
 |------|-------------|-----------|--------|
 | **[me-site](cmd/me-site/)** | Personal website with static content | `ghcr.io/lexfrei/me-site` | ✅ Active |
 | **[a200](build/a200/)** | Simple nginx server that responds 200 to all requests | `ghcr.io/lexfrei/a200` | ✅ Active |
+| **[ow-exporter](cmd/ow-exporter/)** | Overwatch 2 statistics exporter for Prometheus | `ghcr.io/lexfrei/ow-exporter` | 🚧 Development |
 | **[redis-ui](cmd/redis-ui/)** | Web UI for Redis database management | - | 🔧 Development |
 
 ### Social & Communication

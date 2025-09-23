@@ -54,6 +54,19 @@ server:
 
 ## Usage
 
+### Running with Docker:
+```bash
+# Run ow-exporter container
+docker run -d \
+  --name ow-exporter \
+  -p 9420:9420 \
+  -e PORT=9420 \
+  ghcr.io/lexfrei/ow-exporter:latest
+
+# Check health
+curl http://localhost:9420/health
+```
+
 ### Add a user to track:
 ```bash
 curl -X POST http://localhost:9420/api/users \
