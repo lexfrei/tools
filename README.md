@@ -155,7 +155,7 @@ Aleksei Sviridkin
 
 - Email: <f@lex.la>
 - GitHub: [@lexfrei](https://github.com/lexfrei)
-- Role: SRE
+- Role: Developer
 
 ---
 
