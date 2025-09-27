@@ -63,27 +63,27 @@ var GameModeSelectors = map[GameMode]string{
 
 // HeroSelectors for hero identification and detailed stats parsing.
 var HeroSelectors = struct {
-	Container         string
-	Name              string
-	ID                string
-	TimePlayed        string
-	StatsContainer    string
-	StatItem          string
-	StatName          string
-	StatValue         string
-	CategoryHeader    string
-	BlzStatsSection   string
+	Container       string
+	Name            string
+	ID              string
+	TimePlayed      string
+	StatsContainer  string
+	StatItem        string
+	StatName        string
+	StatValue       string
+	CategoryHeader  string
+	BlzStatsSection string
 }{
-	Container:         ".Profile-progressBar",
-	Name:              ".Profile-progressBar-title",
-	ID:                ".Profile-progressBar--bar[data-hero-id]", // data-hero-id is on the bar element
-	TimePlayed:        ".Profile-progressBar-description",
-	StatsContainer:    "span.stats-container",              // OverFast API style
-	StatItem:          ".stat-item",                        // Individual stat items
-	StatName:          "p.name",                            // Stat name within stat-item
-	StatValue:         "p.value",                           // Stat value within stat-item
-	CategoryHeader:    ".category .content .header p",     // Category headers
-	BlzStatsSection:   "blz-section.stats",                 // Main stats sections
+	Container:       ".Profile-progressBar",
+	Name:            ".Profile-progressBar-title",
+	ID:              ".Profile-progressBar--bar[data-hero-id]", // data-hero-id is on the bar element
+	TimePlayed:      ".Profile-progressBar-description",
+	StatsContainer:  "span.stats-container",         // OverFast API style
+	StatItem:        ".stat-item",                   // Individual stat items
+	StatName:        "p.name",                       // Stat name within stat-item
+	StatValue:       "p.value",                      // Stat value within stat-item
+	CategoryHeader:  ".category .content .header p", // Category headers
+	BlzStatsSection: "blz-section.stats",            // Main stats sections
 }
 
 // PlatformFilters for switching views.

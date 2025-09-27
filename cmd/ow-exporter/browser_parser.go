@@ -30,7 +30,7 @@ func (p *BrowserLikeParser) FetchWithJSSupport(ctx context.Context, profileURL s
 	slog.Debug("Attempting to fetch profile with JS-like behavior", "url", profileURL)
 
 	// Create request with browser-like headers
-	req, err := http.NewRequestWithContext(ctx, "GET", profileURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, profileURL, http.NoBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create request")
 	}

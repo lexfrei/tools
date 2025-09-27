@@ -12,12 +12,12 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// APIInspector helps find API endpoints that might contain detailed hero stats
+// APIInspector helps find API endpoints that might contain detailed hero stats.
 type APIInspector struct {
 	client *http.Client
 }
 
-// NewAPIInspector creates a new API inspector
+// NewAPIInspector creates a new API inspector.
 func NewAPIInspector() *APIInspector {
 	return &APIInspector{
 		client: &http.Client{
@@ -26,14 +26,14 @@ func NewAPIInspector() *APIInspector {
 	}
 }
 
-// PotentialAPIEndpoint represents a potential API endpoint to test
+// PotentialAPIEndpoint represents a potential API endpoint to test.
 type PotentialAPIEndpoint struct {
 	URL         string
 	Description string
 	Headers     map[string]string
 }
 
-// InspectPotentialAPIEndpoints tries to find API calls that load detailed stats
+// InspectPotentialAPIEndpoints tries to find API calls that load detailed stats.
 func (a *APIInspector) InspectPotentialAPIEndpoints(ctx context.Context, profileURL string) error {
 	slog.Info("🔍 Starting API endpoint discovery...")
 
@@ -86,9 +86,9 @@ func (a *APIInspector) InspectPotentialAPIEndpoints(ctx context.Context, profile
 	return nil
 }
 
-// testAPIEndpoint tests a single API endpoint
+// testAPIEndpoint tests a single API endpoint.
 func (a *APIInspector) testAPIEndpoint(ctx context.Context, endpoint PotentialAPIEndpoint) error {
-	req, err := http.NewRequestWithContext(ctx, "GET", endpoint.URL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.URL, http.NoBody)
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
@@ -126,7 +126,7 @@ func (a *APIInspector) testAPIEndpoint(ctx context.Context, endpoint PotentialAP
 	return nil
 }
 
-// analyzeJSONResponse analyzes a JSON response for hero stats
+// analyzeJSONResponse analyzes a JSON response for hero stats.
 func (a *APIInspector) analyzeJSONResponse(url string, data interface{}) {
 	slog.Info("✅ Found JSON response", "url", url)
 
@@ -183,8 +183,8 @@ func (a *APIInspector) analyzeJSONStructure(key string, data interface{}, depth 
 	case map[string]interface{}:
 		for k, val := range v {
 			if strings.Contains(strings.ToLower(k), "hero") ||
-			   strings.Contains(strings.ToLower(k), "stat") ||
-			   strings.Contains(strings.ToLower(k), "cassidy") {
+				strings.Contains(strings.ToLower(k), "stat") ||
+				strings.Contains(strings.ToLower(k), "cassidy") {
 				slog.Debug("Interesting JSON key", "path", fmt.Sprintf("%s%s.%s", indent, key, k))
 				a.analyzeJSONStructure(k, val, depth+1)
 			}

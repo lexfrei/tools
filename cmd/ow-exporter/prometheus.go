@@ -453,7 +453,6 @@ func updateSinglePlayerMetrics(battleTag string, playerMetrics *PlayerMetrics) {
 	updateHeroSpecificMetrics(battleTag, playerMetrics)
 }
 
-
 // updateProfileMetrics updates profile-level metrics.
 func updateProfileMetrics(battleTag string, playerMetrics *PlayerMetrics) {
 	prometheusMetrics.playerEndorsementLevel.WithLabelValues(

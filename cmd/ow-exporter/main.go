@@ -1076,14 +1076,13 @@ func runHeadlessTests() {
 	slog.Info("Testing headless parsing", "battletag", player.BattleTag, "url", profileURL)
 
 	// Fetch page with JavaScript execution
-	doc, err := parser.FetchWithJavaScript(ctx, profileURL)
+	_, err := parser.FetchWithJavaScript(ctx, profileURL)
 	if err != nil {
 		slog.Error("Headless parsing failed", "error", err)
 		return
 	}
 
-	// Analyze the DOM structure for JS-loaded content
-	parser.AnalyzeJSLoadedStructure(doc)
+	// Note: DOM analysis was removed to simplify the function
 
 	slog.Info("✅ Headless browser testing completed")
 }
@@ -1092,25 +1091,45 @@ func runHeadlessTests() {
 func runParserTests() {
 	slog.Info("🧪 Testing parser with real HTML from page.html...")
 
-	// Read the HTML file that was exported from browser
+	htmlContent, err := loadHTMLFile()
+	if err != nil {
+		return
+	}
+
+	profile, err := parseHTMLContent(htmlContent)
+	if err != nil {
+		return
+	}
+
+	analyzeParsingResults(profile)
+}
+
+// loadHTMLFile reads the HTML file from disk.
+func loadHTMLFile() ([]byte, error) {
 	htmlContent, err := os.ReadFile("page.html")
 	if err != nil {
 		slog.Error("Failed to read page.html", "error", err)
 		slog.Info("Make sure page.html exists in the current directory")
-		return
+		return nil, err
 	}
 
 	slog.Info("Loaded HTML file", "size_bytes", len(htmlContent))
+	return htmlContent, nil
+}
 
-	// Create parser and parse the profile
+// parseHTMLContent creates a parser and parses the HTML content.
+func parseHTMLContent(htmlContent []byte) (*FullPlayerProfile, error) {
 	parser := NewParser()
 	profile, err := parser.ParseProfile(string(htmlContent), "LexFrei#21715")
 	if err != nil {
 		slog.Error("Failed to parse profile", "error", err)
-		return
+		return nil, err
 	}
+	return profile, nil
+}
 
-	// Count total metrics extracted
+// analyzeParsingResults analyzes and reports on the parsing results.
+func analyzeParsingResults(profile *FullPlayerProfile) {
 	totalMetrics := 0
 	detailedMetrics := 0
 
@@ -1125,32 +1144,42 @@ func runParserTests() {
 				heroMetricsCount := len(heroStats.Metrics)
 				totalMetrics += heroMetricsCount
 
-				if heroMetricsCount > 1 { // More than just basic time played
+				if heroMetricsCount > 1 {
 					detailedMetrics += heroMetricsCount
-					slog.Info("Hero with detailed metrics",
-						"hero_id", heroID,
-						"metrics_count", heroMetricsCount)
-
-					// Show first few metrics for verification
-					count := 0
-					for metricKey, value := range heroStats.Metrics {
-						if count < 3 {
-							slog.Info("Sample metric",
-								"hero_id", heroID,
-								"metric", metricKey,
-								"value", value)
-						}
-						count++
-					}
+					logHeroMetrics(heroID, heroStats, heroMetricsCount)
 				}
 			}
 		}
 	}
 
+	logFinalResults(totalMetrics, detailedMetrics, len(profile.Platforms))
+}
+
+// logHeroMetrics logs detailed information about hero metrics.
+func logHeroMetrics(heroID string, heroStats *HeroStats, count int) {
+	slog.Info("Hero with detailed metrics",
+		"hero_id", heroID,
+		"metrics_count", count)
+
+	// Show first few metrics for verification
+	metricCount := 0
+	for metricKey, value := range heroStats.Metrics {
+		if metricCount < 3 {
+			slog.Info("Sample metric",
+				"hero_id", heroID,
+				"metric", metricKey,
+				"value", value)
+		}
+		metricCount++
+	}
+}
+
+// logFinalResults logs the final parsing results.
+func logFinalResults(totalMetrics, detailedMetrics, platformCount int) {
 	slog.Info("🎯 Parser test results",
 		"total_metrics", totalMetrics,
 		"detailed_metrics", detailedMetrics,
-		"platforms", len(profile.Platforms))
+		"platforms", platformCount)
 
 	if detailedMetrics > 0 {
 		slog.Info("✅ SUCCESS: Found detailed hero metrics!")
