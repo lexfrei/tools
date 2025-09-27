@@ -656,7 +656,6 @@ func updateByOwTag(heroID, metricKey string, value float64, labels prometheus.La
 
 // startPrometheusServer starts the HTTP server for Prometheus metrics.
 func startPrometheusServer(port string) {
-
 	// Create metrics handler that updates data before serving
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		updatePrometheusMetrics()

@@ -51,8 +51,18 @@ func (h *HeadlessParser) AnalyzeJSLoadedStructure(ctx context.Context, profileUR
 
 // tryPuppeteer attempts to use Node.js with Puppeteer for JavaScript execution.
 func (h *HeadlessParser) tryPuppeteer(ctx context.Context, profileURL string) (*goquery.Document, error) {
-	// Create a simple Node.js script for Puppeteer
-	script := fmt.Sprintf(`
+	script := h.generatePuppeteerScript(profileURL)
+	output, err := h.executePuppeteerScript(ctx, script)
+	if err != nil {
+		return nil, err
+	}
+
+	return h.parsePuppeteerOutput(output)
+}
+
+// generatePuppeteerScript creates the Node.js script for Puppeteer.
+func (h *HeadlessParser) generatePuppeteerScript(profileURL string) string {
+	return fmt.Sprintf(`
 const puppeteer = require('puppeteer');
 
 (async () => {
@@ -63,13 +73,13 @@ const puppeteer = require('puppeteer');
     });
     const page = await browser.newPage();
 
-    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' +
+      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     console.error('Navigating to URL: %s');
     await page.goto('%s', {waitUntil: 'networkidle2', timeout: 30000});
 
     console.error('Waiting for JavaScript to execute...');
-    // Wait longer for stats to load - using setTimeout instead of waitForTimeout
     await new Promise(resolve => setTimeout(resolve, 10000));
 
     // Try to wait for specific elements
@@ -81,13 +91,7 @@ const puppeteer = require('puppeteer');
     }
 
     // Check for the specific selectors
-    const selectors = [
-      '.stats-container',
-      'blz-section',
-      '.option-15',
-      '[data-stat]'
-    ];
-
+    const selectors = ['.stats-container', 'blz-section', '.option-15', '[data-stat]'];
     for (const selector of selectors) {
       try {
         const elements = await page.$$(selector);
@@ -99,7 +103,6 @@ const puppeteer = require('puppeteer');
 
     const html = await page.content();
     console.log(html);
-
     await browser.close();
   } catch (error) {
     console.error('Puppeteer error:', error.message);
@@ -107,18 +110,21 @@ const puppeteer = require('puppeteer');
   }
 })();
 `, profileURL, profileURL)
+}
 
-	// Try to execute the Node.js script
+// executePuppeteerScript runs the Node.js Puppeteer script.
+func (h *HeadlessParser) executePuppeteerScript(ctx context.Context, script string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, "node", "-e", script)
-
-	// Capture both stdout and stderr to see what's happening
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		slog.Error("Puppeteer script failed", "error", err, "output", string(output))
 		return nil, errors.Wrap(err, "failed to execute Puppeteer script")
 	}
+	return output, nil
+}
 
-	// Parse the HTML output
+// parsePuppeteerOutput parses the HTML output from Puppeteer.
+func (h *HeadlessParser) parsePuppeteerOutput(output []byte) (*goquery.Document, error) {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(output)))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse Puppeteer HTML output")
@@ -138,8 +144,10 @@ func (h *HeadlessParser) fetchWithEnhancedHTTP(ctx context.Context, profileURL s
 	}
 
 	// Set comprehensive browser-like headers
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+	req.Header.Set("Accept",
+		"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Set("Connection", "keep-alive")

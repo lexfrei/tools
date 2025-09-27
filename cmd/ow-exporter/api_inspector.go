@@ -110,7 +110,8 @@ func (a *APIInspector) testAPIEndpoint(ctx context.Context, endpoint PotentialAP
 	}
 	defer resp.Body.Close()
 
-	slog.Info("API response", "url", endpoint.URL, "status", resp.StatusCode, "content_type", resp.Header.Get("Content-Type"))
+	slog.Info("API response", "url", endpoint.URL, "status", resp.StatusCode,
+		"content_type", resp.Header.Get("Content-Type"))
 
 	if resp.StatusCode == http.StatusOK {
 		// Try to read and analyze the response
@@ -134,6 +135,7 @@ func (a *APIInspector) analyzeJSONResponse(url string, data interface{}) {
 	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		slog.Error("Failed to marshal JSON", "error", err)
+
 		return
 	}
 
@@ -171,7 +173,7 @@ func (a *APIInspector) analyzeJSONResponse(url string, data interface{}) {
 	}
 }
 
-// analyzeJSONStructure recursively analyzes JSON structure
+// analyzeJSONStructure recursively analyzes JSON structure.
 func (a *APIInspector) analyzeJSONStructure(key string, data interface{}, depth int) {
 	if depth > 3 { // Limit recursion depth
 		return
@@ -197,9 +199,10 @@ func (a *APIInspector) analyzeJSONStructure(key string, data interface{}, depth 
 	}
 }
 
-// extractProfileIDFromURL extracts profile ID from Overwatch URL
+// extractProfileIDFromURL extracts profile ID from Overwatch URL.
 func extractProfileIDFromURL(url string) string {
-	// Extract from URL like: https://overwatch.blizzard.com/en-us/career/de5bb4aca17492e0bba120a1d1%7Ca92a11ef8d304356fccfff8df12e1dc6/
+	// Extract from URL like:
+	// https://overwatch.blizzard.com/en-us/career/de5bb4aca17492e0bba120a1d1%7Ca92a11ef8d304356fccfff8df12e1dc6/
 	parts := strings.Split(url, "/career/")
 	if len(parts) < 2 {
 		return ""
@@ -211,9 +214,10 @@ func extractProfileIDFromURL(url string) string {
 	return profilePart
 }
 
-// saveJSONToFile saves JSON string to file
+// saveJSONToFile saves JSON string to file.
 func saveJSONToFile(fileName, jsonStr string) error {
 	// This is a placeholder - in real implementation you'd use os.WriteFile
 	slog.Debug("Would save JSON to file", "file", fileName, "size", len(jsonStr))
+
 	return nil
 }

@@ -36,7 +36,8 @@ func (p *BrowserLikeParser) FetchWithJSSupport(ctx context.Context, profileURL s
 	}
 
 	// Add browser-like headers to appear more like a real browser
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
@@ -64,6 +65,7 @@ func (p *BrowserLikeParser) FetchWithJSSupport(ctx context.Context, profileURL s
 	}
 
 	slog.Debug("Successfully fetched HTML", "url", profileURL)
+
 	return doc, nil
 }
 
@@ -71,9 +73,16 @@ func (p *BrowserLikeParser) FetchWithJSSupport(ctx context.Context, profileURL s
 func (p *BrowserLikeParser) AnalyzeJSLoadedContent(doc *goquery.Document) {
 	slog.Info("🔍 Analyzing HTML structure for JS-loaded content...")
 
-	// Check for script tags that might load additional content
+	p.analyzeScriptTags(doc)
+	p.analyzeDataAttributes(doc)
+	p.analyzeSelectors(doc)
+	p.analyzeHeroContainers(doc)
+}
+
+// analyzeScriptTags checks for script tags that might load additional content.
+func (p *BrowserLikeParser) analyzeScriptTags(doc *goquery.Document) {
 	scriptCount := 0
-	doc.Find("script").Each(func(i int, s *goquery.Selection) {
+	doc.Find("script").Each(func(_ int, s *goquery.Selection) {
 		scriptCount++
 		src, exists := s.Attr("src")
 		if exists && strings.Contains(src, "career") {
@@ -81,10 +90,12 @@ func (p *BrowserLikeParser) AnalyzeJSLoadedContent(doc *goquery.Document) {
 		}
 	})
 	slog.Info("Found script tags", "count", scriptCount)
+}
 
-	// Look for data attributes that might be populated by JS
+// analyzeDataAttributes looks for data attributes that might be populated by JS.
+func (p *BrowserLikeParser) analyzeDataAttributes(doc *goquery.Document) {
 	dataAttrs := make(map[string]int)
-	doc.Find("*").Each(func(i int, s *goquery.Selection) {
+	doc.Find("*").Each(func(_ int, s *goquery.Selection) {
 		for _, attr := range []string{"data-stat", "data-category-id", "data-hero-id"} {
 			if val, exists := s.Attr(attr); exists {
 				dataAttrs[attr]++
@@ -98,8 +109,10 @@ func (p *BrowserLikeParser) AnalyzeJSLoadedContent(doc *goquery.Document) {
 	for attr, count := range dataAttrs {
 		slog.Info("Found data attributes", "attribute", attr, "count", count)
 	}
+}
 
-	// Look for the specific selectors the user mentioned
+// analyzeSelectors checks for specific selectors the user mentioned.
+func (p *BrowserLikeParser) analyzeSelectors(doc *goquery.Document) {
 	selectors := []string{
 		"blz-section.stats",
 		"span.stats-container",
@@ -114,19 +127,21 @@ func (p *BrowserLikeParser) AnalyzeJSLoadedContent(doc *goquery.Document) {
 		slog.Info("Checking selector", "selector", selector, "found", count)
 
 		if count > 0 {
-			elements.Each(func(i int, s *goquery.Selection) {
+			elements.Each(func(_ int, s *goquery.Selection) {
 				classes, _ := s.Attr("class")
 				id, _ := s.Attr("id")
 				slog.Debug("Found element", "selector", selector, "classes", classes, "id", id)
 			})
 		}
 	}
+}
 
-	// Look for containers that might hold hero stats
+// analyzeHeroContainers looks for containers that might hold hero stats.
+func (p *BrowserLikeParser) analyzeHeroContainers(doc *goquery.Document) {
 	heroContainers := doc.Find("[data-hero-id]")
 	slog.Info("Found hero containers", "count", heroContainers.Length())
 
-	heroContainers.Each(func(i int, s *goquery.Selection) {
+	heroContainers.Each(func(_ int, s *goquery.Selection) {
 		heroID, _ := s.Attr("data-hero-id")
 		classes, _ := s.Attr("class")
 		text := strings.TrimSpace(s.Text())
