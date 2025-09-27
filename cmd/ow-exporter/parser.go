@@ -349,13 +349,14 @@ func (p *Parser) extractAllHeroMetrics(heroEl *goquery.Selection, heroID, heroNa
 
 // extractCommonMetricsFromProgressBar extracts the common metrics from the progress bar description.
 // This reads the value from the .Profile-progressBar-description element.
-func (p *Parser) extractCommonMetricsFromProgressBar(heroEl *goquery.Selection, heroID, heroName string, stats *HeroStats) {
+func (p *Parser) extractCommonMetricsFromProgressBar(heroEl *goquery.Selection, heroID, _ string, stats *HeroStats) {
 	// Get the progress bar description value (this shows the current metric value)
 	descriptionEl := heroEl.Find(".Profile-progressBar-description")
 	if descriptionEl.Length() == 0 {
 		slog.Debug("No progress bar description found",
 			"hero_id", heroID,
 			"selector", ".Profile-progressBar-description")
+
 		return
 	}
 
@@ -372,6 +373,7 @@ func (p *Parser) extractCommonMetricsFromProgressBar(heroEl *goquery.Selection, 
 		slog.Debug("No active category found for hero",
 			"hero_id", heroID,
 			"value_text", valueText)
+
 		return
 	}
 
@@ -386,6 +388,7 @@ func (p *Parser) extractCommonMetricsFromProgressBar(heroEl *goquery.Selection, 
 		slog.Debug("Unknown category ID",
 			"hero_id", heroID,
 			"category_id", categoryID)
+
 		return
 	}
 
@@ -410,111 +413,8 @@ func (p *Parser) mapCategoryIDToMetricName(categoryID string) string {
 			return metricName
 		}
 	}
+
 	return ""
-}
-
-// extractMetricFromDocument extracts and parses a single metric value using its definition.
-// NOTE: This function is currently not used as detailed metrics are not available in the HTML.
-func (p *Parser) extractMetricFromDocument(
-	heroEl *goquery.Selection,
-	metricDef *MetricDef,
-	metricKey, heroID string,
-) float64 {
-	// Find the element using the selector
-	selection := p.findMetricElement(heroEl, metricDef.Selector, heroID, metricKey)
-	if selection == nil {
-		return -1
-	}
-
-	// Extract the value text from the element
-	valueText := p.extractValueFromElement(selection)
-	if valueText == "" {
-		return -1
-	}
-
-	// Parse the value based on its type
-	return p.parseValueByType(valueText, metricDef.ValueType)
-}
-
-// findMetricElement finds the HTML element using the provided selector.
-func (p *Parser) findMetricElement(heroEl *goquery.Selection, selector, heroID, metricKey string) *goquery.Selection {
-	// Try hero-specific search first
-	selection := heroEl.Find(selector)
-
-	if selection.Length() == 0 {
-		// Try broader document search if hero-specific search fails
-		selection = heroEl.Parent().Find(selector)
-	}
-
-	if selection.Length() == 0 {
-		slog.Debug("Metric selector not found",
-			"hero_id", heroID,
-			"metric", metricKey,
-			"selector", selector)
-
-		return nil
-	}
-
-	return selection
-}
-
-// extractValueFromElement extracts the text value from an HTML element.
-func (p *Parser) extractValueFromElement(selection *goquery.Selection) string {
-	// Try different extraction methods
-	valueText := strings.TrimSpace(selection.Text())
-	if valueText == "" {
-		valueText, _ = selection.Attr("data-value")
-	}
-	if valueText == "" {
-		valueText, _ = selection.Attr("value")
-	}
-
-	return valueText
-}
-
-// parseValueByType parses a value string based on the specified type.
-func (p *Parser) parseValueByType(valueText, valueType string) float64 {
-	switch valueType {
-	case DurationMetricType:
-		return p.parseTimeToSeconds(valueText)
-
-	case PercentageMetricType:
-		return p.parsePercentage(valueText)
-
-	case NumberMetricType:
-		return p.parseNumericValue(valueText)
-
-	default:
-		// Default to number parsing
-		return p.parseNumericValue(valueText)
-	}
-}
-
-// parseNumericValue tries to parse a value as integer first, then float.
-func (p *Parser) parseNumericValue(valueText string) float64 {
-	// Try integer first
-	if intValue := p.parseNumber(valueText); intValue >= 0 {
-		return float64(intValue)
-	}
-	// Try float
-
-	return p.parseFloat(valueText)
-}
-
-// parseFloat parses float values from text, removing non-numeric characters.
-func (p *Parser) parseFloat(text string) float64 {
-	// Remove all non-numeric characters except decimal point and minus
-	cleanStr := regexp.MustCompile(`[^\d.-]`).ReplaceAllString(text, "")
-	if cleanStr == "" {
-		return -1
-	}
-
-	value, err := strconv.ParseFloat(cleanStr, 64)
-	if err != nil {
-		return -1
-	}
-
-	return value
 }
 
 // parseTimeToSeconds converts time strings like "44:28:48" to seconds.
@@ -1021,6 +921,7 @@ func (p *Parser) processGameModeStats(doc *goquery.Selection, gamemodeView, hero
 	if statsSection.Length() == 0 {
 		slog.Debug("No stats section found for gamemode view",
 			"gamemode_view", gamemodeView, "hero_id", heroID)
+
 		return 0
 	}
 
@@ -1032,6 +933,7 @@ func (p *Parser) processGameModeStats(doc *goquery.Selection, gamemodeView, hero
 	if statsContainers.Length() == 0 {
 		slog.Debug("No stats containers found in section",
 			"gamemode_view", gamemodeView, "hero_id", heroID)
+
 		return 0
 	}
 
@@ -1063,12 +965,15 @@ func (p *Parser) findStatsContainers(statsSection *goquery.Selection) *goquery.S
 }
 
 // processStatsContainer processes a single stats container for hero-specific metrics.
-func (p *Parser) processStatsContainer(container *goquery.Selection, containerIdx int, heroID string, stats *HeroStats) int {
+func (p *Parser) processStatsContainer(
+	container *goquery.Selection, containerIdx int, heroID string, stats *HeroStats,
+) int {
 	// Check if this container has a select element (OverFast API pattern)
 	selectEl := container.Find("select")
 	if selectEl.Length() == 0 {
 		slog.Debug("Container has no select element, skipping",
 			"container_idx", containerIdx, "hero_id", heroID)
+
 		return 0
 	}
 
@@ -1076,6 +981,7 @@ func (p *Parser) processStatsContainer(container *goquery.Selection, containerId
 	if !p.isHeroInContainer(selectEl, heroID) {
 		slog.Debug("Hero not found in container options",
 			"container_idx", containerIdx, "hero_id", heroID)
+
 		return 0
 	}
 
@@ -1087,6 +993,7 @@ func (p *Parser) processStatsContainer(container *goquery.Selection, containerId
 	if statItems.Length() == 0 {
 		slog.Debug("No stat items found in container",
 			"container_idx", containerIdx, "hero_id", heroID)
+
 		return 0
 	}
 
@@ -1127,6 +1034,7 @@ func (p *Parser) processStatItem(item *goquery.Selection, itemIdx int, heroID st
 	if statName == "" || statValue == "" {
 		slog.Debug("Empty stat name or value, skipping",
 			"item_idx", itemIdx, "stat_name", statName, "stat_value", statValue)
+
 		return false
 	}
 
@@ -1177,10 +1085,12 @@ func (p *Parser) convertToFloat(parsedValue interface{}, statName string) (float
 
 		slog.Debug("Could not convert string value to float",
 			"stat_name", statName, "value", value)
+
 		return 0, false
 	default:
 		slog.Debug("Unsupported value type for metric storage",
 			"stat_name", statName, "value", parsedValue, "type", fmt.Sprintf("%T", parsedValue))
+
 		return 0, false
 	}
 }

@@ -28,7 +28,10 @@ const (
 	// DefaultServerPort sets the default Prometheus server port.
 	DefaultServerPort = "9090"
 	// DefaultHTTPTimeout sets the default HTTP client timeout.
-	DefaultHTTPTimeout = 30 * time.Second
+
+	// maxSampleMetricsCount sets maximum number of sample metrics to show.
+	maxSampleMetricsCount = 3
+	DefaultHTTPTimeout    = 30 * time.Second
 	// MaxHeroesDisplayed sets the maximum number of heroes displayed in logs.
 	MaxHeroesDisplayed = 3
 	// DebugFilePermissions sets file permissions for debug files.
@@ -1026,7 +1029,7 @@ func printMainUsage() {
 	slog.Info("Help", "message", "Run command without arguments for command-specific help", "program", os.Args[0])
 }
 
-// runAPITests runs API endpoint discovery
+// runAPITests runs API endpoint discovery.
 func runAPITests() {
 	slog.Info("🔍 Starting API endpoint discovery...")
 
@@ -1037,6 +1040,7 @@ func runAPITests() {
 	players := getAllPlayers()
 	if len(players) == 0 {
 		slog.Error("No players configured")
+
 		return
 	}
 
@@ -1049,13 +1053,14 @@ func runAPITests() {
 	err := inspector.InspectPotentialAPIEndpoints(ctx, profileURL)
 	if err != nil {
 		slog.Error("API inspection failed", "error", err)
+
 		return
 	}
 
 	slog.Info("✅ API endpoint discovery completed")
 }
 
-// runHeadlessTests runs headless browser testing
+// runHeadlessTests runs headless browser testing.
 func runHeadlessTests() {
 	slog.Info("🌐 Starting headless browser testing...")
 
@@ -1066,6 +1071,7 @@ func runHeadlessTests() {
 	players := getAllPlayers()
 	if len(players) == 0 {
 		slog.Error("No players configured")
+
 		return
 	}
 
@@ -1079,6 +1085,7 @@ func runHeadlessTests() {
 	_, err := parser.FetchWithJavaScript(ctx, profileURL)
 	if err != nil {
 		slog.Error("Headless parsing failed", "error", err)
+
 		return
 	}
 
@@ -1087,7 +1094,7 @@ func runHeadlessTests() {
 	slog.Info("✅ Headless browser testing completed")
 }
 
-// runParserTests tests the updated parser with real HTML from page.html
+// runParserTests tests the updated parser with real HTML from page.html.
 func runParserTests() {
 	slog.Info("🧪 Testing parser with real HTML from page.html...")
 
@@ -1110,10 +1117,12 @@ func loadHTMLFile() ([]byte, error) {
 	if err != nil {
 		slog.Error("Failed to read page.html", "error", err)
 		slog.Info("Make sure page.html exists in the current directory")
-		return nil, err
+
+		return nil, errors.Wrap(err, "failed to read page.html")
 	}
 
 	slog.Info("Loaded HTML file", "size_bytes", len(htmlContent))
+
 	return htmlContent, nil
 }
 
@@ -1123,8 +1132,10 @@ func parseHTMLContent(htmlContent []byte) (*FullPlayerProfile, error) {
 	profile, err := parser.ParseProfile(string(htmlContent), "LexFrei#21715")
 	if err != nil {
 		slog.Error("Failed to parse profile", "error", err)
+
 		return nil, err
 	}
+
 	return profile, nil
 }
 
@@ -1164,7 +1175,7 @@ func logHeroMetrics(heroID string, heroStats *HeroStats, count int) {
 	// Show first few metrics for verification
 	metricCount := 0
 	for metricKey, value := range heroStats.Metrics {
-		if metricCount < 3 {
+		if metricCount < maxSampleMetricsCount {
 			slog.Info("Sample metric",
 				"hero_id", heroID,
 				"metric", metricKey,

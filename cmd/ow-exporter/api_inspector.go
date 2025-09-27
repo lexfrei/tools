@@ -12,6 +12,11 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
+const (
+	defaultHTTPTimeoutSeconds = 30
+	maxRecursionDepth         = 3
+)
+
 // APIInspector helps find API endpoints that might contain detailed hero stats.
 type APIInspector struct {
 	client *http.Client
@@ -21,7 +26,7 @@ type APIInspector struct {
 func NewAPIInspector() *APIInspector {
 	return &APIInspector{
 		client: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: defaultHTTPTimeoutSeconds * time.Second,
 		},
 	}
 }
@@ -117,7 +122,8 @@ func (a *APIInspector) testAPIEndpoint(ctx context.Context, endpoint PotentialAP
 		// Try to read and analyze the response
 		var jsonData interface{}
 		decoder := json.NewDecoder(resp.Body)
-		if err := decoder.Decode(&jsonData); err == nil {
+		err := decoder.Decode(&jsonData)
+		if err == nil {
 			a.analyzeJSONResponse(endpoint.URL, jsonData)
 		} else {
 			slog.Debug("Response is not JSON", "url", endpoint.URL)
@@ -160,9 +166,8 @@ func (a *APIInspector) analyzeJSONResponse(url string, data interface{}) {
 
 		// Save the response for analysis
 		fileName := fmt.Sprintf("/tmp/claude/api_response_%d.json", time.Now().Unix())
-		if err := saveJSONToFile(fileName, jsonStr); err == nil {
-			slog.Info("Saved API response", "file", fileName)
-		}
+		saveJSONToFile(fileName, jsonStr)
+		slog.Info("Saved API response", "file", fileName)
 	} else {
 		slog.Debug("No hero keywords found in response", "url", url)
 	}
@@ -175,15 +180,15 @@ func (a *APIInspector) analyzeJSONResponse(url string, data interface{}) {
 
 // analyzeJSONStructure recursively analyzes JSON structure.
 func (a *APIInspector) analyzeJSONStructure(key string, data interface{}, depth int) {
-	if depth > 3 { // Limit recursion depth
+	if depth > maxRecursionDepth { // Limit recursion depth
 		return
 	}
 
 	indent := strings.Repeat("  ", depth)
 
-	switch v := data.(type) {
+	switch value := data.(type) {
 	case map[string]interface{}:
-		for k, val := range v {
+		for k, val := range value {
 			if strings.Contains(strings.ToLower(k), "hero") ||
 				strings.Contains(strings.ToLower(k), "stat") ||
 				strings.Contains(strings.ToLower(k), "cassidy") {
@@ -192,9 +197,9 @@ func (a *APIInspector) analyzeJSONStructure(key string, data interface{}, depth 
 			}
 		}
 	case []interface{}:
-		if len(v) > 0 {
-			slog.Debug("JSON array", "path", fmt.Sprintf("%s%s", indent, key), "length", len(v))
-			a.analyzeJSONStructure(fmt.Sprintf("%s[0]", key), v[0], depth+1)
+		if len(value) > 0 {
+			slog.Debug("JSON array", "path", fmt.Sprintf("%s%s", indent, key), "length", len(value))
+			a.analyzeJSONStructure(key+"[0]", value[0], depth+1)
 		}
 	}
 }
@@ -215,9 +220,7 @@ func extractProfileIDFromURL(url string) string {
 }
 
 // saveJSONToFile saves JSON string to file.
-func saveJSONToFile(fileName, jsonStr string) error {
+func saveJSONToFile(fileName, jsonStr string) {
 	// This is a placeholder - in real implementation you'd use os.WriteFile
 	slog.Debug("Would save JSON to file", "file", fileName, "size", len(jsonStr))
-
-	return nil
 }

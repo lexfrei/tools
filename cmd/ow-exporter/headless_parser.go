@@ -13,21 +13,25 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
-// HeadlessParser provides JavaScript-enabled HTML parsing
+const (
+	headlessHTTPTimeoutSeconds = 60
+)
+
+// HeadlessParser provides JavaScript-enabled HTML parsing.
 type HeadlessParser struct {
 	client *http.Client
 }
 
-// NewHeadlessParser creates a new headless parser
+// NewHeadlessParser creates a new headless parser.
 func NewHeadlessParser() *HeadlessParser {
 	return &HeadlessParser{
 		client: &http.Client{
-			Timeout: 60 * time.Second,
+			Timeout: headlessHTTPTimeoutSeconds * time.Second,
 		},
 	}
 }
 
-// FetchWithJavaScript fetches a page and executes JavaScript to get full DOM
+// FetchWithJavaScript fetches a page and executes JavaScript to get full DOM.
 func (h *HeadlessParser) FetchWithJavaScript(ctx context.Context, profileURL string) (*goquery.Document, error) {
 	slog.Info("🌐 Fetching page with JavaScript execution", "url", profileURL)
 
@@ -43,9 +47,10 @@ func (h *HeadlessParser) FetchWithJavaScript(ctx context.Context, profileURL str
 	return h.fetchWithEnhancedHTTP(ctx, profileURL)
 }
 
-// AnalyzeJSLoadedStructure analyzes the JavaScript-loaded DOM structure
-func (h *HeadlessParser) AnalyzeJSLoadedStructure(ctx context.Context, profileURL string) error {
-	slog.Info("🔍 Analyzing JavaScript-loaded structure", "url", profileURL)
+// AnalyzeJSLoadedStructure analyzes the JavaScript-loaded DOM structure.
+func (h *HeadlessParser) AnalyzeJSLoadedStructure(_ context.Context, _ string) error {
+	slog.Info("🔍 Analyzing JavaScript-loaded structure")
+
 	return nil
 }
 
@@ -118,8 +123,10 @@ func (h *HeadlessParser) executePuppeteerScript(ctx context.Context, script stri
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		slog.Error("Puppeteer script failed", "error", err, "output", string(output))
+
 		return nil, errors.Wrap(err, "failed to execute Puppeteer script")
 	}
+
 	return output, nil
 }
 
@@ -131,6 +138,7 @@ func (h *HeadlessParser) parsePuppeteerOutput(output []byte) (*goquery.Document,
 	}
 
 	slog.Info("✅ Successfully fetched page with Puppeteer")
+
 	return doc, nil
 }
 
@@ -145,7 +153,8 @@ func (h *HeadlessParser) fetchWithEnhancedHTTP(ctx context.Context, profileURL s
 
 	// Set comprehensive browser-like headers
 	req.Header.Set("User-Agent",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "+
+			"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 	req.Header.Set("Accept",
 		"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
@@ -173,5 +182,6 @@ func (h *HeadlessParser) fetchWithEnhancedHTTP(ctx context.Context, profileURL s
 	}
 
 	slog.Info("📄 Enhanced HTTP fetch completed")
+
 	return doc, nil
 }
