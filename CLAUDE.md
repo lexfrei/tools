@@ -78,6 +78,169 @@ The project follows standard Go conventions with strict linting rules. Pay atten
 - Import formatting with goimports and gofumpt
 - Error handling patterns using `github.com/cockroachdb/errors`
 
+## Go Code Style Guide
+
+Based on golangci-lint configuration and current linting errors, follow these specific style guidelines:
+
+### Standard Libraries (from ~/PROMPT.md)
+- **Logging**: `slog` (standard library)
+- **Errors**: `github.com/cockroachdb/errors`
+- **Web framework**: `github.com/labstack/echo/v4`
+- **CLI**: `github.com/spf13/cobra`
+- **Configuration**: `github.com/spf13/viper`
+
+### Function and Method Guidelines
+- **Function length**: Maximum 60 lines (funlen)
+- **Cognitive complexity**: Maximum 30 (gocognit)
+- **Cyclomatic complexity**: Maximum 10 (gocyclo)
+- Break down complex functions into smaller, focused functions
+- Use helper methods to reduce complexity
+
+### Line Length and Formatting
+- **Maximum line length**: 120 characters (lll)
+- For struct tags that exceed line length:
+  ```go
+  // Good - break long struct tags across lines
+  type HeroStats struct {
+      TimePlayed time.Duration `ow:"time_played"
+          prometheus:"ow_hero_time_played_seconds"
+          help:"Total time played on hero"
+          path:"[data-category-id='0x0860000000000021']"
+          type:"duration"`
+  }
+  ```
+
+### Constants and Magic Numbers
+- **Extract repeated strings** as constants (goconst):
+  ```go
+  // Good
+  const MouseKeyboardViewActiveSelector = ".mouseKeyboard-view.is-active"
+  const QuickPlayViewActiveSelector = ".quickPlay-view.is-active"
+  ```
+- **Avoid magic numbers** (mnd) - define as constants with meaningful names:
+  ```go
+  // Bad
+  time.Sleep(30 * time.Second)
+
+  // Good
+  const DefaultTimeout = 30 * time.Second
+  time.Sleep(DefaultTimeout)
+  ```
+
+### Variable Naming
+- **Minimum 3 characters** for variable names (varnamelen)
+- Use descriptive names:
+  ```go
+  // Bad
+  e := echo.New()
+  s := "hello"
+
+  // Good
+  server := echo.New()
+  message := "hello"
+  ```
+
+### Documentation Standards
+- **All comments must end with periods** (godot):
+  ```go
+  // Good comment ends with a period.
+  func doSomething() {}
+  ```
+- **Document all exported functions and types** (godoclint)
+- Use proper Go doc comment format
+
+### Struct Tags and JSON Naming
+- **Use camelCase for JSON tags** (tagliatelle):
+  ```go
+  // Good
+  type Player struct {
+      BattleTag    string     `json:"battleTag" yaml:"battletag"`
+      LastResolved *time.Time `json:"lastResolved" yaml:"lastResolved"`
+  }
+  ```
+- **Align struct tags** (tagalign) for better readability:
+  ```go
+  type Config struct {
+      Host     string `json:"host"     yaml:"host"`
+      Port     int    `json:"port"     yaml:"port"`
+      Database string `json:"database" yaml:"database"`
+  }
+  ```
+
+### Context Handling
+- **Pass context as first parameter** (noctx) in functions that might need it:
+  ```go
+  // Good
+  func fetchData(ctx context.Context, url string) error {
+      // implementation
+  }
+  ```
+
+### Loop Patterns
+- **Use integer ranges for Go 1.22+** (intrange):
+  ```go
+  // Modern Go 1.22+ style
+  for i := range 10 {
+      // process i
+  }
+
+  // Instead of
+  for i := 0; i < 10; i++ {
+      // process i
+  }
+  ```
+
+### Line Spacing (nlreturn)
+- **Add blank lines before return statements** when they follow blocks:
+  ```go
+  // Good
+  if condition {
+      doSomething()
+  }
+
+  return result
+  ```
+
+### Testing Standards
+- **Use parallel tests** where appropriate (paralleltest):
+  ```go
+  func TestSomething(t *testing.T) {
+      t.Parallel() // Add this for independent tests
+
+      // test implementation
+  }
+  ```
+
+### TODOs and Technical Debt
+- **Minimize TODO comments** (godox)
+- When TODOs are necessary, make them specific and actionable
+- Include issue references or deadlines where possible
+
+### Prometheus Metrics
+- **Follow Prometheus naming conventions** (promlinter):
+  ```go
+  // Good metric names
+  "http_requests_total"      // counter
+  "request_duration_seconds" // histogram
+  "current_connections"      // gauge
+  ```
+
+### Error Handling Patterns
+- Use sentinel errors for expected conditions
+- Wrap errors with context using `github.com/cockroachdb/errors`
+- Don't return `nil, nil` - use meaningful errors instead
+
+### Code Organization
+- Keep related functionality together
+- Use meaningful package names
+- Prefer composition over inheritance
+- Use interfaces for dependencies
+
+### File Permissions and Security
+- Use octal notation for file permissions: `0o600` not `0600`
+- Never commit secrets or credentials
+- Use environment variables for sensitive configuration
+
 ### Adding New Tools
 When adding a new CLI tool:
 1. Create directory under `cmd/<tool-name>/`

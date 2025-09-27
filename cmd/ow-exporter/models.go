@@ -1,17 +1,18 @@
-// metrics_mapping.go - Hardcoded metrics mapping for OW2 exporter
 package main
 
-// MetricDef defines a single metric with its parsing information
+import "time"
+
+// MetricDef defines a single metric with its parsing information.
 type MetricDef struct {
-	PrometheusName string `json:"prometheus_name"` // "ow_hero_time_played_seconds"
-	Help           string `json:"help"`            // Help text for Prometheus
-	Unit           string `json:"unit"`            // "seconds", "percent", "count", "ratio"
-	Selector       string `json:"selector"`        // CSS selector or data attribute
-	HexID          string `json:"hex_id"`          // Blizzard's hex ID for the metric
-	ValueType      string `json:"value_type"`      // "duration", "number", "percentage"
+	PrometheusName string `json:"prometheusName"` // "ow_hero_time_played_seconds"
+	Help           string `json:"help"`           // Help text for Prometheus
+	Unit           string `json:"unit"`           // "seconds", "percent", "count", "ratio"
+	Selector       string `json:"selector"`       // CSS selector or data attribute
+	HexID          string `json:"hexId"`          // Blizzard's hex ID for the metric
+	ValueType      string `json:"valueType"`      // "duration", "number", "percentage"
 }
 
-// Platform represents PC or Console
+// Platform represents PC or Console.
 type Platform string
 
 const (
@@ -19,15 +20,15 @@ const (
 	PlatformConsole Platform = "console"
 )
 
-// GameMode represents Quick Play or Competitive
+// GameMode represents Quick Play or Competitive.
 type GameMode string
 
 const (
-	GameModeQuickPlay    GameMode = "quickplay"
-	GameModeCompetitive  GameMode = "competitive"
+	GameModeQuickPlay   GameMode = "quickplay"
+	GameModeCompetitive GameMode = "competitive"
 )
 
-// MetricLabels for Prometheus metrics
+// MetricLabels for Prometheus metrics.
 type MetricLabels struct {
 	Username string   `json:"username"`
 	Hero     string   `json:"hero"`
@@ -35,171 +36,143 @@ type MetricLabels struct {
 	GameMode GameMode `json:"gamemode"`
 }
 
-// Common metrics available for all heroes
-var CommonMetrics = map[string]MetricDef{
-	"time_played": {
-		PrometheusName: "ow_hero_time_played_seconds",
-		Help:           "Total time played on hero in seconds",
-		Unit:           "seconds",
-		Selector:       ".Profile-progressBar-description",
-		HexID:          "0x0860000000000021",
-		ValueType:      "duration",
-	},
-	"games_won": {
-		PrometheusName: "ow_hero_games_won_total",
-		Help:           "Total number of games won with hero",
-		Unit:           "count",
-		Selector:       "[data-category-id='0x0860000000000039'] .Profile-progressBar-description",
-		HexID:          "0x0860000000000039",
-		ValueType:      "number",
-	},
-	"win_percentage": {
-		PrometheusName: "ow_hero_win_percentage",
-		Help:           "Win percentage with hero",
-		Unit:           "percent",
-		Selector:       "[data-category-id='0x08600000000003D1'] .Profile-progressBar-description",
-		HexID:          "0x08600000000003D1",
-		ValueType:      "percentage",
-	},
-	"weapon_accuracy": {
-		PrometheusName: "ow_hero_weapon_accuracy_percent",
-		Help:           "Best weapon accuracy percentage with hero",
-		Unit:           "percent",
-		Selector:       "[data-category-id='0x08600000000001BB'] .Profile-progressBar-description",
-		HexID:          "0x08600000000001BB",
-		ValueType:      "percentage",
-	},
-	"eliminations_per_life": {
-		PrometheusName: "ow_hero_eliminations_per_life",
-		Help:           "Average eliminations per life with hero",
-		Unit:           "ratio",
-		Selector:       "[data-category-id='0x08600000000003D2'] .Profile-progressBar-description",
-		HexID:          "0x08600000000003D2",
-		ValueType:      "number",
-	},
-	"kill_streak_best": {
-		PrometheusName: "ow_hero_kill_streak_best",
-		Help:           "Best kill streak achieved with hero",
-		Unit:           "count",
-		Selector:       "[data-category-id='0x0860000000000223'] .Profile-progressBar-description",
-		HexID:          "0x0860000000000223",
-		ValueType:      "number",
-	},
-	"multikill_best": {
-		PrometheusName: "ow_hero_multikill_best",
-		Help:           "Best multikill achieved with hero",
-		Unit:           "count",
-		Selector:       "[data-category-id='0x0860000000000346'] .Profile-progressBar-description",
-		HexID:          "0x0860000000000346",
-		ValueType:      "number",
-	},
-	"eliminations_per_10min": {
-		PrometheusName: "ow_hero_eliminations_per_10min_avg",
-		Help:           "Average eliminations per 10 minutes with hero",
-		Unit:           "rate",
-		Selector:       "[data-category-id='0x08600000000004D4'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004D4",
-		ValueType:      "number",
-	},
-	"deaths_per_10min": {
-		PrometheusName: "ow_hero_deaths_per_10min_avg",
-		Help:           "Average deaths per 10 minutes with hero",
-		Unit:           "rate",
-		Selector:       "[data-category-id='0x08600000000004D3'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004D3",
-		ValueType:      "number",
-	},
-	"final_blows_per_10min": {
-		PrometheusName: "ow_hero_final_blows_per_10min_avg",
-		Help:           "Average final blows per 10 minutes with hero",
-		Unit:           "rate",
-		Selector:       "[data-category-id='0x08600000000004D5'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004D5",
-		ValueType:      "number",
-	},
-	"solo_kills_per_10min": {
-		PrometheusName: "ow_hero_solo_kills_per_10min_avg",
-		Help:           "Average solo kills per 10 minutes with hero",
-		Unit:           "rate",
-		Selector:       "[data-category-id='0x08600000000004DA'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004DA",
-		ValueType:      "number",
-	},
-	"objective_kills_per_10min": {
-		PrometheusName: "ow_hero_objective_kills_per_10min_avg",
-		Help:           "Average objective kills per 10 minutes with hero",
-		Unit:           "rate",
-		Selector:       "[data-category-id='0x08600000000004D8'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004D8",
-		ValueType:      "number",
-	},
-	"objective_time_per_10min": {
-		PrometheusName: "ow_hero_objective_time_per_10min_avg",
-		Help:           "Average objective time per 10 minutes with hero",
-		Unit:           "seconds",
-		Selector:       "[data-category-id='0x08600000000004D9'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004D9",
-		ValueType:      "duration",
-	},
-	"hero_damage_per_10min": {
-		PrometheusName: "ow_hero_damage_per_10min_avg",
-		Help:           "Average hero damage per 10 minutes",
-		Unit:           "damage",
-		Selector:       "[data-category-id='0x08600000000004BD'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004BD",
-		ValueType:      "number",
-	},
-	"healing_per_10min": {
-		PrometheusName: "ow_hero_healing_per_10min_avg",
-		Help:           "Average healing done per 10 minutes",
-		Unit:           "healing",
-		Selector:       "[data-category-id='0x08600000000004D6'] .Profile-progressBar-description",
-		HexID:          "0x08600000000004D6",
-		ValueType:      "number",
-	},
+// GetCommonMetrics returns common metrics using the new embedded struct approach.
+func GetCommonMetrics() map[string]MetricDef {
+	return GetCommonMetricsForPlatform(PlatformPC, GameModeQuickPlay)
 }
 
-// Hero-specific metrics can be added here for special abilities
-// For now, we'll use the common metrics for all heroes
+// GetCommonMetricsForPlatform returns common metrics for specific platform and game mode.
+func GetCommonMetricsForPlatform(platform Platform, gameMode GameMode) map[string]MetricDef {
+	commonStruct := CommonMetrics{}
 
-// CSS Selectors for platform and game mode detection
+	return GenerateMetricDefsWithContext(commonStruct, platform, gameMode)
+}
+
+// Hero-specific metrics can be added here for special abilities.
+
+// PlatformSelectors for platform and game mode detection.
 var PlatformSelectors = map[Platform]string{
-	PlatformPC:      ".mouseKeyboard-view.is-active",
-	PlatformConsole: ".controller-view.is-active",
+	PlatformPC:      ".mouseKeyboard-view",
+	PlatformConsole: ".controller-view",
 }
 
 var GameModeSelectors = map[GameMode]string{
-	GameModeQuickPlay:   ".quickPlay-view.is-active",
-	GameModeCompetitive: ".competitive-view.is-active",
+	GameModeQuickPlay:   ".quickPlay-view",
+	GameModeCompetitive: ".competitive-view",
 }
 
-// Hero identification selectors
+// HeroSelectors for hero identification and detailed stats parsing.
 var HeroSelectors = struct {
-	Container string
-	Name      string
-	ID        string
-	TimePlayed string
+	Container         string
+	Name              string
+	ID                string
+	TimePlayed        string
+	StatsContainer    string
+	StatItem          string
+	StatName          string
+	StatValue         string
+	CategoryHeader    string
+	BlzStatsSection   string
 }{
-	Container:  ".Profile-progressBar",
-	Name:       ".Profile-progressBar-title",
-	ID:         "[data-hero-id]",
-	TimePlayed: ".Profile-progressBar-description",
+	Container:         ".Profile-progressBar",
+	Name:              ".Profile-progressBar-title",
+	ID:                ".Profile-progressBar--bar[data-hero-id]", // data-hero-id is on the bar element
+	TimePlayed:        ".Profile-progressBar-description",
+	StatsContainer:    "span.stats-container",              // OverFast API style
+	StatItem:          ".stat-item",                        // Individual stat items
+	StatName:          "p.name",                            // Stat name within stat-item
+	StatValue:         "p.value",                           // Stat value within stat-item
+	CategoryHeader:    ".category .content .header p",     // Category headers
+	BlzStatsSection:   "blz-section.stats",                 // Main stats sections
 }
 
-// Platform filter selectors for switching views
+// PlatformFilters for switching views.
 var PlatformFilters = map[Platform]string{
 	PlatformPC:      "#mouseKeyboardFilter",
 	PlatformConsole: "#controllerFilter",
 }
 
-// Helper function to generate Prometheus metric name
-func (m MetricDef) PrometheusMetricName(labels MetricLabels) string {
+// PrometheusMetricName generates Prometheus metric name.
+func (m *MetricDef) PrometheusMetricName(_ MetricLabels) string {
 	return m.PrometheusName
 }
 
-// Helper function to get CSS selector for a metric in a specific context
-func (m MetricDef) GetSelector(platform Platform, gameMode GameMode) string {
-	// For now, use the base selector
-	// In the future, we might need platform/gamemode specific selectors
+// GetSelector returns CSS selector for this metric.
+func (m *MetricDef) GetSelector() string {
 	return m.Selector
+}
+
+// New structures for the enhanced metrics system.
+
+// AllHeroesStats represents aggregated statistics across all heroes.
+type AllHeroesStats struct {
+	TotalTimePlayed        int64   `json:"totalTimePlayedSeconds" prometheus:"ow_player_total_time_played_seconds"`
+	TotalGamesWon          int     `json:"totalGamesWon"          prometheus:"ow_player_total_games_won"`
+	OverallWinPercentage   float64 `json:"overallWinPercentage"   prometheus:"ow_player_overall_win_percentage"`
+	WeaponAccuracy         float64 `json:"weaponAccuracyPercent"  prometheus:"ow_player_weapon_accuracy_percent"`
+	EliminationsPerLife    float64 `json:"eliminationsPerLife"    prometheus:"ow_player_eliminations_per_life"`
+	KillStreakBest         int     `json:"killStreakBest"         prometheus:"ow_player_kill_streak_best"`
+	MultikillBest          int     `json:"multikillBest"          prometheus:"ow_player_multikill_best"`
+	EliminationsPer10Min   float64 `json:"eliminationsPer10min"   prometheus:"ow_player_eliminations_per_10min"`
+	DeathsPer10Min         float64 `json:"deathsPer10min"         prometheus:"ow_player_deaths_per_10min"`
+	FinalBlowsPer10Min     float64 `json:"finalBlowsPer10min"     prometheus:"ow_player_final_blows_per_10min"`
+	SoloKillsPer10Min      float64 `json:"soloKillsPer10min"      prometheus:"ow_player_solo_kills_per_10min"`
+	ObjectiveKillsPer10Min float64 `json:"objectiveKillsPer10min" prometheus:"ow_player_objective_kills_per_10min"`
+	ObjectiveTimePer10Min  float64 `json:"objectiveTimePer10min"  prometheus:"ow_player_objective_time_per_10min"`
+	HeroDamagePer10Min     float64 `json:"heroDamagePer10min"     prometheus:"ow_player_hero_damage_per_10min"`
+	HealingPer10Min        float64 `json:"healingPer10min"        prometheus:"ow_player_healing_per_10min"`
+}
+
+// HeroMetrics represents metrics for a specific hero.
+type HeroMetrics map[string]interface{}
+
+// RuntimeMetrics contains all runtime metrics data.
+type RuntimeMetrics struct {
+	Players map[string]*PlayerMetrics `json:"players"` // battletag -> metrics
+}
+
+// PlayerMetrics contains all metrics for a single player.
+type PlayerMetrics struct {
+	BattleTag   string    `json:"battletag"`
+	DisplayName string    `json:"displayName"` // "Joe" from HTML
+	PlayerTitle string    `json:"playerTitle"` // "Peasant" from HTML
+	LastUpdated time.Time `json:"lastUpdated"`
+
+	// Level 1: Profile-level metrics (SR, endorsement)
+	ProfileMetrics ProfileMetrics `json:"profileMetrics"`
+
+	// Level 2: All Heroes aggregated metrics by platform/gamemode
+	AllHeroesMetrics map[Platform]map[GameMode]AllHeroesStats `json:"allHeroesMetrics"`
+
+	// Level 3: Individual hero metrics by platform/gamemode/hero
+	HeroMetrics map[Platform]map[GameMode]map[string]HeroMetrics `json:"heroMetrics"`
+}
+
+// EnhancedMetricLabels with BattleTag support.
+type EnhancedMetricLabels struct {
+	BattleTag  string   `json:"battletag"`  // LexFrei#21715
+	PlayerName string   `json:"playerName"` // Joe
+	Hero       string   `json:"hero"`       // soldier-76, widowmaker, etc.
+	Platform   Platform `json:"platform"`   // pc, console
+	GameMode   GameMode `json:"gamemode"`   // quickplay, competitive
+	MetricType string   `json:"metricType"` // profile, all_heroes, hero
+}
+
+// AllHeroesHexIDs for parsing.
+var AllHeroesHexIDs = map[string]string{
+	"time_played":               "0x0860000000000021",
+	"games_won":                 "0x0860000000000039",
+	"win_percentage":            "0x08600000000003D1",
+	"weapon_accuracy":           "0x08600000000001BB",
+	"eliminations_per_life":     "0x08600000000003D2",
+	"kill_streak_best":          "0x0860000000000223",
+	"multikill_best":            "0x0860000000000346",
+	"eliminations_per_10min":    "0x08600000000004D4",
+	"deaths_per_10min":          "0x08600000000004D3",
+	"final_blows_per_10min":     "0x08600000000004D5",
+	"solo_kills_per_10min":      "0x08600000000004DA",
+	"objective_kills_per_10min": "0x08600000000004D8",
+	"objective_time_per_10min":  "0x08600000000004D9",
+	"hero_damage_per_10min":     "0x08600000000004BD",
+	"healing_per_10min":         "0x08600000000004D6",
 }

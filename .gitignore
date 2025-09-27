@@ -108,4 +108,22 @@ $RECYCLE.BIN/
 deployments/vk2tg/compose/local.env
 
 # Project-specific binaries
-ow-exporter
+/ow-exporter
+cmd/ow-exporter/ow-exporter
+
+# OverFast API source code for reference
+overfast-api/
+
+# Node.js (not needed for Go project)
+node_modules/
+package.json
+package-lock.json
+
+# Temporary debug/development files
+*.html
+debug_profile.html
+
+# Configuration files with personal data
+config/players.yaml
+cmd/ow-exporter/config/
+*/config/players.yaml
