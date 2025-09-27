@@ -241,10 +241,6 @@ Based on golangci-lint configuration and current linting errors, follow these sp
 - Never commit secrets or credentials
 - Use environment variables for sensitive configuration
 
-### Git Security Standards
-- **NEVER disable GPG signing for commits** - GPG signing is mandatory for security
-- If GPG signing fails, fix the GPG agent instead of bypassing with `--no-gpg-sign`
-
 ### Adding New Tools
 When adding a new CLI tool:
 1. Create directory under `cmd/<tool-name>/`
