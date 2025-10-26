@@ -15,6 +15,7 @@ import (
 
 var (
 	DataType string
+	Language string
 	cfgFile  string
 	Parallel uint
 )
@@ -40,6 +41,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mtgdsgenerator.yaml)")
 	rootCmd.PersistentFlags().StringVar(&DataType, "datatype", "all_cards",
 		"type of cards archive (all_cards, oracle_cards, etc)")
+	rootCmd.PersistentFlags().StringVar(&Language, "lang", "",
+		"filter cards by language code (e.g., en, ru, ja). Empty string means all languages")
 	rootCmd.PersistentFlags().UintVar(&Parallel, "parallel", 10, "number of parallel downloaders")
 
 	// Cobra also supports local flags, which will only run

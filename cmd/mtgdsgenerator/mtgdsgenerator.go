@@ -11,24 +11,72 @@ import (
 	"path"
 	"strconv"
 	"sync"
+	"time"
 
 	scryfall "github.com/BlueMonday/go-scryfall"
 	"github.com/cockroachdb/errors"
 	"github.com/lexfrei/tools/cmd/mtgdsgenerator/cmd"
 )
 
+const (
+	httpClientTimeout      = 30 * time.Second
+	bulkDataTimeout        = 5 * time.Minute
+	filePermission         = 0o600
+	directoryPermission    = 0o755
+	progressUpdateInterval = 500 * time.Millisecond
+	bytesPerMegabyte       = 1024 * 1024
+)
+
 // config holds the configuration for the server.
-// It has a waitgroup for waiting for the server to shutdown,
-// and a mutex for synchronizing access to the configuration.
+// It has a waitgroup for waiting for the server to shutdown.
 type config struct {
-	wg sync.WaitGroup
-	mu sync.Mutex
+	wg         sync.WaitGroup
+	httpClient *http.Client
+}
+
+// progressReader wraps an io.Reader to display download progress.
+type progressReader struct {
+	reader    io.Reader
+	total     int64
+	current   int64
+	lastPrint time.Time
+}
+
+// Read implements io.Reader and prints progress periodically.
+//
+//nolint:wrapcheck // error passthrough required for io.Reader interface
+func (pr *progressReader) Read(p []byte) (int, error) {
+	bytesRead, err := pr.reader.Read(p)
+	pr.current += int64(bytesRead)
+
+	if time.Since(pr.lastPrint) > progressUpdateInterval || err == io.EOF {
+		percentage := float64(0)
+		if pr.total > 0 {
+			percentage = float64(pr.current) * 100 / float64(pr.total)
+		}
+
+		log.Printf("\rDownloaded: %.2f MB / %.2f MB (%.1f%%)",
+			float64(pr.current)/bytesPerMegabyte,
+			float64(pr.total)/bytesPerMegabyte,
+			percentage)
+		pr.lastPrint = time.Now()
+
+		if err == io.EOF {
+			log.Println()
+		}
+	}
+
+	return bytesRead, err
 }
 
 func main() {
 	cmd.Execute()
 
-	var conf config
+	conf := config{
+		httpClient: &http.Client{
+			Timeout: httpClientTimeout,
+		},
+	}
 
 	ctx := context.Background()
 
@@ -37,7 +85,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	result := make(map[string][]string)
+	var result sync.Map
 
 	log.Printf("Spawning %d workers...\n", cmd.Parallel)
 
@@ -45,8 +93,8 @@ func main() {
 	workersCount := int(cmd.Parallel)
 	jobIndex := make(chan int, workersCount)
 
-	for w := 1; w <= workersCount; w++ {
-		go worker(ctx, &conf, cards, jobIndex, result)
+	for workerID := 1; workerID <= workersCount; workerID++ {
+		go worker(ctx, &conf, cards, jobIndex, &result)
 	}
 
 	for index := range cards {
@@ -56,24 +104,36 @@ func main() {
 	close(jobIndex)
 	conf.wg.Wait()
 
-	err = generateReport(result)
+	err = generateReport(&result)
 	if err != nil {
 		log.Fatalf("error generating report: %s", err)
 	}
 }
 
-// GenerateReport is a function that generates a report when passed a map of card names to slices of card types
-
-func generateReport(result map[string][]string) error {
+// GenerateReport is a function that generates a report when passed a sync.Map of card names to slices of card types.
+func generateReport(result *sync.Map) error {
 	log.Println("Generating report...")
 
-	jsondata, err := json.Marshal(result)
+	resultMap := make(map[string][]string)
+	result.Range(func(key, value any) bool {
+		keyStr, keyOK := key.(string)
+		mapValue, valueOK := value.(*syncMapValue)
+		if keyOK && valueOK {
+			mapValue.mu.Lock()
+			resultMap[keyStr] = make([]string, len(mapValue.paths))
+			copy(resultMap[keyStr], mapValue.paths)
+			mapValue.mu.Unlock()
+		}
+
+		return true
+	})
+
+	jsondata, err := json.Marshal(resultMap)
 	if err != nil {
 		return errors.Wrap(err, "cant marshal json")
 	}
 
-	//nolint:gosec // This permission is fine
-	err = os.WriteFile("./cards.json", jsondata, os.ModePerm)
+	err = os.WriteFile("./cards.json", jsondata, filePermission)
 	if err != nil {
 		return errors.Wrap(err, "cant write file")
 	}
@@ -81,7 +141,7 @@ func generateReport(result map[string][]string) error {
 	return nil
 }
 
-func downloadAndSave(ctx context.Context, imageurl, filepath string) error {
+func downloadAndSave(ctx context.Context, client *http.Client, imageurl, filepath string) error {
 	_, err := url.ParseRequestURI(imageurl)
 	if err != nil {
 		return errors.Wrap(err, "invalid url")
@@ -92,7 +152,7 @@ func downloadAndSave(ctx context.Context, imageurl, filepath string) error {
 		return errors.Wrap(err, "cannot create request")
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "cannot download file")
 	}
@@ -111,13 +171,12 @@ func downloadAndSave(ctx context.Context, imageurl, filepath string) error {
 		return errors.New("empty response body")
 	}
 
-	err = os.MkdirAll(path.Dir(filepath), os.ModePerm)
+	err = os.MkdirAll(path.Dir(filepath), directoryPermission)
 	if err != nil {
 		return errors.Wrap(err, "cannot create directory")
 	}
 
-	//nolint:gosec // This permission is fine
-	err = os.WriteFile(filepath, body, os.ModePerm)
+	err = os.WriteFile(filepath, body, filePermission)
 	if err != nil {
 		return errors.Wrap(err, "cannot write file")
 	}
@@ -125,6 +184,7 @@ func downloadAndSave(ctx context.Context, imageurl, filepath string) error {
 	return nil
 }
 
+//nolint:funlen // Function handles complex bulk data download with progress
 func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 	client, err := scryfall.NewClient()
 	if err != nil {
@@ -138,6 +198,10 @@ func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 
 	cards := []scryfall.Card{}
 
+	bulkClient := &http.Client{
+		Timeout: bulkDataTimeout,
+	}
+
 	for index := range lbd {
 		if lbd[index].Type != cmd.DataType {
 			continue
@@ -150,7 +214,7 @@ func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 			return nil, errors.Wrap(err, "cant create request")
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := bulkClient.Do(req)
 		if err != nil {
 			return nil, errors.Wrap(err, "cant do request")
 		}
@@ -161,7 +225,13 @@ func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 			return nil, errors.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
 		}
 
-		body, err := io.ReadAll(resp.Body)
+		progress := &progressReader{
+			reader:    resp.Body,
+			total:     resp.ContentLength,
+			lastPrint: time.Now(),
+		}
+
+		body, err := io.ReadAll(progress)
 		if err != nil {
 			resp.Body.Close()
 
@@ -181,71 +251,87 @@ func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 	return cards, nil
 }
 
-//nolint:funlen // This function handles complex card processing logic
+//nolint:funlen,gocyclo,cyclop // This function handles complex card processing logic
 func worker(
 	ctx context.Context,
 	conf *config,
 	cards []scryfall.Card,
 	indexChan <-chan int,
-	result map[string][]string,
+	result *sync.Map,
 ) {
 	conf.wg.Add(1)
 	defer conf.wg.Done()
 
-	select {
-	case <-ctx.Done():
-		return
+	for index := range indexChan {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 
-	default:
-		for index := range indexChan {
-			IDString := cards[index].Name + " " +
-				cards[index].Set + " " +
-				string(cards[index].Lang) + " " +
-				cards[index].CollectorNumber
+		card := cards[index]
 
-			log.Printf("%.2f%% %s", float64(index)*float64(100)/float64(len(cards)), IDString)
+		// Filter by language if specified.
+		if cmd.Language != "" && string(card.Lang) != cmd.Language {
+			continue
+		}
 
-			//nolint:lll // This line can't be shorter
-			if *cards[index].ImageStatus == scryfall.ImageStatusHighres || *cards[index].ImageStatus == scryfall.ImageStatusLowres {
-				if cards[index].ImageURIs != nil {
-					imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" + cards[index].ID + ".jpg"
+		IDString := card.Name + " " +
+			card.Set + " " +
+			string(card.Lang) + " " +
+			card.CollectorNumber
 
-					err := downloadAndSave(ctx, cards[index].ImageURIs.Normal, imagePath)
-					if err != nil {
-						log.Printf("error downloading %s: %s", IDString, err)
+		log.Printf("%.2f%% %s", float64(index)*float64(100)/float64(len(cards)), IDString)
 
-						continue
-					}
+		if *card.ImageStatus != scryfall.ImageStatusHighres && *card.ImageStatus != scryfall.ImageStatusLowres {
+			continue
+		}
 
-					conf.mu.Lock()
+		if card.ImageURIs != nil {
+			imagePath := "./images" + "/" + card.Set + "/" + string(card.Lang) + "/" + card.ID + ".jpg"
 
-					result[IDString] = append(result[IDString], imagePath)
+			err := downloadAndSave(ctx, conf.httpClient, card.ImageURIs.Normal, imagePath)
+			if err != nil {
+				log.Printf("error downloading %s: %s", IDString, err)
 
-					conf.mu.Unlock()
-
-					continue
-				}
-
-				for faceIndex := range cards[index].CardFaces {
-					imagePath := "./images" + "/" + cards[index].Set + "/" + string(cards[index].Lang) + "/" +
-						cards[index].ID + strconv.Itoa(faceIndex) + ".jpg"
-
-					err := downloadAndSave(ctx, cards[index].CardFaces[faceIndex].ImageURIs.Normal, imagePath)
-					if err != nil {
-						log.Printf("error downloading %s: %s", IDString, err)
-
-						continue
-					}
-
-					conf.mu.Lock()
-
-					result[IDString] = append(result[IDString], imagePath)
-
-					conf.mu.Unlock()
-
-					continue
-				}
+				continue
 			}
+
+			appendToSyncMap(result, IDString, imagePath)
+
+			continue
+		}
+
+		for faceIndex := range card.CardFaces {
+			imagePath := "./images" + "/" + card.Set + "/" + string(card.Lang) + "/" +
+				card.ID + strconv.Itoa(faceIndex) + ".jpg"
+
+			err := downloadAndSave(ctx, conf.httpClient, card.CardFaces[faceIndex].ImageURIs.Normal, imagePath)
+			if err != nil {
+				log.Printf("error downloading %s: %s", IDString, err)
+
+				continue
+			}
+
+			appendToSyncMap(result, IDString, imagePath)
 		}
 	}
+}
+
+type syncMapValue struct {
+	mu    sync.Mutex
+	paths []string
+}
+
+func appendToSyncMap(syncMap *sync.Map, key, value string) {
+	actual, _ := syncMap.LoadOrStore(key, &syncMapValue{paths: []string{}})
+	mapValue, valueOK := actual.(*syncMapValue)
+	if !valueOK {
+		return
+	}
+
+	mapValue.mu.Lock()
+	defer mapValue.mu.Unlock()
+
+	mapValue.paths = append(mapValue.paths, value)
 }
