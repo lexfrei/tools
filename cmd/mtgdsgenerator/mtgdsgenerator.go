@@ -59,6 +59,7 @@ func (pr *progressReader) Read(p []byte) (int, error) {
 			float64(pr.current)/bytesPerMegabyte,
 			float64(pr.total)/bytesPerMegabyte,
 			percentage)
+
 		pr.lastPrint = time.Now()
 
 		if err == io.EOF {
@@ -115,9 +116,11 @@ func generateReport(result *sync.Map) error {
 	log.Println("Generating report...")
 
 	resultMap := make(map[string][]string)
+
 	result.Range(func(key, value any) bool {
 		keyStr, keyOK := key.(string)
 		mapValue, valueOK := value.(*syncMapValue)
+
 		if keyOK && valueOK {
 			mapValue.mu.Lock()
 			resultMap[keyStr] = make([]string, len(mapValue.paths))
@@ -326,6 +329,7 @@ type syncMapValue struct {
 func appendToSyncMap(syncMap *sync.Map, key, value string) {
 	actual, _ := syncMap.LoadOrStore(key, &syncMapValue{paths: []string{}})
 	mapValue, valueOK := actual.(*syncMapValue)
+
 	if !valueOK {
 		return
 	}
