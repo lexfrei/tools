@@ -4,7 +4,7 @@ go 1.25
 
 require (
 	github.com/BlueMonday/go-scryfall v0.9.1
-	github.com/SevereCloud/vksdk/v3 v3.2.1
+	github.com/SevereCloud/vksdk/v3 v3.2.2
 	github.com/cockroachdb/errors v1.12.0
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/redis/go-redis/v9 v9.16.0
