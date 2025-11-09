@@ -252,7 +252,7 @@ func (vtCli *VTClinent) TGSender() {
 	}
 }
 
-func (vtCli *VTClinent) sendMessage(u *tb.User, options ...interface{}) error {
+func (vtCli *VTClinent) sendMessage(u *tb.User, options ...any) error {
 	_, err := vtCli.tgClient.Send(u, options)
 	if err != nil {
 		return errors.Wrap(err, "error on sending message")

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 )
@@ -44,9 +45,11 @@ func b64ToHex(b64 string) (string, error) {
 
 	var result string
 
+	var resultSb47 strings.Builder
 	for _, r := range data {
-		result += strconv.FormatUint(uint64(r), 16)
+		resultSb47.WriteString(strconv.FormatUint(uint64(r), 16))
 	}
+	result += resultSb47.String()
 
 	return result, nil
 }

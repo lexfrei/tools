@@ -17,5 +17,5 @@ COPY --from=build /go/src/github.com/lexfrei/tools/me-site /
 
 EXPOSE 8080
 
-USER nobody
+USER 65534
 ENTRYPOINT ["/me-site"]

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 )
 
@@ -56,17 +57,21 @@ func createField(width, height int) [][]bool {
 func printField(field [][]bool) string {
 	var result string
 
+	var resultSb59 strings.Builder
 	for i := range field {
+		var resultSb60 strings.Builder
 		for j := range field[i] {
 			if field[i][j] {
-				result += "X"
+				resultSb60.WriteString("X")
 			} else {
-				result += " "
+				resultSb60.WriteString(" ")
 			}
 		}
+		result += resultSb60.String()
 
-		result += "\n"
+		resultSb59.WriteString("\n")
 	}
+	result += resultSb59.String()
 
 	return result
 }
@@ -130,9 +135,11 @@ func clearScreen(field [][]bool) {
 	clearString := "\033[1A\033[2K"
 
 	// repeat for every line
+	var clearStringSb133 strings.Builder
 	for range field {
-		clearString += "\033[1A\033[2K"
+		clearStringSb133.WriteString("\033[1A\033[2K")
 	}
+	clearString += clearStringSb133.String()
 
 	fmt.Print(clearString) // move cursor up and clear line
 }
