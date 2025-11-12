@@ -300,9 +300,9 @@ func (b *Bot) Send(to Recipient, what interface{}, opts ...interface{}) (*Messag
 	}
 }
 
-// SendPaid sends multiple instances of paid media as a single message.
+// SendPaidMedia sends multiple instances of paid media as a single message.
 // To include the caption, make sure the first PaidInputtable of an album has it.
-func (b *Bot) SendPaid(to Recipient, stars int, a PaidAlbum, opts ...interface{}) (*Message, error) {
+func (b *Bot) SendPaidMedia(to Recipient, stars int, a PaidAlbum, opts ...interface{}) (*Message, error) {
 	if to == nil {
 		return nil, ErrBadRecipient
 	}
@@ -338,6 +338,10 @@ func (b *Bot) SendPaid(to Recipient, stars int, a PaidAlbum, opts ...interface{}
 
 	params["media"] = "[" + strings.Join(media, ",") + "]"
 	b.embedSendOptions(params, sendOpts)
+
+	if sendOpts.Payload != "" {
+		params["payload"] = sendOpts.Payload
+	}
 
 	data, err := b.sendFiles("sendPaidMedia", files, params)
 	if err != nil {
@@ -447,6 +451,14 @@ func (b *Bot) Forward(to Recipient, msg Editable, opts ...interface{}) (*Message
 	sendOpts := b.extractOptions(opts)
 	b.embedSendOptions(params, sendOpts)
 
+	// Check for video_start_timestamp option (Bot API 8.3)
+	for _, opt := range opts {
+		if ts, ok := opt.(int64); ok && ts > 0 {
+			params["video_start_timestamp"] = strconv.FormatInt(ts, 10)
+			break
+		}
+	}
+
 	data, err := b.Raw("forwardMessage", params)
 	if err != nil {
 		return nil, err
@@ -483,6 +495,14 @@ func (b *Bot) Copy(to Recipient, msg Editable, opts ...interface{}) (*Message, e
 
 	sendOpts := b.extractOptions(opts)
 	b.embedSendOptions(params, sendOpts)
+
+	// Check for video_start_timestamp option (Bot API 8.3)
+	for _, opt := range opts {
+		if ts, ok := opt.(int64); ok && ts > 0 {
+			params["video_start_timestamp"] = strconv.FormatInt(ts, 10)
+			break
+		}
+	}
 
 	data, err := b.Raw("copyMessage", params)
 	if err != nil {
@@ -1120,6 +1140,31 @@ func (b *Bot) ChatByUsername(name string) (*Chat, error) {
 	return resp.Result, nil
 }
 
+// ChatFullInfo fetches full information about a chat.
+func (b *Bot) ChatFullInfo(chat Recipient) (*ChatFullInfo, error) {
+	params := map[string]string{
+		"chat_id": chat.Recipient(),
+	}
+
+	data, err := b.Raw("getChat", params)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Result *ChatFullInfo
+	}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, wrapError(err)
+	}
+
+	if resp.Result.Type == ChatChannel && resp.Result.Username == "" {
+		resp.Result.Type = ChatChannelPrivate
+	}
+
+	return resp.Result, nil
+}
+
 // ProfilePhotosOf returns list of profile pictures for a user.
 func (b *Bot) ProfilePhotosOf(user *User) ([]Photo, error) {
 	params := map[string]string{
@@ -1341,6 +1386,24 @@ func (b *Bot) botInfo(language, key string) (*BotInfo, error) {
 		return nil, wrapError(err)
 	}
 	return resp.Result, nil
+}
+
+// SetUserEmojiStatus changes the emoji status for a given user that previously
+// allowed the bot to manage their emoji status via the Mini App Bot API.
+func (b *Bot) SetUserEmojiStatus(user Recipient, emojiStatusCustomEmojiID string, expirationDate ...int64) error {
+	params := map[string]string{
+		"user_id": user.Recipient(),
+	}
+
+	if emojiStatusCustomEmojiID != "" {
+		params["emoji_status_custom_emoji_id"] = emojiStatusCustomEmojiID
+	}
+	if len(expirationDate) > 0 && expirationDate[0] > 0 {
+		params["emoji_status_expiration_date"] = strconv.FormatInt(expirationDate[0], 10)
+	}
+
+	_, err := b.Raw("setUserEmojiStatus", params)
+	return err
 }
 
 func extractEndpoint(endpoint interface{}) string {

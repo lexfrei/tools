@@ -381,7 +381,11 @@ type MessageEntity struct {
 	Language string `json:"language,omitempty"`
 
 	// (Optional) For EntityCustomEmoji entity type only.
-	CustomEmojiID string `json:"custom_emoji_id"`
+	CustomEmojiID string `json:"custom_emoji_id,omitempty"`
+
+	// (Optional) For EntityHashtag and EntityCashtag entity types only.
+	// Username of the chat where the hashtag or cashtag search should be performed.
+	ChatUsername string `json:"chat_username,omitempty"`
 }
 
 // EntityType is a MessageEntity type.

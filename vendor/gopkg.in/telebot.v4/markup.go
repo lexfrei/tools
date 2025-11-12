@@ -95,6 +95,7 @@ type Btn struct {
 	Poll            PollType        `json:"request_poll,omitempty"`
 	User            *ReplyRecipient `json:"request_user,omitempty"`
 	Chat            *ReplyRecipient `json:"request_chat,omitempty"`
+	CopyText        *CopyTextButton `json:"copy_text,omitempty"`
 }
 
 // Row represents an array of buttons, a row.
@@ -210,6 +211,10 @@ func (r *ReplyMarkup) WebApp(text string, app *WebApp) Btn {
 	return Btn{Text: text, WebApp: app}
 }
 
+func (r *ReplyMarkup) CopyText(text, copyText string) Btn {
+	return Btn{Text: text, CopyText: &CopyTextButton{Text: copyText}}
+}
+
 // ReplyButton represents a button displayed in reply-keyboard.
 //
 // Set either Contact or Location to true in order to request
@@ -297,6 +302,7 @@ type InlineButton struct {
 	WebApp                *WebApp            `json:"web_app,omitempty"`
 	CallbackGame          *CallbackGame      `json:"callback_game,omitempty"`
 	Pay                   bool               `json:"pay,omitempty"`
+	CopyText              *CopyTextButton    `json:"copy_text,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler interface.
@@ -355,6 +361,7 @@ func (b Btn) Inline() *InlineButton {
 		InlineQueryChat: b.InlineQueryChat,
 		Login:           b.Login,
 		WebApp:          b.WebApp,
+		CopyText:        b.CopyText,
 	}
 }
 
@@ -366,6 +373,12 @@ type Login struct {
 	Text        string `json:"forward_text,omitempty"`
 	Username    string `json:"bot_username,omitempty"`
 	WriteAccess bool   `json:"request_write_access,omitempty"`
+}
+
+// CopyTextButton represents an inline keyboard button that copies
+// specified text to the clipboard when pressed.
+type CopyTextButton struct {
+	Text string `json:"text"`
 }
 
 // MenuButton describes the bot's menu button in a private chat.
