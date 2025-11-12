@@ -18,6 +18,7 @@ type API interface {
 	BusinessConnection(id string) (*BusinessConnection, error)
 	ChatByID(id int64) (*Chat, error)
 	ChatByUsername(name string) (*Chat, error)
+	ChatFullInfo(chat Recipient) (*ChatFullInfo, error)
 	ChatMemberOf(chat, user Recipient) (*ChatMember, error)
 	Close() (bool, error)
 	CloseGeneralTopic(chat *Chat) error
@@ -53,6 +54,7 @@ type API interface {
 	Forward(to Recipient, msg Editable, opts ...interface{}) (*Message, error)
 	ForwardMany(to Recipient, msgs []Editable, opts ...*SendOptions) ([]Message, error)
 	GameScores(user Recipient, msg Editable) ([]GameHighScore, error)
+	GetAvailableGifts() ([]Gift, error)
 	HideGeneralTopic(chat *Chat) error
 	InviteLink(chat *Chat) (string, error)
 	Leave(chat Recipient) error
@@ -68,6 +70,7 @@ type API interface {
 	Promote(chat *Chat, member *ChatMember) error
 	React(to Recipient, msg Editable, r Reactions) error
 	RefundStars(to Recipient, chargeID string) error
+	EditUserStarSubscription(user Recipient, chargeID string, isCanceled bool) error
 	RemoveWebhook(dropPending ...bool) error
 	ReopenGeneralTopic(chat *Chat) error
 	ReopenTopic(chat *Chat, topic *Topic) error
@@ -78,7 +81,9 @@ type API interface {
 	RevokeInviteLink(chat Recipient, link string) (*ChatInviteLink, error)
 	Send(to Recipient, what interface{}, opts ...interface{}) (*Message, error)
 	SendAlbum(to Recipient, a Album, opts ...interface{}) ([]Message, error)
-	SendPaid(to Recipient, stars int, a PaidAlbum, opts ...interface{}) (*Message, error)
+	SendPaidMedia(to Recipient, stars int, a PaidAlbum, opts ...interface{}) (*Message, error)
+	SendGift(to Recipient, giftID string, opts ...interface{}) error
+	SavePreparedInlineMessage(user Recipient, result Result, opts ...interface{}) (*PreparedInlineMessage, error)
 	SetAdminTitle(chat *Chat, user *User, title string) error
 	SetCommands(opts ...interface{}) error
 	SetCustomEmojiStickerSetThumb(name, id string) error
@@ -98,6 +103,7 @@ type API interface {
 	SetStickerPosition(sticker string, position int) error
 	SetStickerSetThumb(of Recipient, set *StickerSet) error
 	SetStickerSetTitle(s StickerSet) error
+	SetUserEmojiStatus(user Recipient, emojiStatusCustomEmojiID string, expirationDate ...int64) error
 	SetWebhook(w *Webhook) error
 	Ship(query *ShippingQuery, what ...interface{}) error
 	StarTransactions(offset, limit int) ([]StarTransaction, error)

@@ -73,6 +73,9 @@ type Context interface {
 	// BoostRemoved returns the boost removed from a chat instance.
 	BoostRemoved() *BoostRemoved
 
+	// PurchasedPaidMedia returns the purchased paid media instance.
+	PurchasedPaidMedia() *PaidMediaPurchased
+
 	// Sender returns the current recipient, depending on the context type.
 	// Returns nil if user is not presented.
 	Sender() *User
@@ -302,6 +305,10 @@ func (c *nativeContext) Boost() *BoostUpdated {
 
 func (c *nativeContext) BoostRemoved() *BoostRemoved {
 	return c.u.BoostRemoved
+}
+
+func (c *nativeContext) PurchasedPaidMedia() *PaidMediaPurchased {
+	return c.u.PurchasedPaidMedia
 }
 
 func (c *nativeContext) Sender() *User {
