@@ -254,7 +254,7 @@ func getAllCards(ctx context.Context) ([]scryfall.Card, error) {
 	return cards, nil
 }
 
-//nolint:funlen,gocyclo,cyclop // This function handles complex card processing logic
+//nolint:funlen // This function handles complex card processing logic
 func worker(
 	ctx context.Context,
 	conf *config,
