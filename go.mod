@@ -11,7 +11,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	github.com/tdewolff/minify/v2 v2.24.7
-	gopkg.in/telebot.v4 v4.0.0-beta.5
+	gopkg.in/telebot.v4 v4.0.0-beta.7
 )
 
 require (
