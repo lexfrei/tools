@@ -32,6 +32,12 @@ type InputMedia struct {
 	DisableTypeDetection bool     `json:"disable_content_type_detection,omitempty"`
 	CaptionAbove         bool     `json:"show_caption_above_media,omitempty"`
 	HasSpoiler           bool     `json:"has_spoiler,omitempty"`
+
+	// Bot API 8.3: (Optional) Cover frame of the video (for InputMediaVideo)
+	Cover string `json:"cover,omitempty"`
+
+	// Bot API 8.3: (Optional) Point in time (Unix timestamp) when the video starts (for InputMediaVideo)
+	StartTimestamp int64 `json:"start_timestamp,omitempty"`
 }
 
 // Inputtable is a generic type for all kinds of media you
@@ -216,6 +222,12 @@ type Video struct {
 	FileName     string `json:"file_name,omitempty"`
 	HasSpoiler   bool   `json:"has_spoiler,omitempty"`
 	CaptionAbove bool   `json:"show_caption_above_media,omitempty"`
+
+	// Bot API 8.3: (Optional) Cover frame of the video
+	Cover *Photo `json:"cover,omitempty"`
+
+	// Bot API 8.3: (Optional) Point in time (Unix timestamp) when the video starts
+	StartTimestamp int64 `json:"start_timestamp,omitempty"`
 }
 
 func (v *Video) MediaType() string {
@@ -228,15 +240,22 @@ func (v *Video) MediaFile() *File {
 }
 
 func (v *Video) InputMedia() InputMedia {
+	var coverFileID string
+	if v.Cover != nil {
+		coverFileID = v.Cover.FileID
+	}
+
 	return InputMedia{
-		Type:         v.MediaType(),
-		Caption:      v.Caption,
-		Width:        v.Width,
-		Height:       v.Height,
-		Duration:     v.Duration,
-		Streaming:    v.Streaming,
-		HasSpoiler:   v.HasSpoiler,
-		CaptionAbove: v.CaptionAbove,
+		Type:           v.MediaType(),
+		Caption:        v.Caption,
+		Width:          v.Width,
+		Height:         v.Height,
+		Duration:       v.Duration,
+		Streaming:      v.Streaming,
+		HasSpoiler:     v.HasSpoiler,
+		CaptionAbove:   v.CaptionAbove,
+		Cover:          coverFileID,
+		StartTimestamp: v.StartTimestamp,
 	}
 }
 
@@ -434,4 +453,20 @@ type PaidMedia struct {
 	Width    int    `json:"width"`    // preview only
 	Height   int    `json:"height"`   // preview only
 	Duration int    `json:"duration"` // preview only
+	Payload  string `json:"payload,omitempty"`
+
+	// Bot API 8.3: (Optional) Cover frame of the video (for paid video media)
+	Cover *Photo `json:"cover,omitempty"`
+
+	// Bot API 8.3: (Optional) Point in time (Unix timestamp) when the video starts (for paid video media)
+	StartTimestamp int64 `json:"start_timestamp,omitempty"`
+}
+
+// PaidMediaPurchased contains information about paid media purchased by a user.
+type PaidMediaPurchased struct {
+	// User who purchased the media.
+	From *User `json:"from"`
+
+	// Bot-specified paid media payload.
+	Payload string `json:"paid_media_payload"`
 }
