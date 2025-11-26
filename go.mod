@@ -7,7 +7,7 @@ require (
 	github.com/SevereCloud/vksdk/v3 v3.2.2
 	github.com/cockroachdb/errors v1.12.0
 	github.com/labstack/echo/v4 v4.13.4
-	github.com/redis/go-redis/v9 v9.17.0
+	github.com/redis/go-redis/v9 v9.17.1
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	github.com/tdewolff/minify/v2 v2.24.7
