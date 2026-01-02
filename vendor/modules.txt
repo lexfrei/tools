@@ -100,7 +100,7 @@ github.com/kr/pretty
 # github.com/kr/text v0.2.0
 ## explicit
 github.com/kr/text
-# github.com/labstack/echo/v4 v4.14.0
+# github.com/labstack/echo/v4 v4.15.0
 ## explicit; go 1.24.0
 github.com/labstack/echo/v4
 # github.com/labstack/gommon v0.4.2
