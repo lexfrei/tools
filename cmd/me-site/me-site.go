@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/tdewolff/minify/v2"
@@ -25,6 +29,7 @@ const (
 	readHeaderTimeout = 3
 	readTimeout       = 10
 	writeTimeout      = 10
+	shutdownTimeout   = 30
 )
 
 // timeZoneUTCPlus4 is the timezone of the city of Tbilisi.
@@ -82,11 +87,8 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func main() {
-	programLevel := new(slog.LevelVar) // Info by default
-	programLevel.Set(logLevel)
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})))
-
+// createServer creates and configures the HTTP server.
+func createServer() *http.Server {
 	// Create a minifier.
 	minifier := minify.New()
 
@@ -95,7 +97,7 @@ func main() {
 	// Minify the CSS.
 	minifier.AddFunc("text/css", css.Minify)
 	// Minify the template.
-	site, _ := minifier.String("text/html", site)
+	minifiedSite, _ := minifier.String("text/html", site)
 
 	// set birth date
 	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", timeZoneUTCPlus4)
@@ -104,7 +106,7 @@ func main() {
 	}
 
 	// Render the template
-	siteTemplate, err := template.New("webpage").Parse(site)
+	siteTemplate, err := template.New("webpage").Parse(minifiedSite)
 	if err != nil {
 		slog.Error("Failed to parse the template", "error", err)
 	}
@@ -132,17 +134,50 @@ func main() {
 	// Wrap router with middleware: logging -> recovery -> router
 	handler := loggingMiddleware(recoveryMiddleware(mux))
 
-	server := &http.Server{
+	return &http.Server{
 		Addr:              ":" + port,
 		Handler:           handler,
 		ReadHeaderTimeout: readHeaderTimeout * time.Second,
 		ReadTimeout:       readTimeout * time.Second,
 		WriteTimeout:      writeTimeout * time.Second,
 	}
+}
 
-	slog.Info("Starting the server", "port", port)
+func main() {
+	programLevel := new(slog.LevelVar) // Info by default
+	programLevel.Set(logLevel)
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})))
 
-	slog.Error("Server failed", "error", server.ListenAndServe())
+	server := createServer()
+
+	// Create context that listens for SIGTERM and SIGINT
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// Start server in goroutine
+	go func() {
+		slog.Info("Starting the server", "port", port)
+
+		err := server.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("Server failed", "error", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	<-ctx.Done()
+	slog.Info("Shutting down gracefully, press Ctrl+C again to force")
+
+	// Graceful shutdown with timeout
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
+	defer cancel()
+
+	err := server.Shutdown(shutdownCtx)
+	if err != nil {
+		slog.Error("Shutdown failed", "error", err)
+	}
+
+	slog.Info("Server stopped")
 }
 
 // faviconHandler returns the favicon.png.
