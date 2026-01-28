@@ -48,6 +48,40 @@ var robots string
 // logLevel is the log level.
 var logLevel = slog.LevelInfo
 
+// recoveryMiddleware wraps an HTTP handler with panic recovery.
+func recoveryMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Error("Panic recovered",
+					"error", err,
+					"method", request.Method,
+					"path", request.URL.Path,
+				)
+				http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+			}
+		}()
+
+		next.ServeHTTP(writer, request)
+	})
+}
+
+// loggingMiddleware wraps an HTTP handler with request logging.
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(writer, request)
+
+		duration := time.Since(start)
+		slog.Info("Request handled",
+			"method", request.Method,
+			"path", request.URL.Path,
+			"duration_ms", duration.Milliseconds(),
+		)
+	})
+}
+
 func main() {
 	programLevel := new(slog.LevelVar) // Info by default
 	programLevel.Set(logLevel)
@@ -95,9 +129,12 @@ func main() {
 	// Serve the robots.txt
 	mux.HandleFunc("GET /robots.txt", robotsHandler)
 
+	// Wrap router with middleware: logging -> recovery -> router
+	handler := loggingMiddleware(recoveryMiddleware(mux))
+
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           handler,
 		ReadHeaderTimeout: readHeaderTimeout * time.Second,
 		ReadTimeout:       readTimeout * time.Second,
 		WriteTimeout:      writeTimeout * time.Second,
