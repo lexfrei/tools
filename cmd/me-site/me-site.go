@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
-
-	echo "github.com/labstack/echo/v4"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -20,6 +23,14 @@ const port = "8080"
 
 // utcPlus4 is the timezone for UTC+4.
 const utcPlus4 = 4 * 60 * 60
+
+// timeouts for HTTP server.
+const (
+	readHeaderTimeout = 3
+	readTimeout       = 10
+	writeTimeout      = 10
+	shutdownTimeout   = 30
+)
 
 // timeZoneUTCPlus4 is the timezone of the city of Tbilisi.
 var timeZoneUTCPlus4 = time.FixedZone("UTC+4", utcPlus4)
@@ -42,11 +53,42 @@ var robots string
 // logLevel is the log level.
 var logLevel = slog.LevelInfo
 
-func main() {
-	programLevel := new(slog.LevelVar) // Info by default
-	programLevel.Set(logLevel)
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})))
+// recoveryMiddleware wraps an HTTP handler with panic recovery.
+func recoveryMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Error("Panic recovered",
+					"error", err,
+					"method", request.Method,
+					"path", request.URL.Path,
+				)
+				http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+			}
+		}()
 
+		next.ServeHTTP(writer, request)
+	})
+}
+
+// loggingMiddleware wraps an HTTP handler with request logging.
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(writer, request)
+
+		duration := time.Since(start)
+		slog.Info("Request handled",
+			"method", request.Method,
+			"path", request.URL.Path,
+			"duration_ms", duration.Milliseconds(),
+		)
+	})
+}
+
+// createServer creates and configures the HTTP server.
+func createServer() *http.Server {
 	// Create a minifier.
 	minifier := minify.New()
 
@@ -55,7 +97,7 @@ func main() {
 	// Minify the CSS.
 	minifier.AddFunc("text/css", css.Minify)
 	// Minify the template.
-	site, _ := minifier.String("text/html", site)
+	minifiedSite, _ := minifier.String("text/html", site)
 
 	// set birth date
 	birthDate, err := time.ParseInLocation("02.01.2006", "04.08.1993", timeZoneUTCPlus4)
@@ -64,47 +106,90 @@ func main() {
 	}
 
 	// Render the template
-	siteTemplate, err := template.New("webpage").Parse(site)
+	siteTemplate, err := template.New("webpage").Parse(minifiedSite)
 	if err != nil {
 		slog.Error("Failed to parse the template", "error", err)
 	}
 
-	server := echo.New()
-	server.HideBanner = true
-	server.HidePort = true
+	mux := http.NewServeMux()
 
-	server.GET("/", func(context echo.Context) error {
-		err = siteTemplate.Execute(context.Response().Writer, countFullYearsSinceBirth(birthDate, timeZoneUTCPlus4))
+	mux.HandleFunc("GET /", func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		err = siteTemplate.Execute(writer, countFullYearsSinceBirth(birthDate, timeZoneUTCPlus4))
 		if err != nil {
 			slog.Error("Template execution failed", "error", err)
-		}
+			http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
 
-		return nil
+			return
+		}
 	})
 
 	// Serve the favicon
-	server.GET("/favicon.png", faviconHandler)
+	mux.HandleFunc("GET /favicon.png", faviconHandler)
 
 	// Serve the robots.txt
-	server.GET("/robots.txt", robotsHandler)
+	mux.HandleFunc("GET /robots.txt", robotsHandler)
 
-	slog.Info("Starting the server", "port", port)
+	// Wrap router with middleware: logging -> recovery -> router
+	handler := loggingMiddleware(recoveryMiddleware(mux))
 
-	slog.Error("Server failed", "error", server.Start(":"+port))
+	return &http.Server{
+		Addr:              ":" + port,
+		Handler:           handler,
+		ReadHeaderTimeout: readHeaderTimeout * time.Second,
+		ReadTimeout:       readTimeout * time.Second,
+		WriteTimeout:      writeTimeout * time.Second,
+	}
+}
+
+func main() {
+	programLevel := new(slog.LevelVar) // Info by default
+	programLevel.Set(logLevel)
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})))
+
+	server := createServer()
+
+	// Create context that listens for SIGTERM and SIGINT
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// Start server in goroutine
+	go func() {
+		slog.Info("Starting the server", "port", port)
+
+		err := server.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("Server failed", "error", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	<-ctx.Done()
+	slog.Info("Shutting down gracefully, press Ctrl+C again to force")
+
+	// Graceful shutdown with timeout
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout*time.Second)
+	defer cancel()
+
+	err := server.Shutdown(shutdownCtx)
+	if err != nil {
+		slog.Error("Shutdown failed", "error", err)
+	}
+
+	slog.Info("Server stopped")
 }
 
 // faviconHandler returns the favicon.png.
-func faviconHandler(context echo.Context) error {
-	fmt.Fprint(context.Response().Writer, favicon)
-
-	return nil
+func faviconHandler(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set("Content-Type", "image/png")
+	fmt.Fprint(writer, favicon)
 }
 
 // robotsHandler returns the robots.txt.
-func robotsHandler(context echo.Context) error {
-	fmt.Fprint(context.Response().Writer, robots)
-
-	return nil
+func robotsHandler(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(writer, robots)
 }
 
 // countFullYearsSinceBirth returns the number of full years since the birth date.
