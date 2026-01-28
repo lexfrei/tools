@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
-
-	echo "github.com/labstack/echo/v4"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -20,6 +19,13 @@ const port = "8080"
 
 // utcPlus4 is the timezone for UTC+4.
 const utcPlus4 = 4 * 60 * 60
+
+// timeouts for HTTP server.
+const (
+	readHeaderTimeout = 3
+	readTimeout       = 10
+	writeTimeout      = 10
+)
 
 // timeZoneUTCPlus4 is the timezone of the city of Tbilisi.
 var timeZoneUTCPlus4 = time.FixedZone("UTC+4", utcPlus4)
@@ -69,42 +75,49 @@ func main() {
 		slog.Error("Failed to parse the template", "error", err)
 	}
 
-	server := echo.New()
-	server.HideBanner = true
-	server.HidePort = true
+	mux := http.NewServeMux()
 
-	server.GET("/", func(context echo.Context) error {
-		err = siteTemplate.Execute(context.Response().Writer, countFullYearsSinceBirth(birthDate, timeZoneUTCPlus4))
+	mux.HandleFunc("GET /", func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		err = siteTemplate.Execute(writer, countFullYearsSinceBirth(birthDate, timeZoneUTCPlus4))
 		if err != nil {
 			slog.Error("Template execution failed", "error", err)
-		}
+			http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
 
-		return nil
+			return
+		}
 	})
 
 	// Serve the favicon
-	server.GET("/favicon.png", faviconHandler)
+	mux.HandleFunc("GET /favicon.png", faviconHandler)
 
 	// Serve the robots.txt
-	server.GET("/robots.txt", robotsHandler)
+	mux.HandleFunc("GET /robots.txt", robotsHandler)
+
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           mux,
+		ReadHeaderTimeout: readHeaderTimeout * time.Second,
+		ReadTimeout:       readTimeout * time.Second,
+		WriteTimeout:      writeTimeout * time.Second,
+	}
 
 	slog.Info("Starting the server", "port", port)
 
-	slog.Error("Server failed", "error", server.Start(":"+port))
+	slog.Error("Server failed", "error", server.ListenAndServe())
 }
 
 // faviconHandler returns the favicon.png.
-func faviconHandler(context echo.Context) error {
-	fmt.Fprint(context.Response().Writer, favicon)
-
-	return nil
+func faviconHandler(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set("Content-Type", "image/png")
+	fmt.Fprint(writer, favicon)
 }
 
 // robotsHandler returns the robots.txt.
-func robotsHandler(context echo.Context) error {
-	fmt.Fprint(context.Response().Writer, robots)
-
-	return nil
+func robotsHandler(writer http.ResponseWriter, _ *http.Request) {
+	writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(writer, robots)
 }
 
 // countFullYearsSinceBirth returns the number of full years since the birth date.
