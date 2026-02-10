@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.25.7-alpine3.22 AS build
+FROM docker.io/library/golang:1.26.0-alpine3.22 AS build
 
 RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
     apk add --no-cache upx=5.0.2-r0
