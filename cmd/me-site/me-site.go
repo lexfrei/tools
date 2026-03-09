@@ -58,11 +58,7 @@ func recoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				slog.Error("Panic recovered",
-					"error", err,
-					"method", request.Method,
-					"path", request.URL.Path,
-				)
+				slog.Error("Panic recovered", "error", err)
 				http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
@@ -79,11 +75,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(writer, request)
 
 		duration := time.Since(start)
-		slog.Info("Request handled",
-			"method", request.Method,
-			"path", request.URL.Path,
-			"duration_ms", duration.Milliseconds(),
-		)
+		slog.Info("Request handled", "duration_ms", duration.Milliseconds())
 	})
 }
 
