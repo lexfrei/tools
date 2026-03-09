@@ -1,7 +1,7 @@
 /*
 Package object contains objects for VK.
 
-See more https://dev.vk.com/ru/reference/objects
+See more https://dev.vk.ru/ru/reference/objects
 */
 package object // import "github.com/SevereCloud/vksdk/v3/object"
 
@@ -38,7 +38,7 @@ func (b *BaseBoolInt) UnmarshalJSON(data []byte) (err error) {
 		// return json error
 		err = &json.UnmarshalTypeError{
 			Value: string(data),
-			Type:  reflect.TypeOf((*BaseBoolInt)(nil)),
+			Type:  reflect.TypeFor[*BaseBoolInt](),
 		}
 	}
 
@@ -76,7 +76,7 @@ func (b *BaseBoolInt) DecodeMsgpack(dec *msgpack.Decoder) (err error) {
 		// return msgpack error
 		err = &json.UnmarshalTypeError{
 			Value: string(data),
-			Type:  reflect.TypeOf((*BaseBoolInt)(nil)),
+			Type:  reflect.TypeFor[*BaseBoolInt](),
 		}
 	}
 
@@ -121,9 +121,9 @@ const (
 
 // LongPollResponse struct.
 type LongPollResponse struct {
-	Ts      int             `json:"ts"`
-	Updates [][]interface{} `json:"updates"`
-	Failed  int             `json:"failed"`
+	Ts      int     `json:"ts"`
+	Updates [][]any `json:"updates"`
+	Failed  int     `json:"failed"`
 }
 
 // BaseCommentsInfo struct.
@@ -300,8 +300,8 @@ type BaseLinkRating struct {
 type BasePlace struct {
 	Address        string             `json:"address"`
 	Checkins       int                `json:"checkins"`
-	City           interface{}        `json:"city"` // BUG(VK): https://github.com/VKCOM/vk-api-schema/issues/143
-	Country        interface{}        `json:"country"`
+	City           any                `json:"city"` // BUG(VK): https://github.com/VKCOM/vk-api-schema/issues/143
+	Country        any                `json:"country"`
 	Created        int                `json:"created"`
 	ID             int                `json:"id"`
 	Icon           string             `json:"icon"`
@@ -405,6 +405,12 @@ type BaseUserID struct {
 	UserID int `json:"user_id"`
 }
 
+// BaseMessageError struct.
+type BaseMessageError struct {
+	Code        int    `json:"code"`
+	Description string `json:"description"`
+}
+
 // PrivacyCategory type.
 type PrivacyCategory string
 
@@ -422,11 +428,11 @@ type Privacy struct {
 	Lists    struct {
 		Allowed  []int `json:"allowed"`
 		Excluded []int `json:"excluded"`
-	} `json:"lists,omitempty"`
+	} `json:"lists"`
 	Owners struct {
 		Allowed  []int `json:"allowed"`
 		Excluded []int `json:"excluded"`
-	} `json:"owners,omitempty"`
+	} `json:"owners"`
 }
 
 // EventsEventAttach struct.
@@ -579,26 +585,26 @@ const (
 
 // Button action type.
 const (
-	// A button that sends a message with text specified in the label.
+	// ButtonText a button that sends a message with text specified in the label.
 	ButtonText = "text"
 
-	// Opens the VK Pay window with predefined parameters. The button is called
+	// ButtonVKPay opens the VK Pay window with predefined parameters. The button is called
 	// “Pay with VK Pay” (VK Pay is displayed as a logo). This button always
 	// stretches to the whole keyboard width.
 	ButtonVKPay = "vkpay"
 
-	// Opens a specified VK Apps app. This button always stretches to the whole
+	// ButtonVKApp opens a specified VK Apps app. This button always stretches to the whole
 	// keyboard width.
 	ButtonVKApp = "open_app"
 
-	// Sends the location to the chat. This button always stretches to the
+	// ButtonLocation sends the location to the chat. This button always stretches to the
 	// whole keyboard width.
 	ButtonLocation = "location"
 
-	// Opens the specified link.
+	// ButtonOpenLink opens the specified link.
 	ButtonOpenLink = "open_link"
 
-	// Allows, without sending a message from the user, to receive a
+	// ButtonCallback allows, without sending a message from the user, to receive a
 	// notification about pressing the button and perform the necessary action.
 	ButtonCallback = "callback"
 )
