@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -17,6 +16,22 @@ import (
 	"github.com/cockroachdb/errors"
 )
 
+const directoryPermission os.FileMode = 0o755
+
+func resolveSafeDirectory(input string) (string, error) {
+	if input == "" {
+		return "", errors.New("VK_DIRECTORY is empty")
+	}
+
+	cleaned := filepath.Clean(input)
+	absolute, err := filepath.Abs(cleaned)
+	if err != nil {
+		return "", errors.Wrap(err, "can't resolve absolute directory path")
+	}
+
+	return absolute, nil
+}
+
 func main() {
 	// Get token from environment variable.
 	token := os.Getenv("VK_TOKEN")
@@ -25,11 +40,14 @@ func main() {
 	}
 
 	// Get directory from environment variable.
-	directory := os.Getenv("VK_DIRECTORY")
+	directory, err := resolveSafeDirectory(os.Getenv("VK_DIRECTORY"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_, err := os.Stat(directory)
-	if os.IsNotExist(err) {
-		log.Fatal("VK_DIRECTORY is not exists")
+	root, err := os.OpenRoot(directory)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Create VK client.
@@ -55,10 +73,15 @@ func main() {
 	for albumID := range albums {
 		wg.Add(1)
 
-		go downloadAlbum(ctx, &wg, &albums[albumID], vkClient, directory)
+		go downloadAlbum(ctx, &wg, &albums[albumID], vkClient, root)
 	}
 
 	wg.Wait()
+
+	err = root.Close()
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // getPhotoURL returns url of photo.
@@ -81,7 +104,7 @@ func getPhotoURL(photo *object.PhotosPhoto) (string, error) {
 }
 
 // downloadAndSave downloads file from url and saves it to file.
-func downloadAndSave(ctx context.Context, url, directoryPath, fileName string) error {
+func downloadAndSave(ctx context.Context, url string, root *os.Root, albumID, photoID int) error {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -101,19 +124,16 @@ func downloadAndSave(ctx context.Context, url, directoryPath, fileName string) e
 		return errors.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	// Check if the directory already exists
-	_, err = os.Stat(directoryPath)
-	if os.IsNotExist(err) {
-		err = os.MkdirAll(directoryPath, os.ModePerm)
-		if err != nil {
-			return errors.Wrap(err, "cant create directory")
-		}
+	albumDirectory := strconv.Itoa(albumID)
+	err = root.MkdirAll(albumDirectory, directoryPermission)
+	if err != nil {
+		return errors.Wrap(err, "cant create directory")
 	}
 
-	filePath := filepath.Join(directoryPath, fileName)
+	filePath := filepath.Join(albumDirectory, strconv.Itoa(photoID)+".jpg")
 
 	// Use io.Copy to stream data
-	file, err := os.Create(filePath)
+	file, err := root.Create(filePath)
 	if err != nil {
 		return errors.Wrap(err, "cant create file")
 	}
@@ -182,7 +202,7 @@ func downloadAlbum(
 	wg *sync.WaitGroup,
 	album *object.PhotosPhotoAlbumFull,
 	vkClient *api.VK,
-	directory string,
+	root *os.Root,
 ) {
 	defer wg.Done()
 
@@ -205,11 +225,9 @@ func downloadAlbum(
 		err = downloadAndSave(
 			ctx,
 			url,
-			path.Join(
-				directory,
-				strconv.Itoa(album.ID),
-			),
-			strconv.Itoa(photos[photoID].ID)+".jpg",
+			root,
+			album.ID,
+			photos[photoID].ID,
 		)
 		if err != nil {
 			log.Printf("can't download photo %d: %s", photos[photoID].ID, err)
