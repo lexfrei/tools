@@ -134,7 +134,7 @@ func (keyboard *MessagesKeyboard) AddRow() *MessagesKeyboard {
 }
 
 // AddTextButton add Text button in last row.
-func (keyboard *MessagesKeyboard) AddTextButton(label string, payload interface{}, color string) *MessagesKeyboard {
+func (keyboard *MessagesKeyboard) AddTextButton(label string, payload any, color string) *MessagesKeyboard {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		panic(err)
@@ -156,7 +156,7 @@ func (keyboard *MessagesKeyboard) AddTextButton(label string, payload interface{
 }
 
 // AddOpenLinkButton add Open Link button in last row.
-func (keyboard *MessagesKeyboard) AddOpenLinkButton(link, label string, payload interface{}) *MessagesKeyboard {
+func (keyboard *MessagesKeyboard) AddOpenLinkButton(link, label string, payload any) *MessagesKeyboard {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		panic(err)
@@ -178,7 +178,7 @@ func (keyboard *MessagesKeyboard) AddOpenLinkButton(link, label string, payload 
 }
 
 // AddLocationButton add Location button in last row.
-func (keyboard *MessagesKeyboard) AddLocationButton(payload interface{}) *MessagesKeyboard {
+func (keyboard *MessagesKeyboard) AddLocationButton(payload any) *MessagesKeyboard {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		panic(err)
@@ -198,7 +198,7 @@ func (keyboard *MessagesKeyboard) AddLocationButton(payload interface{}) *Messag
 }
 
 // AddVKPayButton add VK Pay button in last row.
-func (keyboard *MessagesKeyboard) AddVKPayButton(payload interface{}, hash string) *MessagesKeyboard {
+func (keyboard *MessagesKeyboard) AddVKPayButton(payload any, hash string) *MessagesKeyboard {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		panic(err)
@@ -221,7 +221,7 @@ func (keyboard *MessagesKeyboard) AddVKPayButton(payload interface{}, hash strin
 // AddVKAppsButton add VK Apps button in last row.
 func (keyboard *MessagesKeyboard) AddVKAppsButton(
 	appID, ownerID int,
-	payload interface{},
+	payload any,
 	label, hash string,
 ) *MessagesKeyboard {
 	b, err := json.Marshal(payload)
@@ -247,7 +247,7 @@ func (keyboard *MessagesKeyboard) AddVKAppsButton(
 }
 
 // AddCallbackButton add Callback button in last row.
-func (keyboard *MessagesKeyboard) AddCallbackButton(label string, payload interface{}, color string) *MessagesKeyboard {
+func (keyboard *MessagesKeyboard) AddCallbackButton(label string, payload any, color string) *MessagesKeyboard {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		panic(err)
@@ -282,10 +282,10 @@ type MessagesKeyboardButton struct {
 
 // MessagesKeyboardButtonAction struct.
 type MessagesKeyboardButtonAction struct {
-	AppID   int    `json:"app_id,omitempty"`   // Fragment value in app link like vk.com/app{app_id}_-654321#hash
-	Hash    string `json:"hash,omitempty"`     // Fragment value in app link like vk.com/app123456_-654321#{hash}
+	AppID   int    `json:"app_id,omitempty"`   // Fragment value in app link like vk.ru/app{app_id}_-654321#hash
+	Hash    string `json:"hash,omitempty"`     // Fragment value in app link like vk.ru/app123456_-654321#{hash}
 	Label   string `json:"label,omitempty"`    // Label for button
-	OwnerID int    `json:"owner_id,omitempty"` // Fragment value in app link like vk.com/app123456_{owner_id}#hash
+	OwnerID int    `json:"owner_id,omitempty"` // Fragment value in app link like vk.ru/app123456_{owner_id}#hash
 	Payload string `json:"payload,omitempty"`  // Additional data sent along with message for developer convenience
 	Type    string `json:"type"`               // Button type
 	Link    string `json:"link,omitempty"`     // Link URL
@@ -361,7 +361,7 @@ func (eventData MessagesEventData) ToJSON() string {
 
 // MessagesTemplate struct.
 //
-// https://dev.vk.com/ru/api/bots/development/messages
+// https://dev.vk.ru/ru/api/bots/development/messages
 type MessagesTemplate struct {
 	Type     string                    `json:"type"`
 	Elements []MessagesTemplateElement `json:"elements"`
@@ -381,7 +381,7 @@ type MessagesTemplateElement struct {
 // MessagesTemplateElementCarousel struct.
 type MessagesTemplateElementCarousel struct {
 	Title       string                                `json:"title,omitempty"`
-	Action      MessagesTemplateElementCarouselAction `json:"action,omitempty"`
+	Action      MessagesTemplateElementCarouselAction `json:"action"`
 	Description string                                `json:"description,omitempty"`
 	Photo       *PhotosPhoto                          `json:"photo,omitempty"`    // Only read
 	PhotoID     string                                `json:"photo_id,omitempty"` // Only for send
@@ -408,7 +408,7 @@ type MessageContentSourceURL struct {
 
 // MessageContentSource struct.
 //
-// https://dev.vk.com/ru/api/bots/development/messages
+// https://dev.vk.ru/ru/api/bots/development/messages
 type MessageContentSource struct {
 	MessageContentSourceMessage // type message
 	MessageContentSourceURL     // type url
@@ -771,4 +771,13 @@ type MessagesForward struct {
 func (forward MessagesForward) ToJSON() string {
 	b, _ := json.Marshal(forward)
 	return string(b)
+}
+
+// MessagesDeleteResponse struct.
+type MessagesDeleteResponse struct {
+	PeerID                int               `json:"peer_id"`
+	MessageID             *int              `json:"message_id,omitempty"`
+	ConversationMessageID int               `json:"conversation_message_id"`
+	Response              *BaseBoolInt      `json:"response,omitempty"`
+	Error                 *BaseMessageError `json:"error,omitempty"`
 }
