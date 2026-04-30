@@ -13,6 +13,7 @@
 [![Build Status](https://github.com/getsentry/sentry-go/actions/workflows/test.yml/badge.svg)](https://github.com/getsentry/sentry-go/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/getsentry/sentry-go)](https://goreportcard.com/report/github.com/getsentry/sentry-go)
 [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/Ww9hbqr)
+[![X Follow](https://img.shields.io/twitter/follow/sentry?label=sentry&style=social)](https://x.com/intent/follow?screen_name=sentry)
 [![go.dev](https://img.shields.io/badge/go.dev-pkg-007d9c.svg?style=flat)](https://pkg.go.dev/github.com/getsentry/sentry-go)
 
 `sentry-go` provides a Sentry client implementation for the Go programming
@@ -26,8 +27,9 @@ intended to replace the `raven-go` package.
 
 The only requirement is a Go compiler.
 
-We verify this package against the 3 most recent releases of Go. Those are the
-supported versions. The exact versions are defined in
+We follow Go's [official release policy](https://go.dev/doc/devel/release#policy),
+supporting the two most recent Go releases. Each major Go release is supported
+until there are two newer major releases. The exact versions are defined in
 [`GitHub workflow`](.github/workflows/test.yml).
 
 In addition, we run tests against the current master branch of the Go toolchain,

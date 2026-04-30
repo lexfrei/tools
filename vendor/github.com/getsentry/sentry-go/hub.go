@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/getsentry/sentry-go/internal/debuglog"
 )
 
 type contextKey int
@@ -17,14 +19,6 @@ const (
 	// RequestContextKey is the key used to store the current http.Request.
 	RequestContextKey = contextKey(2)
 )
-
-// defaultMaxBreadcrumbs is the default maximum number of breadcrumbs added to
-// an event. Can be overwritten with the maxBreadcrumbs option.
-const defaultMaxBreadcrumbs = 30
-
-// maxBreadcrumbs is the absolute maximum number of breadcrumbs added to an
-// event. The maxBreadcrumbs option cannot be set higher than this value.
-const maxBreadcrumbs = 100
 
 // currentHub is the initial Hub with no Client bound and an empty Scope.
 var currentHub = NewHub(nil, NewScope())
@@ -218,11 +212,16 @@ func (hub *Hub) ConfigureScope(f func(scope *Scope)) {
 // passing it a top-level Scope.
 // Returns EventID if successfully, or nil if there's no Scope or Client available.
 func (hub *Hub) CaptureEvent(event *Event) *EventID {
+	return hub.CaptureEventWithHint(event, nil)
+}
+
+// CaptureEventWithHint is like CaptureEvent but additionally accepts an EventHint.
+func (hub *Hub) CaptureEventWithHint(event *Event, hint *EventHint) *EventID {
 	client, scope := hub.Client(), hub.Scope()
 	if client == nil || scope == nil {
 		return nil
 	}
-	eventID := client.CaptureEvent(event, nil, scope)
+	eventID := client.CaptureEvent(event, hint, scope)
 
 	if event.Type != transactionType && eventID != nil {
 		hub.mu.Lock()
@@ -289,7 +288,7 @@ func (hub *Hub) AddBreadcrumb(breadcrumb *Breadcrumb, hint *BreadcrumbHint) {
 
 	// If there's no client, just store it on the scope straight away
 	if client == nil {
-		hub.Scope().AddBreadcrumb(breadcrumb, maxBreadcrumbs)
+		hub.Scope().AddBreadcrumb(breadcrumb, defaultMaxBreadcrumbs)
 		return
 	}
 
@@ -299,8 +298,6 @@ func (hub *Hub) AddBreadcrumb(breadcrumb *Breadcrumb, hint *BreadcrumbHint) {
 		return
 	case limit == 0:
 		limit = defaultMaxBreadcrumbs
-	case limit > maxBreadcrumbs:
-		limit = maxBreadcrumbs
 	}
 
 	if client.options.BeforeBreadcrumb != nil {
@@ -308,7 +305,7 @@ func (hub *Hub) AddBreadcrumb(breadcrumb *Breadcrumb, hint *BreadcrumbHint) {
 			hint = &BreadcrumbHint{}
 		}
 		if breadcrumb = client.options.BeforeBreadcrumb(breadcrumb, hint); breadcrumb == nil {
-			DebugLogger.Println("breadcrumb dropped due to BeforeBreadcrumb callback.")
+			debuglog.Println("breadcrumb dropped due to BeforeBreadcrumb callback.")
 			return
 		}
 	}
@@ -399,6 +396,17 @@ func (hub *Hub) GetTraceparent() string {
 	}
 
 	return fmt.Sprintf("%s-%s", scope.propagationContext.TraceID, scope.propagationContext.SpanID)
+}
+
+// GetTraceparentW3C returns the current traceparent string in W3C format.
+// This is intended for propagation to downstream services that expect the W3C header.
+func (hub *Hub) GetTraceparentW3C() string {
+	scope := hub.Scope()
+	if scope.span != nil {
+		return scope.span.ToTraceparent()
+	}
+
+	return fmt.Sprintf("00-%s-%s-00", scope.propagationContext.TraceID, scope.propagationContext.SpanID)
 }
 
 // GetBaggage returns the current Sentry baggage string, to be used as a HTTP header value
