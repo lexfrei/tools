@@ -24,8 +24,13 @@ type User struct {
 	CanJoinGroups        bool `json:"can_join_groups"`
 	CanReadMessages      bool `json:"can_read_all_group_messages"`
 	SupportsInline       bool `json:"supports_inline_queries"`
+	SupportsGuest        bool `json:"supports_guest_queries"`
 	CanConnectToBusiness bool `json:"can_connect_to_business"`
 	HasMainWebApp        bool `json:"has_main_web_app"`
+
+	// Bot API 9.4: (Optional) True, if the bot allows users to create
+	// and delete topics in private chats.
+	AllowsUsersToCreateTopics bool `json:"allows_users_to_create_topics,omitempty"`
 }
 
 // Recipient returns user ID (see Recipient interface).
@@ -139,6 +144,9 @@ type ChatMember struct {
 
 	JoinToSend    string `json:"join_to_send_messages"`
 	JoinByRequest string `json:"join_by_request"`
+
+	// Bot API 9.5: (Optional) Tag of the member; for regular and restricted members only.
+	Tag string `json:"tag,omitempty"`
 }
 
 // MemberStatus is one's chat status.
@@ -359,6 +367,9 @@ type ChatFullInfo struct {
 
 	// Bot API 8.3: True, if the chat can be gifted with Telegram Stars gifts
 	CanSendGift bool `json:"can_send_gift"`
+
+	// Bot API 9.4: For private chats, the first audio added to the profile of the user.
+	FirstProfileAudio *Audio `json:"first_profile_audio,omitempty"`
 }
 
 type ChatBackground struct {
