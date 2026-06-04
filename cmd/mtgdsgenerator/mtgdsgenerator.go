@@ -90,7 +90,6 @@ func main() {
 
 	log.Printf("Spawning %d workers...\n", cmd.Parallel)
 
-	//nolint:gosec // not interesting
 	workersCount := int(cmd.Parallel)
 	jobIndex := make(chan int, workersCount)
 
