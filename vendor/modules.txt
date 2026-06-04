@@ -220,6 +220,6 @@ golang.org/x/text/language
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# gopkg.in/telebot.v4 v4.0.0-beta.7
+# gopkg.in/telebot.v4 v4.0.0-beta.9
 ## explicit; go 1.16
 gopkg.in/telebot.v4
