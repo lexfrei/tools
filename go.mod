@@ -6,7 +6,7 @@ require (
 	github.com/BlueMonday/go-scryfall v0.9.1
 	github.com/SevereCloud/vksdk/v3 v3.3.1
 	github.com/cockroachdb/errors v1.13.0
-	github.com/redis/go-redis/v9 v9.20.0
+	github.com/redis/go-redis/v9 v9.20.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/tdewolff/minify/v2 v2.24.13
