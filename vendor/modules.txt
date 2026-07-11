@@ -1,4 +1,4 @@
-# github.com/BlueMonday/go-scryfall v0.9.1
+# github.com/BlueMonday/go-scryfall v0.10.0
 ## explicit; go 1.17
 github.com/BlueMonday/go-scryfall
 # github.com/SevereCloud/vksdk/v3 v3.3.1
