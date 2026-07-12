@@ -614,6 +614,11 @@ type Card struct {
 	// FlavorName is the just-for-fun name printed on the card (such as for
 	// Godzilla series cards).
 	FlavorName *string `json:"flavor_name,omitempty"`
+
+	// GameChanger is whether this card is on the [Commander Game Changer list].
+	//
+	// [Commander Game Changer list]: https://mtg.wiki/page/Game_Changers
+	GameChanger *bool `json:"game_changer,omitempty"`
 }
 
 // RelatedCard is a card that is closely related to another card (because it
@@ -758,16 +763,28 @@ type Prices struct {
 
 // Legalities describes the legality of a card across formats.
 type Legalities struct {
-	Standard  Legality `json:"standard"`
-	Modern    Legality `json:"modern"`
-	Pauper    Legality `json:"pauper"`
-	Pioneer   Legality `json:"pioneer"`
-	Legacy    Legality `json:"legacy"`
-	Penny     Legality `json:"penny"`
-	Vintage   Legality `json:"vintage"`
-	Duel      Legality `json:"duel"`
-	Commander Legality `json:"commander"`
-	Future    Legality `json:"future"`
+	Standard          Legality `json:"standard"`
+	Modern            Legality `json:"modern"`
+	Pauper            Legality `json:"pauper"`
+	Pioneer           Legality `json:"pioneer"`
+	Legacy            Legality `json:"legacy"`
+	Penny             Legality `json:"penny"`
+	Vintage           Legality `json:"vintage"`
+	Duel              Legality `json:"duel"`
+	Commander         Legality `json:"commander"`
+	Future            Legality `json:"future"`
+	Historic          Legality `json:"historic"`
+	Timeless          Legality `json:"timeless"`
+	Gladiator         Legality `json:"gladiator"`
+	Oathbreaker       Legality `json:"oathbreaker"`
+	StandardBrawl     Legality `json:"standardbrawl"`
+	Brawl             Legality `json:"brawl"`
+	Alchemy           Legality `json:"alchemy"`
+	PauperCommander   Legality `json:"paupercommander"`
+	OldSchool         Legality `json:"oldschool"`
+	PreModern         Legality `json:"premodern"`
+	PreDH             Legality `json:"predh"`
+	TinyLeadersReborn Legality `json:"tlr"`
 }
 
 // RelatedURIs contains links related to a card.
