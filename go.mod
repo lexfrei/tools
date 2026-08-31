@@ -1,6 +1,6 @@
 module github.com/lexfrei/tools
 
-go 1.26.5
+go 1.27.0
 
 require (
 	github.com/BlueMonday/go-scryfall v0.10.0
