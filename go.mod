@@ -9,7 +9,7 @@ require (
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/tdewolff/minify/v2 v2.24.17
+	github.com/tdewolff/minify/v2 v2.24.19
 	gopkg.in/telebot.v4 v4.0.0-beta.10
 )
 

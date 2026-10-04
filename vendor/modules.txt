@@ -167,7 +167,7 @@ github.com/spf13/viper/internal/features
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv
-# github.com/tdewolff/minify/v2 v2.24.17
+# github.com/tdewolff/minify/v2 v2.24.19
 ## explicit; go 1.25.0
 github.com/tdewolff/minify/v2
 github.com/tdewolff/minify/v2/css
