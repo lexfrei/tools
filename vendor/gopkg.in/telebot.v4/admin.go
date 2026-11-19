@@ -7,6 +7,8 @@ import (
 )
 
 // Rights is a list of privileges available to chat members.
+//
+// Bot API: ChatPermissions, ChatAdministratorRights.
 type Rights struct {
 	// Anonymous is true, if the user's presence in the chat is hidden.
 	Anonymous bool `json:"is_anonymous"`
@@ -45,6 +47,18 @@ type Rights struct {
 
 	// Bot API 9.5: restricted member permission (ChatPermissions).
 	CanEditTag bool `json:"can_edit_tag"`
+
+	// Bot API 9.2: administrator right to manage the channel's direct
+	// messages and decline suggested posts.
+	CanManageDirectMessages bool `json:"can_manage_direct_messages"`
+
+	// Bot API 10.0: restricted member permission to react to messages
+	// (ChatPermissions).
+	CanReactToMessages bool `json:"can_react_to_messages"`
+
+	// Bot API 10.3: administrator right to manage the chat's welcome
+	// messages, or for bots, to send them.
+	CanSendWelcomeMessages bool `json:"can_send_welcome_messages"`
 
 	// Independent defines whether the chat permissions are set independently.
 	// If not, the can_send_other_messages and can_add_web_page_previews permissions
@@ -129,6 +143,8 @@ func Forever() int64 {
 }
 
 // Ban will ban user from chat until `member.RestrictedUntil`.
+//
+// Bot API: banChatMember.
 func (b *Bot) Ban(chat *Chat, member *ChatMember, revokeMessages ...bool) error {
 	params := map[string]string{
 		"chat_id":    chat.Recipient(),
@@ -139,7 +155,7 @@ func (b *Bot) Ban(chat *Chat, member *ChatMember, revokeMessages ...bool) error 
 		params["revoke_messages"] = strconv.FormatBool(revokeMessages[0])
 	}
 
-	_, err := b.Raw("kickChatMember", params)
+	_, err := b.Raw("banChatMember", params)
 	return err
 }
 
@@ -147,6 +163,8 @@ func (b *Bot) Ban(chat *Chat, member *ChatMember, revokeMessages ...bool) error 
 // By default, it kicks the user if it is not banned, because it ensures
 // the user is not a chat member but is able to join it.
 // forBanned = true should be provided to ignore users that are not banned.
+//
+// Bot API: unbanChatMember.
 func (b *Bot) Unban(chat *Chat, user *User, forBanned ...bool) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -168,6 +186,8 @@ func (b *Bot) Unban(chat *Chat, user *User, forBanned ...bool) error {
 //   - can send media
 //   - can send other
 //   - can add web page previews
+//
+// Bot API: restrictChatMember.
 func (b *Bot) Restrict(chat *Chat, member *ChatMember) error {
 	perms, until := member.Rights, member.RestrictedUntil
 
@@ -195,13 +215,18 @@ func (b *Bot) Restrict(chat *Chat, member *ChatMember) error {
 //   - can restrict members
 //   - can pin messages
 //   - can promote members
+//
+// Bot API: promoteChatMember.
 func (b *Bot) Promote(chat *Chat, member *ChatMember) error {
 	params := map[string]interface{}{
-		"chat_id":      chat.Recipient(),
-		"user_id":      member.User.Recipient(),
-		"is_anonymous": member.Anonymous,
+		"chat_id": chat.Recipient(),
+		"user_id": member.User.Recipient(),
 	}
 	embedRights(params, member.Rights)
+
+	// A member as Telegram returns it has is_anonymous beside its rights,
+	// not among them.
+	params["is_anonymous"] = member.Anonymous || member.Rights.Anonymous
 
 	_, err := b.Raw("promoteChatMember", params)
 	return err
@@ -214,9 +239,17 @@ func (b *Bot) Promote(chat *Chat, member *ChatMember) error {
 //
 // If the chat is a group or a supergroup and
 // no administrators were appointed, only the creator will be returned.
-func (b *Bot) AdminsOf(chat *Chat) ([]ChatMember, error) {
+//
+// Bots other than this one are left out unless returnBots is true
+// (Bot API 10.0).
+//
+// Bot API: getChatAdministrators.
+func (b *Bot) AdminsOf(chat *Chat, returnBots ...bool) ([]ChatMember, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
+	}
+	if len(returnBots) > 0 && returnBots[0] {
+		params["return_bots"] = "true"
 	}
 
 	data, err := b.Raw("getChatAdministrators", params)
@@ -234,12 +267,14 @@ func (b *Bot) AdminsOf(chat *Chat) ([]ChatMember, error) {
 }
 
 // Len returns the number of members in a chat.
+//
+// Bot API: getChatMemberCount.
 func (b *Bot) Len(chat *Chat) (int, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
 	}
 
-	data, err := b.Raw("getChatMembersCount", params)
+	data, err := b.Raw("getChatMemberCount", params)
 	if err != nil {
 		return 0, err
 	}
@@ -255,6 +290,8 @@ func (b *Bot) Len(chat *Chat) (int, error) {
 
 // SetAdminTitle sets a custom title for an administrator.
 // A title should be 0-16 characters length, emoji are not allowed.
+//
+// Bot API: setChatAdministratorCustomTitle.
 func (b *Bot) SetAdminTitle(chat *Chat, user *User, title string) error {
 	params := map[string]string{
 		"chat_id":      chat.Recipient(),
@@ -269,6 +306,8 @@ func (b *Bot) SetAdminTitle(chat *Chat, user *User, title string) error {
 // SetMemberTag sets a tag for a regular member in a group or a supergroup.
 // The bot must be an administrator with the can_manage_tags right.
 // A tag should be 0-16 characters length, emoji are not allowed.
+//
+// Bot API: setChatMemberTag.
 func (b *Bot) SetMemberTag(chat *Chat, user *User, tag string) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -283,6 +322,8 @@ func (b *Bot) SetMemberTag(chat *Chat, user *User, tag string) error {
 // BanSenderChat will use this method to ban a channel chat in a supergroup or a channel.
 // Until the chat is unbanned, the owner of the banned chat won't be able
 // to send messages on behalf of any of their channels.
+//
+// Bot API: banChatSenderChat.
 func (b *Bot) BanSenderChat(chat *Chat, sender Recipient) error {
 	params := map[string]string{
 		"chat_id":        chat.Recipient(),
@@ -295,6 +336,8 @@ func (b *Bot) BanSenderChat(chat *Chat, sender Recipient) error {
 
 // UnbanSenderChat will use this method to unban a previously banned channel chat in a supergroup or channel.
 // The bot must be an administrator for this to work and must have the appropriate administrator rights.
+//
+// Bot API: unbanChatSenderChat.
 func (b *Bot) UnbanSenderChat(chat *Chat, sender Recipient) error {
 	params := map[string]string{
 		"chat_id":        chat.Recipient(),
@@ -306,6 +349,8 @@ func (b *Bot) UnbanSenderChat(chat *Chat, sender Recipient) error {
 }
 
 // DefaultRights returns the current default administrator rights of the bot.
+//
+// Bot API: getMyDefaultAdministratorRights.
 func (b *Bot) DefaultRights(forChannels bool) (*Rights, error) {
 	params := map[string]bool{
 		"for_channels": forChannels,
@@ -327,6 +372,8 @@ func (b *Bot) DefaultRights(forChannels bool) (*Rights, error) {
 
 // SetDefaultRights changes the default administrator rights requested by the bot
 // when it's added as an administrator to groups or channels.
+//
+// Bot API: setMyDefaultAdministratorRights.
 func (b *Bot) SetDefaultRights(rights Rights, forChannels bool) error {
 	params := map[string]interface{}{
 		"rights":       rights,

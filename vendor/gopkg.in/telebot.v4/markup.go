@@ -9,6 +9,8 @@ import (
 // ReplyMarkup controls two convenient options for bot-user communications
 // such as reply keyboard and inline "keyboard" (a grid of buttons as a part
 // of the message).
+//
+// Bot API: InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply.
 type ReplyMarkup struct {
 	// InlineKeyboard is a grid of InlineButtons displayed in the message.
 	//
@@ -230,6 +232,8 @@ func (r *ReplyMarkup) CopyText(text, copyText string) Btn {
 //
 // Set either Contact or Location to true in order to request
 // sensitive info, such as user's phone number or current location.
+//
+// Bot API: KeyboardButton.
 type ReplyButton struct {
 	Text              string      `json:"text"`
 	IconCustomEmojiID string      `json:"icon_custom_emoji_id,omitempty"`
@@ -241,6 +245,10 @@ type ReplyButton struct {
 	User     *ReplyRecipient `json:"request_users,omitempty"`
 	Chat     *ReplyRecipient `json:"request_chat,omitempty"`
 	WebApp   *WebApp         `json:"web_app,omitempty"`
+
+	// (Optional) Asks the user to create a bot managed by this one
+	// (Bot API 9.6).
+	ManagedBot *ReplyManagedBot `json:"request_managed_bot,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler. It allows passing PollType as a
@@ -253,12 +261,32 @@ func (pt PollType) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// MarshalJSON encodes the button with chat_is_channel of its Chat request
+// even when false, which requests a group; Telegram requires it.
+func (b ReplyButton) MarshalJSON() ([]byte, error) {
+	type alias ReplyButton
+	if b.Chat == nil {
+		return json.Marshal(alias(b))
+	}
+
+	type recipient ReplyRecipient
+	return json.Marshal(struct {
+		alias
+		Chat interface{} `json:"request_chat"`
+	}{alias(b), struct {
+		*recipient
+		Channel bool `json:"chat_is_channel"`
+	}{(*recipient)(b.Chat), b.Chat.Channel}})
+}
+
 // ReplyRecipient combines both KeyboardButtonRequestUser
 // and KeyboardButtonRequestChat objects. Use inside ReplyButton
 // to request the user or chat sharing with respective settings.
 //
 // To pass the pointers to bool use a special tele.Flag function,
 // that way you will be able to reflect the three-state bool (nil, false, true).
+//
+// Bot API: KeyboardButtonRequestUsers, KeyboardButtonRequestChat.
 type ReplyRecipient struct {
 	ID int32 `json:"request_id"`
 
@@ -280,6 +308,8 @@ type ReplyRecipient struct {
 }
 
 // RecipientShared combines both UserShared and ChatShared objects.
+//
+// Bot API: UsersShared, ChatShared.
 type RecipientShared struct {
 	ID       int32  `json:"request_id"` // chat, users
 	ChatID   int64  `json:"chat_id"`    // chat only
@@ -298,6 +328,8 @@ type RecipientShared struct {
 }
 
 // InlineButton represents a button displayed in the message.
+//
+// Bot API: InlineKeyboardButton.
 type InlineButton struct {
 	// Unique slagish name for this kind of button,
 	// try to be as specific as possible.
@@ -318,6 +350,10 @@ type InlineButton struct {
 	CallbackGame          *CallbackGame      `json:"callback_game,omitempty"`
 	Pay                   bool               `json:"pay,omitempty"`
 	CopyText              *CopyTextButton    `json:"copy_text,omitempty"`
+
+	// (Optional) Makes the button disabled; it does nothing when pressed
+	// (Bot API 10.3).
+	Disabled *DisabledButton `json:"disabled,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler interface.
@@ -389,6 +425,8 @@ func (b Btn) Inline() *InlineButton {
 // Login represents a parameter of the inline keyboard button
 // used to automatically authorize a user. Serves as a great replacement
 // for the Telegram Login Widget when the user is coming from Telegram.
+//
+// Bot API: LoginUrl.
 type Login struct {
 	URL         string `json:"url"`
 	Text        string `json:"forward_text,omitempty"`
@@ -398,11 +436,15 @@ type Login struct {
 
 // CopyTextButton represents an inline keyboard button that copies
 // specified text to the clipboard when pressed.
+//
+// Bot API: CopyTextButton.
 type CopyTextButton struct {
 	Text string `json:"text"`
 }
 
 // MenuButton describes the bot's menu button in a private chat.
+//
+// Bot API: MenuButton, MenuButtonCommands, MenuButtonWebApp, MenuButtonDefault.
 type MenuButton struct {
 	Type   MenuButtonType `json:"type"`
 	Text   string         `json:"text,omitempty"`
@@ -416,3 +458,9 @@ const (
 	MenuButtonCommands MenuButtonType = "commands"
 	MenuButtonWebApp   MenuButtonType = "web_app"
 )
+
+// DisabledButton marks a button as disabled (Bot API 10.3). It holds no
+// information.
+//
+// Bot API: DisabledButton.
+type DisabledButton struct{}

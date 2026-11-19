@@ -16,6 +16,8 @@ type Media interface {
 
 // InputMedia represents a composite InputMedia struct that is
 // used by Telebot in sending and editing media methods.
+//
+// Bot API: InputMedia, InputMediaAnimation, InputMediaAudio, InputMediaDocument, InputMediaPhoto, InputMediaVideo, InputMediaVoiceNote, InputMediaLivePhoto, InputPaidMedia, InputPaidMediaPhoto, InputPaidMediaVideo, InputPaidMediaLivePhoto.
 type InputMedia struct {
 	Type                 string   `json:"type"`
 	Media                string   `json:"media"`
@@ -38,6 +40,9 @@ type InputMedia struct {
 
 	// Bot API 8.3: (Optional) Point in time (Unix timestamp) when the video starts (for InputMediaVideo)
 	StartTimestamp int64 `json:"start_timestamp,omitempty"`
+
+	// Bot API 10.0: the static photo of an InputMediaLivePhoto.
+	Photo string `json:"photo,omitempty"`
 }
 
 // Inputtable is a generic type for all kinds of media you
@@ -72,6 +77,8 @@ func (a Album) SetCaption(caption string) {
 }
 
 // Photo object represents a single photo file.
+//
+// Bot API: PhotoSize.
 type Photo struct {
 	File
 
@@ -142,6 +149,8 @@ func (p *Photo) UnmarshalJSON(data []byte) error {
 }
 
 // Audio object represents an audio file.
+//
+// Bot API: Audio.
 type Audio struct {
 	File
 
@@ -178,6 +187,8 @@ func (a *Audio) InputMedia() InputMedia {
 
 // Document object represents a general file (as opposed to Photo or Audio).
 // Telegram users can send files of any type of up to 1.5 GB in size.
+//
+// Bot API: Document.
 type Document struct {
 	File
 
@@ -207,6 +218,8 @@ func (d *Document) InputMedia() InputMedia {
 }
 
 // Video object represents a video file.
+//
+// Bot API: Video.
 type Video struct {
 	File
 
@@ -234,6 +247,8 @@ type Video struct {
 }
 
 // VideoQuality represents a video file of a specific quality.
+//
+// Bot API: VideoQuality.
 type VideoQuality struct {
 	FileID       string `json:"file_id"`
 	FileUniqueID string `json:"file_unique_id"`
@@ -281,6 +296,8 @@ func (v *Video) Paid() bool {
 }
 
 // Animation object represents a animation file.
+//
+// Bot API: Animation.
 type Animation struct {
 	File
 
@@ -319,6 +336,8 @@ func (a *Animation) InputMedia() InputMedia {
 }
 
 // Voice object represents a voice note.
+//
+// Bot API: Voice.
 type Voice struct {
 	File
 
@@ -338,6 +357,8 @@ func (v *Voice) MediaFile() *File {
 }
 
 // VideoNote represents a video message.
+//
+// Bot API: VideoNote.
 type VideoNote struct {
 	File
 
@@ -357,6 +378,8 @@ func (v *VideoNote) MediaFile() *File {
 }
 
 // Sticker object represents a WebP image, so-called sticker.
+//
+// Bot API: Sticker.
 type Sticker struct {
 	File
 	Type             StickerSetType `json:"type"`
@@ -382,6 +405,8 @@ func (s *Sticker) MediaFile() *File {
 }
 
 // Contact object represents a contact to Telegram user.
+//
+// Bot API: Contact.
 type Contact struct {
 	PhoneNumber string `json:"phone_number"`
 	FirstName   string `json:"first_name"`
@@ -397,6 +422,8 @@ type Contact struct {
 const LiveForever = math.MaxInt32
 
 // Location object represents geographic position.
+//
+// Bot API: Location.
 type Location struct {
 	Lat                float32  `json:"latitude"`
 	Lng                float32  `json:"longitude"`
@@ -415,6 +442,8 @@ type Location struct {
 
 // Venue object represents a venue location with name, address and
 // optional foursquare ID.
+//
+// Bot API: Venue.
 type Venue struct {
 	Location Location `json:"location"`
 	Title    string   `json:"title"`
@@ -429,6 +458,8 @@ type Venue struct {
 
 // Dice object represents a dice with a random value
 // from 1 to 6 for currently supported base emoji.
+//
+// Bot API: Dice.
 type Dice struct {
 	Type  DiceType `json:"emoji"`
 	Value int      `json:"value"`
@@ -458,11 +489,18 @@ type PaidInputtable interface {
 // PaidAlbum lets you group multiple paid media into a single message.
 type PaidAlbum []PaidInputtable
 
+// PaidMedias describes the paid media added to a message.
+//
+// Bot API: PaidMediaInfo.
 type PaidMedias struct {
 	Stars     int         `json:"star_count"`
 	PaidMedia []PaidMedia `json:"paid_media"`
 }
 
+// PaidMedia is one paid media item: a photo, a video, or a preview of media
+// not yet bought.
+//
+// Bot API: PaidMedia, PaidMediaPhoto, PaidMediaPreview, PaidMediaVideo, PaidMediaLivePhoto.
 type PaidMedia struct {
 	Type     string `json:"type"`
 	Photo    *Photo `json:"photo"`    // photo
@@ -477,9 +515,14 @@ type PaidMedia struct {
 
 	// Bot API 8.3: (Optional) Point in time (Unix timestamp) when the video starts (for paid video media)
 	StartTimestamp int64 `json:"start_timestamp,omitempty"`
+
+	// Bot API 10.0: the live photo, for paid live photo media.
+	LivePhoto *LivePhoto `json:"live_photo,omitempty"`
 }
 
 // PaidMediaPurchased contains information about paid media purchased by a user.
+//
+// Bot API: PaidMediaPurchased.
 type PaidMediaPurchased struct {
 	// User who purchased the media.
 	From *User `json:"from"`

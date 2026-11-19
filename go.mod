@@ -3,14 +3,14 @@ module github.com/lexfrei/tools
 go 1.27.4
 
 require (
-	github.com/BlueMonday/go-scryfall v0.10.0
+	github.com/BlueMonday/go-scryfall v0.11.0
 	github.com/SevereCloud/vksdk/v3 v3.3.1
 	github.com/cockroachdb/errors v1.14.0
 	github.com/redis/go-redis/v9 v9.23.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/tdewolff/minify/v2 v2.24.25
-	gopkg.in/telebot.v4 v4.0.0-beta.10
+	github.com/tdewolff/minify/v2 v2.25.0
+	gopkg.in/telebot.v4 v4.0.0
 )
 
 require (
@@ -38,12 +38,12 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tdewolff/parse/v2 v2.8.20 // indirect
+	github.com/tdewolff/parse/v2 v2.25.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/atomic v1.12.0 // indirect
 	go.uber.org/ratelimit v0.3.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 )

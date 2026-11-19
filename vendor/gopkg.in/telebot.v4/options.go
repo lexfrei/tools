@@ -2,6 +2,8 @@ package telebot
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -103,6 +105,45 @@ type SendOptions struct {
 	// AllowPaidBroadcast allows the message to be sent to users who have not yet
 	// unlocked access to paid channels. Only for messages sent to channels.
 	AllowPaidBroadcast bool
+
+	// Ephemeral sends the message as an ephemeral message, visible only to one
+	// user and the bot (Bot API 10.3). It can also be passed to Send as an
+	// option on its own.
+	Ephemeral *EphemeralMessageParameters
+
+	// CanStop shows the user a button to stop a streamed draft; pressing it
+	// delivers OnGenerationStopped. KeepOnStop keeps the draft in the chat
+	// for a short time after it is stopped. Used only by SendDraft and
+	// SendRichDraft (Bot API 10.3).
+	CanStop    bool
+	KeepOnStop bool
+
+	// DirectMessagesTopicID sends the message to a topic of a channel's direct
+	// messages chat (Bot API 9.2).
+	DirectMessagesTopicID int64
+
+	// SuggestedPost sends the message as a post suggested to the channel of
+	// a direct messages chat (Bot API 9.2). It can also be passed to Send as
+	// an option on its own.
+	SuggestedPost *SuggestedPostParameters
+
+	// PreviewOptions sets how the link preview of a text message is
+	// generated, when sending or editing it (Bot API 7.0). It can also be
+	// passed to Send as an option on its own.
+	PreviewOptions *PreviewOptions
+
+	// RemoveCaption copies messages without their captions. Used only by
+	// CopyMany.
+	RemoveCaption bool
+
+	// CaptionAbove shows an edited caption above the media. Used only when
+	// editing a caption or copying with a new one; when sending media, set
+	// the media's CaptionAbove.
+	CaptionAbove bool
+
+	// Caption replaces the caption of a copied message, with ParseMode or
+	// Entities for its formatting. Used only by Copy.
+	Caption string
 }
 
 func (og *SendOptions) copy() *SendOptions {
@@ -128,6 +169,12 @@ func (b *Bot) extractOptions(how []interface{}) *SendOptions {
 			}
 		case *ReplyParams:
 			opts.ReplyParams = opt
+		case *EphemeralMessageParameters:
+			opts.Ephemeral = opt
+		case *SuggestedPostParameters:
+			opts.SuggestedPost = opt
+		case *PreviewOptions:
+			opts.PreviewOptions = opt
 		case *Topic:
 			opts.ThreadID = opt.ThreadID
 		case Option:
@@ -155,6 +202,8 @@ func (b *Bot) extractOptions(how []interface{}) *SendOptions {
 				opts.ReplyMarkup.RemoveKeyboard = true
 			case Protected:
 				opts.Protected = true
+			case IgnoreThread:
+				// Only Context reads it, to leave its thread out.
 			default:
 				panic("telebot: unsupported flag-option")
 			}
@@ -177,6 +226,11 @@ func (b *Bot) embedSendOptions(params map[string]string, opt *SendOptions) {
 
 	if opt.ReplyTo != nil && opt.ReplyTo.ID != 0 {
 		params["reply_to_message_id"] = strconv.Itoa(opt.ReplyTo.ID)
+	}
+
+	if opt.ReplyParams != nil {
+		replyParams, _ := json.Marshal(opt.ReplyParams)
+		params["reply_parameters"] = string(replyParams)
 	}
 
 	if opt.DisableWebPagePreview {
@@ -235,6 +289,39 @@ func (b *Bot) embedSendOptions(params map[string]string, opt *SendOptions) {
 	if opt.AllowPaidBroadcast {
 		params["allow_paid_broadcast"] = "true"
 	}
+
+	if opt.PreviewOptions != nil {
+		data, _ := json.Marshal(opt.PreviewOptions)
+		params["link_preview_options"] = string(data)
+	}
+
+	if opt.RemoveCaption {
+		params["remove_caption"] = "true"
+	}
+
+	if opt.DirectMessagesTopicID != 0 {
+		params["direct_messages_topic_id"] = strconv.FormatInt(opt.DirectMessagesTopicID, 10)
+	}
+
+	if opt.SuggestedPost != nil {
+		data, _ := json.Marshal(opt.SuggestedPost)
+		params["suggested_post_parameters"] = string(data)
+	}
+
+	if opt.Ephemeral != nil {
+		data, _ := json.Marshal(opt.Ephemeral)
+		params["ephemeral_message_parameters"] = string(data)
+	}
+}
+
+// embedDraftStop adds the stop button options of the draft methods.
+func embedDraftStop(params map[string]string, opt *SendOptions) {
+	if opt.CanStop {
+		params["can_stop"] = "true"
+	}
+	if opt.KeepOnStop {
+		params["keep_on_stop"] = "true"
+	}
 }
 
 func processButtons(keys [][]InlineButton) {
@@ -259,6 +346,8 @@ func processButtons(keys [][]InlineButton) {
 }
 
 // PreviewOptions describes the options used for link preview generation.
+//
+// Bot API: LinkPreviewOptions.
 type PreviewOptions struct {
 	// (Optional) True, if the link preview is disabled.
 	Disabled bool `json:"is_disabled"`
@@ -282,20 +371,26 @@ type PreviewOptions struct {
 	AboveText bool `json:"show_above_text"`
 }
 
-func embedMessages(params map[string]string, msgs []Editable) {
-	ids := make([]string, 0, len(msgs))
+// embedMessages sets message_ids to the IDs of msgs and chatKey to the chat
+// they are in.
+func embedMessages(params map[string]string, chatKey string, msgs []Editable) error {
+	if len(msgs) == 0 {
+		return errors.New("telebot: no messages given")
+	}
 
-	_, chatID := msgs[0].MessageSig()
-	for _, msg := range msgs {
+	ids := make([]int, len(msgs))
+	for i, msg := range msgs {
 		msgID, _ := msg.MessageSig()
-		ids = append(ids, msgID)
+		id, err := strconv.Atoi(msgID)
+		if err != nil {
+			return fmt.Errorf("telebot: message ID %q is not a number", msgID)
+		}
+		ids[i] = id
 	}
-
-	data, err := json.Marshal(ids)
-	if err != nil {
-		return
-	}
+	data, _ := json.Marshal(ids)
+	_, chatID := msgs[0].MessageSig()
 
 	params["message_ids"] = string(data)
-	params["chat_id"] = strconv.FormatInt(chatID, 10)
+	params[chatKey] = strconv.FormatInt(chatID, 10)
+	return nil
 }
