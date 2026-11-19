@@ -22,6 +22,17 @@ type Sendable interface {
 	Send(*Bot, Recipient, *SendOptions) (*Message, error)
 }
 
+// embedMediaFlags writes the spoiler and caption-above flags a photo, video
+// or animation carries itself, beside any SendOptions.HasSpoiler.
+func embedMediaFlags(params map[string]string, spoiler, captionAbove bool) {
+	if spoiler {
+		params["has_spoiler"] = "true"
+	}
+	if captionAbove {
+		params["show_caption_above_media"] = "true"
+	}
+}
+
 // Send delivers media through bot b to recipient.
 func (p *Photo) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 	params := map[string]string{
@@ -29,15 +40,19 @@ func (p *Photo) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		"caption": p.Caption,
 	}
 	b.embedSendOptions(params, opt)
+	embedMediaFlags(params, p.HasSpoiler, p.CaptionAbove)
 
 	msg, err := b.sendMedia(p, params, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	msg.Photo.File.stealRef(&p.File)
-	*p = *msg.Photo
-	p.Caption = msg.Caption
+	if msg.Photo != nil {
+		msg.Photo.File.stealRef(&p.File)
+		spoiler, above := p.HasSpoiler, p.CaptionAbove
+		*p = *msg.Photo
+		p.Caption, p.HasSpoiler, p.CaptionAbove = msg.Caption, spoiler, above
+	}
 
 	return msg, nil
 }
@@ -124,8 +139,10 @@ func (s *Sticker) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error)
 		return nil, err
 	}
 
-	msg.Sticker.File.stealRef(&s.File)
-	*s = *msg.Sticker
+	if msg.Sticker != nil {
+		msg.Sticker.File.stealRef(&s.File)
+		*s = *msg.Sticker
+	}
 
 	return msg, nil
 }
@@ -138,6 +155,7 @@ func (v *Video) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		"file_name": v.FileName,
 	}
 	b.embedSendOptions(params, opt)
+	embedMediaFlags(params, v.HasSpoiler, v.CaptionAbove)
 
 	if v.Duration != 0 {
 		params["duration"] = strconv.Itoa(v.Duration)
@@ -168,8 +186,9 @@ func (v *Video) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 
 	if vid := msg.Video; vid != nil {
 		vid.File.stealRef(&v.File)
+		spoiler, above := v.HasSpoiler, v.CaptionAbove
 		*v = *vid
-		v.Caption = msg.Caption
+		v.Caption, v.HasSpoiler, v.CaptionAbove = msg.Caption, spoiler, above
 	} else if doc := msg.Document; doc != nil {
 		// If video has no sound, Telegram can turn it into Document (GIF)
 		doc.File.stealRef(&v.File)
@@ -190,6 +209,7 @@ func (a *Animation) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, erro
 		"file_name": a.FileName,
 	}
 	b.embedSendOptions(params, opt)
+	embedMediaFlags(params, a.HasSpoiler, a.CaptionAbove)
 
 	if a.Duration != 0 {
 		params["duration"] = strconv.Itoa(a.Duration)
@@ -211,6 +231,7 @@ func (a *Animation) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, erro
 		return nil, err
 	}
 
+	spoiler, above := a.HasSpoiler, a.CaptionAbove
 	if anim := msg.Animation; anim != nil {
 		anim.File.stealRef(&a.File)
 		*a = *msg.Animation
@@ -223,7 +244,7 @@ func (a *Animation) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, erro
 		}
 	}
 
-	a.Caption = msg.Caption
+	a.Caption, a.HasSpoiler, a.CaptionAbove = msg.Caption, spoiler, above
 	return msg, nil
 }
 
@@ -244,8 +265,12 @@ func (v *Voice) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		return nil, err
 	}
 
-	msg.Voice.File.stealRef(&v.File)
-	*v = *msg.Voice
+	// Telegram sends a voice note that is not OGG, MP3 or M4A as an audio
+	// or a document.
+	if msg.Voice != nil {
+		msg.Voice.File.stealRef(&v.File)
+		*v = *msg.Voice
+	}
 
 	return msg, nil
 }
@@ -269,10 +294,36 @@ func (v *VideoNote) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, erro
 		return nil, err
 	}
 
-	msg.VideoNote.File.stealRef(&v.File)
-	*v = *msg.VideoNote
+	if msg.VideoNote != nil {
+		msg.VideoNote.File.stealRef(&v.File)
+		*v = *msg.VideoNote
+	}
 
 	return msg, nil
+}
+
+// Send delivers the contact through bot b to recipient.
+//
+// Bot API: sendContact.
+func (c *Contact) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
+	params := map[string]string{
+		"chat_id":      to.Recipient(),
+		"phone_number": c.PhoneNumber,
+		"first_name":   c.FirstName,
+	}
+	if c.LastName != "" {
+		params["last_name"] = c.LastName
+	}
+	if c.VCard != "" {
+		params["vcard"] = c.VCard
+	}
+	b.embedSendOptions(params, opt)
+
+	data, err := b.Raw("sendContact", params)
+	if err != nil {
+		return nil, err
+	}
+	return extractMessage(data)
 }
 
 // Send delivers media through bot b to recipient.
@@ -290,7 +341,7 @@ func (x *Location) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error
 		params["heading"] = strconv.Itoa(x.Heading)
 	}
 	if x.AlertRadius != 0 {
-		params["proximity_alert_radius"] = strconv.Itoa(x.Heading)
+		params["proximity_alert_radius"] = strconv.Itoa(x.AlertRadius)
 	}
 	b.embedSendOptions(params, opt)
 
@@ -348,23 +399,85 @@ func (p *Poll) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 		"is_closed":               strconv.FormatBool(p.Closed),
 		"is_anonymous":            strconv.FormatBool(p.Anonymous),
 		"allows_multiple_answers": strconv.FormatBool(p.MultipleAnswers),
-		"correct_option_id":       strconv.Itoa(p.CorrectOption),
+	}
+	if p.Type == PollQuiz || len(p.CorrectOptions) > 0 {
+		correct := p.CorrectOptions
+		if len(correct) == 0 {
+			correct = []int{p.CorrectOption}
+		}
+		data, _ := json.Marshal(correct)
+		params["correct_option_ids"] = string(data)
+	}
+	if p.QuestionParseMode != "" {
+		params["question_parse_mode"] = p.QuestionParseMode
+	}
+	if len(p.QuestionEntities) > 0 {
+		data, _ := json.Marshal(p.QuestionEntities)
+		params["question_entities"] = string(data)
 	}
 	if p.Explanation != "" {
 		params["explanation"] = p.Explanation
 		params["explanation_parse_mode"] = p.ParseMode
+		if len(p.Entities) > 0 {
+			data, _ := json.Marshal(p.Entities)
+			params["explanation_entities"] = string(data)
+			delete(params, "explanation_parse_mode")
+		}
+	}
+	if p.Description != "" {
+		params["description"] = p.Description
+		if len(p.DescriptionEntities) > 0 {
+			data, _ := json.Marshal(p.DescriptionEntities)
+			params["description_entities"] = string(data)
+		} else if p.DescriptionParseMode != "" {
+			params["description_parse_mode"] = p.DescriptionParseMode
+		}
 	}
 	if p.OpenPeriod != 0 {
 		params["open_period"] = strconv.Itoa(p.OpenPeriod)
 	} else if p.CloseUnixdate != 0 {
 		params["close_date"] = strconv.FormatInt(p.CloseUnixdate, 10)
 	}
+	for key, on := range map[string]bool{
+		"allows_revoting":           p.AllowsRevoting,
+		"shuffle_options":           p.ShuffleOptions,
+		"allow_adding_options":      p.AllowAddingOptions,
+		"hide_results_until_closes": p.HideResultsUntilCloses,
+		"members_only":              p.MembersOnly,
+	} {
+		if on {
+			params[key] = "true"
+		}
+	}
+	if p.DisallowRevoting {
+		params["allows_revoting"] = "false"
+	}
+	if len(p.CountryCodes) > 0 {
+		data, _ := json.Marshal(p.CountryCodes)
+		params["country_codes"] = string(data)
+	}
 	b.embedSendOptions(params, opt)
 
-	opts, _ := json.Marshal(p.Options)
-	params["options"] = string(opts)
+	files := make(map[string]File)
+	for key, m := range map[string]InputPollMedia{"media": p.InputMedia, "explanation_media": p.InputExplanationMedia} {
+		if m == nil {
+			continue
+		}
+		media, err := encodePollMedia(m, key, files)
+		if err != nil {
+			return nil, err
+		}
+		data, _ := json.Marshal(media)
+		params[key] = string(data)
+	}
 
-	data, err := b.Raw("sendPoll", params)
+	options, err := encodePollOptions(p.Options, files)
+	if err != nil {
+		return nil, err
+	}
+	params["options"] = options
+
+	data, err := b.sendFiles("sendPoll", files, params)
 	if err != nil {
 		return nil, err
 	}
@@ -405,8 +518,9 @@ func (g *Game) Send(b *Bot, to Recipient, opt *SendOptions) (*Message, error) {
 }
 
 func thumbnailToFilemap(thumb *Photo) map[string]File {
+	files := make(map[string]File)
 	if thumb != nil {
-		return map[string]File{"thumbnail": thumb.File}
+		files["thumbnail"] = thumb.File
 	}
-	return nil
+	return files
 }

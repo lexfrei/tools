@@ -49,6 +49,8 @@ const (
 	RichAnchorLink             = "anchor_link"
 	RichReference              = "reference"
 	RichReferenceLink          = "reference_link"
+	RichButton                 = "button"      // Bot API 10.3
+	RichTonAddress             = "ton_address" // Bot API 10.4
 )
 
 // RichText is a polymorphic piece of rich-formatted text (Bot API 10.1). On the
@@ -56,10 +58,14 @@ const (
 // carrying a "type" discriminator and a (usually nested) text. Kind reports
 // which form was decoded; the relevant fields are populated accordingly.
 //
-// RichText is a received-only type — rich content is sent as HTML or Markdown
-// via InputRichMessage, never as a block tree.
+// To send rich text, build it in the same forms: RichText{Plain: "text"} for
+// plain text, Parts for a run, or Type and Text for a formatted entity. Kind
+// may then be left unset.
+//
+// Bot API: RichText, RichTextBold, RichTextItalic, RichTextUnderline, RichTextStrikethrough, RichTextSpoiler, RichTextDateTime, RichTextTextMention, RichTextSubscript, RichTextSuperscript, RichTextMarked, RichTextCode, RichTextCustomEmoji, RichTextMathematicalExpression, RichTextUrl, RichTextEmailAddress, RichTextPhoneNumber, RichTextBankCardNumber, RichTextMention, RichTextHashtag, RichTextCashtag, RichTextBotCommand, RichTextAnchor, RichTextAnchorLink, RichTextReference, RichTextReferenceLink, RichTextButton, RichTextTonAddress.
 type RichText struct {
-	// Kind is the wire form this value was decoded from.
+	// Kind is the wire form this value was decoded from. A value built
+	// without it is an entity if Type is set and an array if Parts is.
 	Kind RichTextKind `json:"-"`
 
 	// Plain holds the text when Kind is RichTextPlain.
@@ -124,6 +130,12 @@ type RichText struct {
 
 	// ReferenceName is the target of a "reference_link" entity.
 	ReferenceName string `json:"reference_name,omitempty"`
+
+	// Address is the address of a "ton_address" entity (Bot API 10.4).
+	Address string `json:"address,omitempty"`
+
+	// Button is the button of a "button" entity (Bot API 10.3).
+	Button *RichMessageButton `json:"button,omitempty"`
 }
 
 // UnmarshalJSON decodes the string, array and tagged-object forms of RichText.
@@ -133,6 +145,7 @@ func (r *RichText) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	*r = RichText{} // a reused value keeps nothing of its previous form
 	switch data[0] {
 	case '"':
 		r.Kind = RichTextPlain
@@ -149,11 +162,52 @@ func (r *RichText) UnmarshalJSON(data []byte) error {
 	}
 }
 
+// kind returns Kind, or the form the set fields make when it is unset.
+func (r RichText) kind() RichTextKind {
+	switch {
+	case r.Kind != RichTextPlain || r.Plain != "":
+		return r.Kind
+	case r.Type != "":
+		return RichTextEntity
+	case r.Parts != nil:
+		return RichTextArray
+	}
+	return RichTextPlain
+}
+
+// MarshalJSON encodes the RichText in its wire form: a plain string, an
+// array, or a tagged entity object.
+func (r RichText) MarshalJSON() ([]byte, error) {
+	switch r.kind() {
+	case RichTextPlain:
+		return json.Marshal(r.Plain)
+	case RichTextArray:
+		if r.Parts == nil {
+			return []byte("[]"), nil
+		}
+		return json.Marshal(r.Parts)
+	default: // RichTextEntity
+		if r.Button != nil {
+			btn := r.Button.wire()
+			r.Button = &btn
+		}
+		type alias RichText
+		if r.Type == RichAnchorLink {
+			// An empty anchor name links back to the top of the message.
+			return json.Marshal(struct {
+				alias
+				AnchorName string `json:"anchor_name"`
+			}{alias(r), r.AnchorName})
+		}
+		return json.Marshal(alias(r))
+	}
+}
+
 // String renders the RichText as plain text, recursively flattening arrays and
 // entities. Entities without textual content (anchors, dividers) contribute
 // nothing; custom emoji contribute their alternative text.
 func (r RichText) String() string {
-	switch r.Kind {
+	switch r.kind() {
 	case RichTextPlain:
 		return r.Plain
 	case RichTextArray:
