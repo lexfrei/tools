@@ -292,7 +292,7 @@ func worker(
 		if card.ImageURIs != nil {
 			imagePath := "./images" + "/" + card.Set + "/" + string(card.Lang) + "/" + card.ID + ".jpg"
 
-			err := downloadAndSave(ctx, conf.httpClient, card.ImageURIs.Normal, imagePath)
+			err := downloadAndSave(ctx, conf.httpClient, imageURL(card.ImageURIs), imagePath)
 			if err != nil {
 				log.Printf("error downloading %s: %s", IDString, err)
 
@@ -308,7 +308,7 @@ func worker(
 			imagePath := "./images" + "/" + card.Set + "/" + string(card.Lang) + "/" +
 				card.ID + strconv.Itoa(faceIndex) + ".jpg"
 
-			err := downloadAndSave(ctx, conf.httpClient, card.CardFaces[faceIndex].ImageURIs.Normal, imagePath)
+			err := downloadAndSave(ctx, conf.httpClient, imageURL(&card.CardFaces[faceIndex].ImageURIs), imagePath)
 			if err != nil {
 				log.Printf("error downloading %s: %s", IDString, err)
 
@@ -337,4 +337,9 @@ func appendToSyncMap(syncMap *sync.Map, key, value string) {
 	defer mapValue.mu.Unlock()
 
 	mapValue.paths = append(mapValue.paths, value)
+}
+
+// imageURL returns the JPEG image, matching the .jpg files it is saved as.
+func imageURL(uris *scryfall.ImageURIs) string {
+	return uris.JPEG
 }
