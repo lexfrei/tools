@@ -7,6 +7,8 @@ import (
 )
 
 // User object represents a Telegram user, bot.
+//
+// Bot API: User.
 type User struct {
 	ID int64 `json:"id"`
 
@@ -31,6 +33,18 @@ type User struct {
 	// Bot API 9.4: (Optional) True, if the bot allows users to create
 	// and delete topics in private chats.
 	AllowsUsersToCreateTopics bool `json:"allows_users_to_create_topics,omitempty"`
+
+	// Bot API 9.3: (Optional) True, if the bot has forum topic mode enabled
+	// in private chats.
+	HasTopicsEnabled bool `json:"has_topics_enabled,omitempty"`
+
+	// Bot API 9.6: (Optional) True, if the bot can create and control other
+	// bots.
+	CanManageBots bool `json:"can_manage_bots,omitempty"`
+
+	// Bot API 10.1: (Optional) True, if the bot can be assigned to process
+	// join request queries.
+	SupportsJoinRequestQueries bool `json:"supports_join_request_queries,omitempty"`
 }
 
 // Recipient returns user ID (see Recipient interface).
@@ -39,6 +53,8 @@ func (u *User) Recipient() string {
 }
 
 // Chat object represents a Telegram user, bot, group or a channel.
+//
+// Bot API: Chat, ChatFullInfo.
 type Chat struct {
 	ID int64 `json:"id"`
 
@@ -53,26 +69,47 @@ type Chat struct {
 	Username  string `json:"username"`
 
 	// Returns only in getChat
-	Bio                            string               `json:"bio,omitempty"`
-	Photo                          *ChatPhoto           `json:"photo,omitempty"`
-	Description                    string               `json:"description,omitempty"`
-	InviteLink                     string               `json:"invite_link,omitempty"`
-	PinnedMessage                  *Message             `json:"pinned_message,omitempty"`
-	Permissions                    *Rights              `json:"permissions,omitempty"`
-	Reactions                      []Reaction           `json:"available_reactions"`
-	SlowMode                       int                  `json:"slow_mode_delay,omitempty"`
-	StickerSet                     string               `json:"sticker_set_name,omitempty"`
-	CanSetStickerSet               bool                 `json:"can_set_sticker_set,omitempty"`
-	CanSendPaidMedia               bool                 `json:"can_send_paid_media"`
-	CustomEmojiStickerSet          string               `json:"custom_emoji_sticker_set_name"`
-	LinkedChatID                   int64                `json:"linked_chat_id,omitempty"`
-	ChatLocation                   *ChatLocation        `json:"location,omitempty"`
-	Private                        bool                 `json:"has_private_forwards,omitempty"`
-	Protected                      bool                 `json:"has_protected_content,omitempty"`
-	NoVoiceAndVideo                bool                 `json:"has_restricted_voice_and_video_messages"`
-	HasHiddenMembers               bool                 `json:"has_hidden_members,omitempty"`
-	AggressiveAntiSpam             bool                 `json:"has_aggressive_anti_spam_enabled,omitempty"`
-	IsForum                        bool                 `json:"is_forum"`
+	Bio                   string        `json:"bio,omitempty"`
+	Photo                 *ChatPhoto    `json:"photo,omitempty"`
+	Description           string        `json:"description,omitempty"`
+	InviteLink            string        `json:"invite_link,omitempty"`
+	PinnedMessage         *Message      `json:"pinned_message,omitempty"`
+	Permissions           *Rights       `json:"permissions,omitempty"`
+	Reactions             []Reaction    `json:"available_reactions"`
+	SlowMode              int           `json:"slow_mode_delay,omitempty"`
+	StickerSet            string        `json:"sticker_set_name,omitempty"`
+	CanSetStickerSet      bool          `json:"can_set_sticker_set,omitempty"`
+	CanSendPaidMedia      bool          `json:"can_send_paid_media"`
+	CustomEmojiStickerSet string        `json:"custom_emoji_sticker_set_name"`
+	LinkedChatID          int64         `json:"linked_chat_id,omitempty"`
+	ChatLocation          *ChatLocation `json:"location,omitempty"`
+	Private               bool          `json:"has_private_forwards,omitempty"`
+	Protected             bool          `json:"has_protected_content,omitempty"`
+	NoVoiceAndVideo       bool          `json:"has_restricted_voice_and_video_messages"`
+	HasHiddenMembers      bool          `json:"has_hidden_members,omitempty"`
+	AggressiveAntiSpam    bool          `json:"has_aggressive_anti_spam_enabled,omitempty"`
+	IsForum               bool          `json:"is_forum"`
+
+	// Bot API 9.0: the gifts the user or chat accepts; returned only by
+	// ChatByID.
+	AcceptedGiftTypes *AcceptedGiftTypes `json:"accepted_gift_types,omitempty"`
+
+	// Returned only by ChatByID: all active usernames (6.0), whether users
+	// must join the supergroup to write (6.4) or be approved to join (6.4),
+	// the user's rating (9.3), the gift-based color scheme of the chat
+	// (9.3), and the Stars a user pays per message (9.0).
+	ActiveUsernames      []string          `json:"active_usernames,omitempty"`
+	JoinToSendMessages   bool              `json:"join_to_send_messages,omitempty"`
+	JoinByRequest        bool              `json:"join_by_request,omitempty"`
+	Rating               *UserRating       `json:"rating,omitempty"`
+	UniqueGiftColors     *UniqueGiftColors `json:"unique_gift_colors,omitempty"`
+	PaidMessageStarCount int               `json:"paid_message_star_count,omitempty"`
+
+	// Bot API 9.2: the supergroup is the direct messages chat of a channel,
+	// and ParentChat (returned only by ChatByID) is that channel.
+	IsDirectMessages bool  `json:"is_direct_messages,omitempty"`
+	ParentChat       *Chat `json:"parent_chat,omitempty"`
+
 	StatusCustomEmojiID            string               `json:"emoji_status_custom_emoji_id"`
 	EmojiExpirationUnixtime        int64                `json:"emoji_status_expiration_date"`
 	BackgroundCustomEmojiID        string               `json:"background_custom_emoji_id"`
@@ -87,6 +124,22 @@ type Chat struct {
 	BusinessIntro                  BusinessIntro        `json:"business_intro,omitempty"`
 	BusinessLocation               BusinessLocation     `json:"business_location,omitempty"`
 	BusinessOpeningHours           BusinessOpeningHours `json:"business_opening_hours,omitempty"`
+
+	// (Optional) The community the chat belongs to; returned only by
+	// ChatByID (Bot API 10.2).
+	Community *Community `json:"community,omitempty"`
+
+	// (Optional) The TON wallet card of a private chat's user; returned only
+	// by ChatByID (Bot API 10.4).
+	TonWalletCard *TonWalletCard `json:"ton_wallet_card,omitempty"`
+
+	// (Optional) The theme of the screen for sharing a link to the chat;
+	// returned only by ChatByID (Bot API 10.4).
+	ShareTheme *ChatShareTheme `json:"share_theme,omitempty"`
+
+	// (Optional) The bot that processes join request queries in the chat;
+	// returned only by ChatByID, to administrators (Bot API 10.1).
+	GuardBot *User `json:"guard_bot,omitempty"`
 }
 
 // Recipient returns chat ID (see Recipient interface).
@@ -106,12 +159,16 @@ const (
 )
 
 // ChatLocation represents a location to which a chat is connected.
+//
+// Bot API: ChatLocation.
 type ChatLocation struct {
 	Location Location `json:"location,omitempty"`
 	Address  string   `json:"address,omitempty"`
 }
 
 // ChatPhoto object represents a chat photo.
+//
+// Bot API: ChatPhoto.
 type ChatPhoto struct {
 	// File identifiers of small (160x160) chat photo
 	SmallFileID   string `json:"small_file_id"`
@@ -123,6 +180,8 @@ type ChatPhoto struct {
 }
 
 // ChatMember object represents information about a single chat member.
+//
+// Bot API: ChatMember, ChatMemberOwner, ChatMemberAdministrator, ChatMemberMember, ChatMemberRestricted, ChatMemberLeft, ChatMemberBanned.
 type ChatMember struct {
 	Rights
 
@@ -162,6 +221,8 @@ const (
 )
 
 // ChatMemberUpdate object represents changes in the status of a chat member.
+//
+// Bot API: ChatMemberUpdated.
 type ChatMemberUpdate struct {
 	// Chat where the user belongs to.
 	Chat *Chat `json:"chat"`
@@ -218,6 +279,8 @@ func (i ChatID) Recipient() string {
 }
 
 // ChatJoinRequest represents a join request sent to a chat.
+//
+// Bot API: ChatJoinRequest.
 type ChatJoinRequest struct {
 	// Chat to which the request was sent.
 	Chat *Chat `json:"chat"`
@@ -240,9 +303,16 @@ type ChatJoinRequest struct {
 	// InviteLink is the chat invite link that was used by
 	//the user to send the join request, optional.
 	InviteLink *ChatInviteLink `json:"invite_link"`
+
+	// (Optional) Identifier of the join request query, for a bot assigned to
+	// process join requests. The bot must answer it with
+	// AnswerJoinRequest, directly or after SendJoinRequestWebApp (Bot API 10.1).
+	QueryID string `json:"query_id,omitempty"`
 }
 
 // ChatInviteLink object represents an invite for a chat.
+//
+// Bot API: ChatInviteLink.
 type ChatInviteLink struct {
 	// The invite link.
 	InviteLink string `json:"invite_link"`
@@ -273,8 +343,16 @@ type ChatInviteLink struct {
 
 	// (Optional) Number of pending join requests created using this link.
 	PendingCount int `json:"pending_join_request_count"`
+
+	// Bot API 7.9: (Optional) For subscription links, the seconds between
+	// payments and the Telegram Stars paid each period.
+	SubscriptionPeriod int `json:"subscription_period,omitempty"`
+	SubscriptionPrice  int `json:"subscription_price,omitempty"`
 }
 
+// Story is a story posted to a chat.
+//
+// Bot API: Story.
 type Story struct {
 	// Unique identifier for the story in the chat
 	ID int `json:"id"`
@@ -283,6 +361,9 @@ type Story struct {
 	Poster *Chat `json:"chat"`
 }
 
+// Birthdate is the birthdate of a user.
+//
+// Bot API: Birthdate.
 type Birthdate struct {
 	// Day of the user's birth; 1-31
 	Day int `json:"day"`
@@ -295,6 +376,8 @@ type Birthdate struct {
 }
 
 // ChatFullInfo object contains full information about a chat.
+//
+// Bot API: ChatFullInfo.
 type ChatFullInfo struct {
 	ID int64 `json:"id"`
 
@@ -370,13 +453,42 @@ type ChatFullInfo struct {
 
 	// Bot API 9.4: For private chats, the first audio added to the profile of the user.
 	FirstProfileAudio *Audio `json:"first_profile_audio,omitempty"`
+
+	// Bot API 9.0: the gifts the user or chat accepts.
+	AcceptedGiftTypes *AcceptedGiftTypes `json:"accepted_gift_types,omitempty"`
+
+	// Bot API 9.2: the supergroup is the direct messages chat of a channel,
+	// ParentChat.
+	IsDirectMessages bool  `json:"is_direct_messages,omitempty"`
+	ParentChat       *Chat `json:"parent_chat,omitempty"`
+
+	// Bot API 10.2: (Optional) The community the chat belongs to.
+	Community *Community `json:"community,omitempty"`
+
+	// Bot API 10.4: (Optional) The TON wallet card of a private chat's user.
+	TonWalletCard *TonWalletCard `json:"ton_wallet_card,omitempty"`
+
+	// Bot API 10.4: (Optional) The theme of the screen for sharing a link to
+	// the chat.
+	ShareTheme *ChatShareTheme `json:"share_theme,omitempty"`
+
+	// Bot API 10.1: (Optional) The bot that processes join request queries in
+	// the chat; available to administrators only.
+	GuardBot *User `json:"guard_bot,omitempty"`
 }
 
+// ChatBackground is a chat background.
+//
+// Bot API: ChatBackground.
 type ChatBackground struct {
 	// Type of the background
 	Type BackgroundType `json:"type"`
 }
 
+// BackgroundType is the type of a chat background: a fill, a wallpaper,
+// a pattern or a chat theme.
+//
+// Bot API: BackgroundType, BackgroundTypeFill, BackgroundTypeWallpaper, BackgroundTypePattern, BackgroundTypeChatTheme.
 type BackgroundType struct {
 	// Type of the background, always “fill”
 	Type string `json:"type"`
@@ -408,6 +520,10 @@ type BackgroundType struct {
 	ThemeName string `json:"theme_name,omitempty"`
 }
 
+// BackgroundFill is the way a background is filled: a solid color, a
+// gradient or a freeform gradient.
+//
+// Bot API: BackgroundFill, BackgroundFillSolid, BackgroundFillGradient, BackgroundFillFreeformGradient.
 type BackgroundFill struct {
 	// Type of the background fill.
 	Type string `json:"type"`
@@ -445,6 +561,8 @@ func (c *Chat) Time() time.Time {
 }
 
 // InviteLink should be used to export chat's invite link.
+//
+// Bot API: exportChatInviteLink.
 func (b *Bot) InviteLink(chat *Chat) (string, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -465,6 +583,8 @@ func (b *Bot) InviteLink(chat *Chat) (string, error) {
 }
 
 // CreateInviteLink creates an additional invite link for a chat.
+//
+// Bot API: createChatInviteLink.
 func (b *Bot) CreateInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInviteLink, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -498,6 +618,8 @@ func (b *Bot) CreateInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInvit
 }
 
 // EditInviteLink edits a non-primary invite link created by the bot.
+//
+// Bot API: editChatInviteLink.
 func (b *Bot) EditInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInviteLink, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -532,6 +654,8 @@ func (b *Bot) EditInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInviteL
 }
 
 // RevokeInviteLink revokes an invite link created by the bot.
+//
+// Bot API: revokeChatInviteLink.
 func (b *Bot) RevokeInviteLink(chat Recipient, link string) (*ChatInviteLink, error) {
 	params := map[string]string{
 		"chat_id":     chat.Recipient(),
@@ -553,7 +677,88 @@ func (b *Bot) RevokeInviteLink(chat Recipient, link string) (*ChatInviteLink, er
 	return &resp.Result, nil
 }
 
+// Results of AnswerJoinRequest.
+const (
+	JoinRequestApprove = "approve"
+	JoinRequestDecline = "decline"
+	JoinRequestQueue   = "queue"
+)
+
+// AnswerJoinRequest resolves the join request query a bot assigned to process
+// join requests received. result is JoinRequestApprove, JoinRequestDecline,
+// or JoinRequestQueue to leave the decision to other administrators
+// (Bot API 10.1).
+//
+// Bot API: answerChatJoinRequestQuery.
+func (b *Bot) AnswerJoinRequest(req *ChatJoinRequest, result string) error {
+	_, err := b.Raw("answerChatJoinRequestQuery", map[string]string{
+		"chat_join_request_query_id": req.QueryID,
+		"result":                     result,
+	})
+	return err
+}
+
+// SendJoinRequestWebApp shows the user who sent the join request query a
+// Mini App at url before the bot decides; resolve the query afterwards with
+// AnswerJoinRequest (Bot API 10.1).
+//
+// Bot API: sendChatJoinRequestWebApp.
+func (b *Bot) SendJoinRequestWebApp(req *ChatJoinRequest, url string) error {
+	_, err := b.Raw("sendChatJoinRequestWebApp", map[string]string{
+		"chat_join_request_query_id": req.QueryID,
+		"web_app_url":                url,
+	})
+	return err
+}
+
+// CreateSubscriptionInviteLink creates a subscription invite link for a
+// channel, with link's Name, SubscriptionPeriod (currently always 2592000
+// seconds) and SubscriptionPrice in Telegram Stars (Bot API 7.9).
+//
+// Bot API: createChatSubscriptionInviteLink.
+func (b *Bot) CreateSubscriptionInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInviteLink, error) {
+	params := map[string]string{
+		"chat_id":             chat.Recipient(),
+		"subscription_period": strconv.Itoa(link.SubscriptionPeriod),
+		"subscription_price":  strconv.Itoa(link.SubscriptionPrice),
+	}
+	if link.Name != "" {
+		params["name"] = link.Name
+	}
+	return b.inviteLink("createChatSubscriptionInviteLink", params)
+}
+
+// EditSubscriptionInviteLink renames a subscription invite link created by
+// the bot; an empty Name removes its name (Bot API 7.9).
+//
+// Bot API: editChatSubscriptionInviteLink.
+func (b *Bot) EditSubscriptionInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInviteLink, error) {
+	params := map[string]string{
+		"chat_id":     chat.Recipient(),
+		"invite_link": link.InviteLink,
+		"name":        link.Name,
+	}
+	return b.inviteLink("editChatSubscriptionInviteLink", params)
+}
+
+func (b *Bot) inviteLink(method string, params map[string]string) (*ChatInviteLink, error) {
+	data, err := b.Raw(method, params)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Result *ChatInviteLink
+	}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, wrapError(err)
+	}
+	return resp.Result, nil
+}
+
 // ApproveJoinRequest approves a chat join request.
+//
+// Bot API: approveChatJoinRequest.
 func (b *Bot) ApproveJoinRequest(chat Recipient, user *User) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -569,6 +774,8 @@ func (b *Bot) ApproveJoinRequest(chat Recipient, user *User) error {
 }
 
 // DeclineJoinRequest declines a chat join request.
+//
+// Bot API: declineChatJoinRequest.
 func (b *Bot) DeclineJoinRequest(chat Recipient, user *User) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -584,6 +791,8 @@ func (b *Bot) DeclineJoinRequest(chat Recipient, user *User) error {
 }
 
 // SetGroupTitle should be used to update group title.
+//
+// Bot API: setChatTitle.
 func (b *Bot) SetGroupTitle(chat *Chat, title string) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -595,6 +804,8 @@ func (b *Bot) SetGroupTitle(chat *Chat, title string) error {
 }
 
 // SetGroupDescription should be used to update group description.
+//
+// Bot API: setChatDescription.
 func (b *Bot) SetGroupDescription(chat *Chat, description string) error {
 	params := map[string]string{
 		"chat_id":     chat.Recipient(),
@@ -606,6 +817,8 @@ func (b *Bot) SetGroupDescription(chat *Chat, description string) error {
 }
 
 // SetGroupPhoto should be used to update group photo.
+//
+// Bot API: setChatPhoto.
 func (b *Bot) SetGroupPhoto(chat *Chat, p *Photo) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -616,6 +829,8 @@ func (b *Bot) SetGroupPhoto(chat *Chat, p *Photo) error {
 }
 
 // SetGroupStickerSet should be used to update group's group sticker set.
+//
+// Bot API: setChatStickerSet.
 func (b *Bot) SetGroupStickerSet(chat *Chat, setName string) error {
 	params := map[string]string{
 		"chat_id":          chat.Recipient(),
@@ -627,6 +842,8 @@ func (b *Bot) SetGroupStickerSet(chat *Chat, setName string) error {
 }
 
 // SetGroupPermissions sets default chat permissions for all members.
+//
+// Bot API: setChatPermissions.
 func (b *Bot) SetGroupPermissions(chat *Chat, perms Rights) error {
 	params := map[string]interface{}{
 		"chat_id":     chat.Recipient(),
@@ -641,6 +858,8 @@ func (b *Bot) SetGroupPermissions(chat *Chat, perms Rights) error {
 }
 
 // DeleteGroupPhoto should be used to just remove group photo.
+//
+// Bot API: deleteChatPhoto.
 func (b *Bot) DeleteGroupPhoto(chat *Chat) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -651,6 +870,8 @@ func (b *Bot) DeleteGroupPhoto(chat *Chat) error {
 }
 
 // DeleteGroupStickerSet should be used to just remove group sticker set.
+//
+// Bot API: deleteChatStickerSet.
 func (b *Bot) DeleteGroupStickerSet(chat *Chat) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
@@ -658,4 +879,19 @@ func (b *Bot) DeleteGroupStickerSet(chat *Chat) error {
 
 	_, err := b.Raw("deleteChatStickerSet", params)
 	return err
+}
+
+// UserRating is the rating of a user based on their Telegram Star spending
+// (Bot API 9.3).
+//
+// Bot API: UserRating.
+type UserRating struct {
+	// Current level; higher is more trustworthy, negative is unreliable.
+	Level int `json:"level"`
+
+	// The rating, and the rating needed for the current and the next level;
+	// NextLevelRating is zero at the maximum level.
+	Rating             int `json:"rating"`
+	CurrentLevelRating int `json:"current_level_rating"`
+	NextLevelRating    int `json:"next_level_rating,omitempty"`
 }

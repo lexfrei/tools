@@ -9,6 +9,8 @@ import (
 // Query is an incoming inline query. When the user sends
 // an empty query, your bot could return some default or
 // trending results.
+//
+// Bot API: InlineQuery.
 type Query struct {
 	// Unique identifier for this query. 1-64 bytes.
 	ID string `json:"id"`
@@ -70,6 +72,8 @@ type QueryResponse struct {
 
 // QueryResponseButton represents a button to be shown above inline query results.
 // You must use exactly one of the optional fields.
+//
+// Bot API: InlineQueryResultsButton.
 type QueryResponseButton struct {
 	// Label text on the button
 	Text string `json:"text"`
@@ -86,6 +90,8 @@ type QueryResponseButton struct {
 
 // SwitchInlineQuery represents an inline button that switches the current
 // user to inline mode in a chosen chat, with an optional default inline query.
+//
+// Bot API: SwitchInlineQueryChosenChat.
 type SwitchInlineQuery struct {
 	// (Optional) The default inline query to be inserted in the input field.
 	// If left empty, only the bot's username will be inserted.
@@ -106,6 +112,8 @@ type SwitchInlineQuery struct {
 
 // InlineResult represents a result of an inline query that was chosen
 // by the user and sent to their chat partner.
+//
+// Bot API: ChosenInlineResult.
 type InlineResult struct {
 	Sender    *User     `json:"from"`
 	Location  *Location `json:"location,omitempty"`
@@ -146,7 +154,13 @@ func (results Results) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]Result(results))
 }
 
+// inferIQR sets the type of result and, for a result sent on its own, the
+// ID it was left without.
 func inferIQR(result Result) error {
+	if result.ResultID() == "" {
+		result.SetResultID("0")
+	}
+
 	switch r := result.(type) {
 	case *ArticleResult:
 		r.Type = "article"
@@ -181,18 +195,41 @@ func inferIQR(result Result) error {
 	return nil
 }
 
-// SavePreparedInlineMessage stores a message that can be sent by a user of a Mini App.
-func (b *Bot) SavePreparedInlineMessage(user Recipient, result Result, opts ...interface{}) (*PreparedInlineMessage, error) {
+// PreparedInlineChats are the kinds of chats a prepared inline message can
+// be sent to: private chats with users and with bots, groups and
+// supergroups, and channels.
+type PreparedInlineChats struct {
+	Users, Bots, Groups, Channels bool
+}
+
+// PrepareMessage stores a message that can be sent by a user of a Mini App.
+// Pass a PreparedInlineChats to choose the chats it can be sent to, or a
+// bool for private chats with users only.
+//
+// Bot API: savePreparedInlineMessage.
+func (b *Bot) PrepareMessage(user Recipient, result Result, opts ...interface{}) (*PreparedInlineMessage, error) {
 	params := map[string]string{
 		"user_id": user.Recipient(),
 	}
 
 	for _, opt := range opts {
+		if chats, ok := opt.(*PreparedInlineChats); ok && chats != nil {
+			opt = *chats
+		}
 		switch v := opt.(type) {
 		case bool:
 			params["allow_user_chats"] = strconv.FormatBool(v)
-		case *SendOptions:
-			// Handle additional options if needed
+		case PreparedInlineChats:
+			for key, on := range map[string]bool{
+				"allow_user_chats":    v.Users,
+				"allow_bot_chats":     v.Bots,
+				"allow_group_chats":   v.Groups,
+				"allow_channel_chats": v.Channels,
+			} {
+				if on {
+					params[key] = "true"
+				}
+			}
 		}
 	}
 

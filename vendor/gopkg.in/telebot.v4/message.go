@@ -7,6 +7,8 @@ import (
 )
 
 // Message object represents a message.
+//
+// Bot API: Message, MaybeInaccessibleMessage, InaccessibleMessage, MessageId.
 type Message struct {
 	ID int `json:"message_id"`
 
@@ -24,6 +26,14 @@ type Message struct {
 
 	// Sender of the message, sent on behalf of a chat.
 	SenderChat *Chat `json:"sender_chat"`
+
+	// (Optional) For ephemeral messages, the only user who can see the
+	// message besides the bot (Bot API 10.2).
+	ReceiverUser *User `json:"receiver_user,omitempty"`
+
+	// (Optional) For ephemeral messages, the identifier of the message, used
+	// instead of ID by the EditEphemeral* methods and DeleteEphemeral.
+	EphemeralID int `json:"ephemeral_message_id,omitempty"`
 
 	// The user that called the bot in guest mode.
 	GuestUser *User `json:"guest_bot_caller_user"`
@@ -81,6 +91,14 @@ type Message struct {
 
 	// For replies to a story, the original story.
 	ReplyToStory *Story `json:"reply_to_story"`
+
+	// (Optional) Persistent identifier of the poll option being replied to
+	// (Bot API 9.6).
+	ReplyToPollOptionID string `json:"reply_to_poll_option_id,omitempty"`
+
+	// (Optional) Identifier of the checklist task being replied to
+	// (Bot API 9.2).
+	ReplyToChecklistTaskID int `json:"reply_to_checklist_task_id,omitempty"`
 
 	// (Optional) Time of last edit in Unix.
 	LastEdit int64 `json:"edit_date"`
@@ -152,6 +170,12 @@ type Message struct {
 	// For a video, information about it.
 	Video *Video `json:"video"`
 
+	// (Optional) Message is a live photo (Bot API 10.0).
+	LivePhoto *LivePhoto `json:"live_photo,omitempty"`
+
+	// (Optional) Message is a checklist (Bot API 9.1).
+	Checklist *Checklist `json:"checklist,omitempty"`
+
 	// For an animation, information about it.
 	Animation *Animation `json:"animation"`
 
@@ -196,6 +220,9 @@ type Message struct {
 
 	// (Optional) For a rich message, the rich formatted content (Bot API 10.1).
 	RichMessage *RichMessage `json:"rich_message,omitempty"`
+
+	// (Optional) Message is an HTML widget (Bot API 10.4).
+	Widget *Widget `json:"widget,omitempty"`
 
 	// (Optional) The bot that actually sent the message on behalf of the business account.
 	// Available only for outgoing messages sent on behalf of the connected business account.
@@ -297,6 +324,72 @@ type Message struct {
 	// Message is a service message about a refunded payment, information about the payment.
 	RefundedPayment *RefundedPayment `json:"refunded_payment"`
 
+	// Service message: a regular gift was sent or received.
+	Gift *GiftInfo `json:"gift,omitempty"`
+
+	// Service message: a unique gift was sent or received.
+	UniqueGift *UniqueGiftInfo `json:"unique_gift,omitempty"`
+
+	// Service message: an upgrade was bought for a gift after it was sent
+	// (Bot API 9.3).
+	GiftUpgradeSent *GiftInfo `json:"gift_upgrade_sent,omitempty"`
+
+	// Service message: a transfer with a TON wallet (Bot API 10.4).
+	TonWalletTransfer *TonWalletTransfer `json:"ton_wallet_transfer,omitempty"`
+
+	// (Optional) Topic of a channel's direct messages chat the message
+	// belongs to (Bot API 9.2).
+	DirectMessagesTopic *DirectMessagesTopic `json:"direct_messages_topic,omitempty"`
+
+	// (Optional) The message is a paid post, which must not be deleted for
+	// 24 hours for the payment to arrive (Bot API 9.2).
+	IsPaidPost bool `json:"is_paid_post,omitempty"`
+
+	// (Optional) The message is a suggested post (Bot API 9.2).
+	SuggestedPostInfo *SuggestedPostInfo `json:"suggested_post_info,omitempty"`
+
+	// Service messages about suggested posts (Bot API 9.2).
+	SuggestedPostApproved       *SuggestedPostApprovalInfo   `json:"suggested_post_approved,omitempty"`
+	SuggestedPostApprovalFailed *SuggestedPostApprovalFailed `json:"suggested_post_approval_failed,omitempty"`
+	SuggestedPostDeclined       *SuggestedPostDeclineInfo    `json:"suggested_post_declined,omitempty"`
+	SuggestedPostPaid           *SuggestedPostPaid           `json:"suggested_post_paid,omitempty"`
+	SuggestedPostRefunded       *SuggestedPostRefunded       `json:"suggested_post_refunded,omitempty"`
+
+	// (Optional) Telegram Passport data shared with the bot.
+	PassportData *PassportData `json:"passport_data,omitempty"`
+
+	// (Optional) Stars the sender paid to send the message (Bot API 9.0).
+	PaidStarCount int `json:"paid_star_count,omitempty"`
+
+	// Service message: the price of messages in the chat changed
+	// (Bot API 9.0).
+	PaidMessagePriceChanged *PaidMessagePriceChanged `json:"paid_message_price_changed,omitempty"`
+
+	// Service message: checklist tasks were marked as done or not done
+	// (Bot API 9.1).
+	ChecklistTasksDone *ChecklistTasksDone `json:"checklist_tasks_done,omitempty"`
+
+	// Service message: tasks were added to a checklist (Bot API 9.1).
+	ChecklistTasksAdded *ChecklistTasksAdded `json:"checklist_tasks_added,omitempty"`
+
+	// Service message: the price of direct messages to the channel changed
+	// (Bot API 9.1).
+	DirectMessagePriceChanged *DirectMessagePriceChanged `json:"direct_message_price_changed,omitempty"`
+
+	// Service message: an option was added to a poll (Bot API 9.6).
+	PollOptionAdded *PollOptionAdded `json:"poll_option_added,omitempty"`
+
+	// Service message: an option was deleted from a poll (Bot API 9.6).
+	PollOptionDeleted *PollOptionDeleted `json:"poll_option_deleted,omitempty"`
+
+	// Service message: the user created a bot managed by this one
+	// (Bot API 9.6).
+	ManagedBotCreated *ManagedBotCreated `json:"managed_bot_created,omitempty"`
+
+	// Service message: the sender used a link that lets them message the
+	// user without paying Telegram Stars (Bot API 10.4).
+	PaidMessagesWaived *PaidMessagesWaived `json:"paid_messages_waived,omitempty"`
+
 	// For a service message, a user was shared with the bot.
 	UserShared *RecipientShared `json:"users_shared,omitempty"`
 
@@ -349,7 +442,7 @@ type Message struct {
 	TopicCreated *Topic `json:"forum_topic_created,omitempty"`
 
 	// Service message: forum topic closed
-	TopicClosed *struct{} `json:"forum_topic_closed,omitempty"`
+	TopicClosed *ForumTopicClosed `json:"forum_topic_closed,omitempty"`
 
 	// Service message: forum topic reopened
 	TopicReopened *Topic `json:"forum_topic_reopened,omitempty"`
@@ -358,10 +451,10 @@ type Message struct {
 	TopicEdited *Topic `json:"forum_topic_edited,omitempty"`
 
 	// Service message: general forum topic hidden
-	GeneralTopicHidden *struct{} `json:"general_topic_hidden,omitempty"`
+	GeneralTopicHidden *GeneralForumTopicHidden `json:"general_forum_topic_hidden,omitempty"`
 
 	// Service message: general forum topic unhidden
-	GeneralTopicUnhidden *struct{} `json:"general_topic_unhidden,omitempty"`
+	GeneralTopicUnhidden *GeneralForumTopicUnhidden `json:"general_forum_topic_unhidden,omitempty"`
 
 	// Service message: represents spoiler information about the message.
 	HasMediaSpoiler bool `json:"has_media_spoiler,omitempty"`
@@ -377,9 +470,20 @@ type Message struct {
 
 	// Bot API 9.4: Service message: chat owner has changed.
 	ChatOwnerChanged *ChatOwnerChanged `json:"chat_owner_changed,omitempty"`
+
+	// Service message: the chat or the bot was added to a community.
+	CommunityChatAdded *CommunityChatAdded `json:"community_chat_added,omitempty"`
+
+	// Service message: the chat or the bot was removed from a community.
+	CommunityChatRemoved *CommunityChatRemoved `json:"community_chat_removed,omitempty"`
+
+	// Service message: a user joined the chat from a community.
+	CommunityChatJoined *CommunityChatJoined `json:"community_chat_joined,omitempty"`
 }
 
 // ChatOwnerLeft describes a service message about the chat owner leaving the chat.
+//
+// Bot API: ChatOwnerLeft.
 type ChatOwnerLeft struct {
 	// (Optional) The user who will become the new owner of the chat
 	// if the previous owner does not return to the chat.
@@ -387,6 +491,8 @@ type ChatOwnerLeft struct {
 }
 
 // ChatOwnerChanged describes a service message about an ownership change in the chat.
+//
+// Bot API: ChatOwnerChanged.
 type ChatOwnerChanged struct {
 	// The new owner of the chat.
 	NewOwner *User `json:"new_owner"`
@@ -394,6 +500,8 @@ type ChatOwnerChanged struct {
 
 // MessageEntity object represents "special" parts of text messages,
 // including hashtags, usernames, URLs, etc.
+//
+// Bot API: MessageEntity.
 type MessageEntity struct {
 	// Specifies entity type.
 	Type EntityType `json:"type"`
@@ -455,6 +563,8 @@ const (
 	EntityBlockquote    EntityType = "blockquote"
 	EntityEBlockquote   EntityType = "expandable_blockquote"
 	EntityDateTime      EntityType = "date_time"
+	EntityBankCard      EntityType = "bank_card_number" // Bot API 10.4
+	EntityTonAddress    EntityType = "ton_address"      // Bot API 10.4
 )
 
 // Entities are used to set message's text entities as a send option.
@@ -462,6 +572,8 @@ type Entities []MessageEntity
 
 // ProximityAlert sent whenever a user in the chat triggers
 // a proximity alert set by another user.
+//
+// Bot API: ProximityAlertTriggered.
 type ProximityAlert struct {
 	Traveler *User `json:"traveler,omitempty"`
 	Watcher  *User `json:"watcher,omitempty"`
@@ -469,13 +581,16 @@ type ProximityAlert struct {
 }
 
 // AutoDeleteTimer represents a service message about a change in auto-delete timer settings.
+//
+// Bot API: MessageAutoDeleteTimerChanged.
 type AutoDeleteTimer struct {
 	Unixtime int `json:"message_auto_delete_time"`
 }
 
-// Inaccessible shows whether the message is InaccessibleMessage object.
+// Inaccessible shows whether the message is InaccessibleMessage object,
+// which Telegram marks with a zero date.
 func (m *Message) Inaccessible() bool {
-	return m.Sender == nil
+	return m.Unixtime == 0
 }
 
 // MessageSig satisfies Editable interface (see Editable.)
@@ -496,7 +611,7 @@ func (m *Message) LastEdited() time.Time {
 // IsForwarded says whether message is forwarded copy of another
 // message or not.
 func (m *Message) IsForwarded() bool {
-	return m.OriginalSender != nil || m.OriginalChat != nil
+	return m.Origin != nil || m.OriginalSender != nil || m.OriginalChat != nil
 }
 
 // IsReply says whether message is a reply to another message.
@@ -587,6 +702,8 @@ func (m *Message) Media() Media {
 }
 
 // MessageReaction object represents a change of a reaction on a message performed by a user.
+//
+// Bot API: MessageReactionUpdated.
 type MessageReaction struct {
 	// The chat containing the message the user reacted to.
 	Chat *Chat `json:"chat"`
@@ -618,6 +735,8 @@ func (mu *MessageReaction) Time() time.Time {
 
 // MessageReactionCount represents reaction changes on a message with
 // anonymous reactions.
+//
+// Bot API: MessageReactionCountUpdated.
 type MessageReactionCount struct {
 	// The chat containing the message.
 	Chat *Chat `json:"chat"`
@@ -639,6 +758,8 @@ func (mc *MessageReactionCount) Time() time.Time {
 
 // TextQuote contains information about the quoted part of a message that is
 // replied to by the given message.
+//
+// Bot API: TextQuote.
 type TextQuote struct {
 	// Text of the quoted part of a message that is replied to by the given message.
 	Text string `json:"text"`
@@ -655,9 +776,15 @@ type TextQuote struct {
 	// (Optional) True, if the quote was chosen manually by the message sender.
 	// Otherwise, the quote was added automatically by the server.
 	Manual bool `json:"is_manual"`
+
+	// (Optional) The quote as rich text, if it was chosen from a rich
+	// message; Text may then be empty (Bot API 10.4).
+	RichTexts []RichText `json:"rich_texts,omitempty"`
 }
 
 // MessageOrigin a message reference that has been sent originally by a known user.
+//
+// Bot API: MessageOrigin, MessageOriginUser, MessageOriginHiddenUser, MessageOriginChat, MessageOriginChannel.
 type MessageOrigin struct {
 	// Type of the message origin, always “channel”.
 	Type string `json:"type"`
@@ -692,6 +819,8 @@ func (mo *MessageOrigin) Time() time.Time {
 
 // ExternalReply contains information about a message that is being replied to,
 // which may come from another chat or forum topic.
+//
+// Bot API: ExternalReplyInfo.
 type ExternalReply struct {
 	// Origin of the message replied to by the given message.
 	Origin *MessageOrigin `json:"origin"`
@@ -728,6 +857,12 @@ type ExternalReply struct {
 
 	// (Optional) Message is a video, information about the video.
 	Video *Video `json:"video"`
+
+	// (Optional) Message is a live photo (Bot API 10.0).
+	LivePhoto *LivePhoto `json:"live_photo,omitempty"`
+
+	// (Optional) Message is a checklist (Bot API 9.1).
+	Checklist *Checklist `json:"checklist,omitempty"`
 
 	// (Optional) Message is a video note, information about the video message.
 	Note *VideoNote `json:"video_note"`
@@ -767,36 +902,87 @@ type ExternalReply struct {
 
 	// (Optional) True, if the message media is covered by a spoiler animation.
 	HasMediaSpoiler bool `json:"has_media_spoiler"`
+
+	// (Optional) Message is an HTML widget (Bot API 10.4).
+	Widget *Widget `json:"widget,omitempty"`
 }
 
 // ReplyParams describes reply parameters for the message that is being sent.
+//
+// Bot API: ReplyParameters.
 type ReplyParams struct {
 	// Identifier of the message that will be replied to in the current chat,
-	// or in the chat chat_id if it is specified.
-	MessageID int `json:"message_id"`
+	// or in the chat chat_id if it is specified. It is omitted when replying
+	// to an ephemeral message.
+	MessageID int `json:"message_id,omitempty"`
+
+	// (Optional) Identifier of an incoming ephemeral message, such as an
+	// ephemeral command, to reply to within 15 seconds; the reply must be
+	// ephemeral too (Bot API 10.2). The bot's own ephemeral messages can't
+	// be replied to.
+	EphemeralMessageID int `json:"ephemeral_message_id,omitempty"`
 
 	// (Optional) If the message to be replied to is from a different chat,
 	// unique identifier for the chat or username of the channel.
-	ChatID int64 `json:"chat_id"`
+	ChatID int64 `json:"chat_id,omitempty"`
 
 	// Optional. Pass True if the message should be sent even if the specified message
 	// to be replied to is not found; can be used only for replies in the
 	// same chat and forum topic.
-	AllowWithoutReply bool `json:"allow_sending_without_reply"`
+	AllowWithoutReply bool `json:"allow_sending_without_reply,omitempty"`
 
 	// (Optional) Quoted part of the message to be replied to; 0-1024 characters after
 	// entities parsing. The quote must be an exact substring of the message to be replied to,
 	// including bold, italic, underline, strikethrough, spoiler, and custom_emoji entities.
 	// The message will fail to send if the quote isn't found in the original message.
-	Quote string `json:"quote"`
+	Quote string `json:"quote,omitempty"`
 
 	// (Optional) Mode for parsing entities in the quote.
-	QuoteParseMode ParseMode `json:"quote_parse_mode"`
+	QuoteParseMode ParseMode `json:"quote_parse_mode,omitempty"`
 
 	// (Optional) A JSON-serialized list of special entities that appear in the quote.
 	// It can be specified instead of quote_parse_mode.
-	QuoteEntities []MessageEntity `json:"quote_entities"`
+	QuoteEntities []MessageEntity `json:"quote_entities,omitempty"`
 
 	// (Optional) Position of the quote in the original message in UTF-16 code units.
-	QuotePosition int `json:"quote_position"`
+	QuotePosition int `json:"quote_position,omitempty"`
+
+	// (Optional) Quoted parts of a rich message, one per quoted text in the
+	// order they appear; if set, Quote, QuoteParseMode and QuoteEntities are
+	// ignored (Bot API 10.4).
+	QuoteRichTexts []RichText `json:"quote_rich_texts,omitempty"`
+
+	// (Optional) Persistent identifier of the poll option to reply to
+	// (Bot API 9.6).
+	PollOptionID string `json:"poll_option_id,omitempty"`
+
+	// (Optional) Identifier of the checklist task to reply to (Bot API 9.2).
+	ChecklistTaskID int `json:"checklist_task_id,omitempty"`
+}
+
+// PaidMessagesWaived is a service message about the sender using a link that
+// lets them message the user without paying Telegram Stars (Bot API 10.4).
+// It holds no information.
+//
+// Bot API: PaidMessagesWaived.
+type PaidMessagesWaived struct{}
+
+// DirectMessagePriceChanged is a service message about a change in the price
+// of direct messages to a channel (Bot API 9.1).
+//
+// Bot API: DirectMessagePriceChanged.
+type DirectMessagePriceChanged struct {
+	// Direct messages are enabled for the channel.
+	Enabled bool `json:"are_direct_messages_enabled"`
+
+	// (Optional) Stars users must pay for each direct message.
+	StarCount int `json:"direct_message_star_count,omitempty"`
+}
+
+// PaidMessagePriceChanged is a service message about a change in the Stars
+// users pay per message in a supergroup (Bot API 9.0).
+//
+// Bot API: PaidMessagePriceChanged.
+type PaidMessagePriceChanged struct {
+	StarCount int `json:"paid_message_star_count"`
 }

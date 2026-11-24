@@ -22,6 +22,16 @@ var AllowedUpdates = []string{
 	"chat_boost",
 	"removed_chat_boost",
 	"guest_message",
+	"subscription",
+	"stopped_message_generation",
+	"widget_query",
+	"shared_widget_query",
+	"managed_bot",
+	"business_connection",
+	"business_message",
+	"edited_business_message",
+	"deleted_business_messages",
+	"purchased_paid_media",
 }
 
 // Poller is a provider of Updates.
@@ -66,6 +76,8 @@ type LongPoller struct {
 }
 
 // Poll does long polling.
+//
+// Bot API: getUpdates.
 func (p *LongPoller) Poll(b *Bot, dest chan Update, stop chan struct{}) {
 	for {
 		select {
