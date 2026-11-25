@@ -1,6 +1,8 @@
 package telebot
 
 // ResultBase must be embedded into all IQRs.
+//
+// Bot API: InlineQueryResult.
 type ResultBase struct {
 	// Unique identifier for this result, 1-64 Bytes.
 	// If left unspecified, a 64-bit FNV-1 hash will be calculated
@@ -12,6 +14,10 @@ type ResultBase struct {
 	// Optional. Send Markdown or HTML, if you want Telegram apps to show
 	// bold, italic, fixed-width text or inline URLs in the media caption.
 	ParseMode ParseMode `json:"parse_mode,omitempty"`
+
+	// Optional. Entities of the caption, instead of ParseMode; for results
+	// with a caption.
+	CaptionEntities []MessageEntity `json:"caption_entities,omitempty"`
 
 	// Optional. Content of the message to be sent.
 	Content InputMessageContent `json:"input_message_content,omitempty"`
@@ -45,15 +51,18 @@ func (r *ResultBase) SetReplyMarkup(markup *ReplyMarkup) {
 	r.ReplyMarkup = markup
 }
 
+// Process fills in the bot's default parse mode, unless entities are given,
+// over which Telegram would prefer the parse mode.
 func (r *ResultBase) Process(b *Bot) {
-	if r.ParseMode == ModeDefault {
-		r.ParseMode = b.parseMode
+	mode := r.ParseMode
+	if mode == ModeDefault {
+		mode = b.parseMode
 	}
-	if r.Content != nil {
-		c, ok := r.Content.(*InputTextMessageContent)
-		if ok && c.ParseMode == ModeDefault {
-			c.ParseMode = r.ParseMode
-		}
+	if len(r.CaptionEntities) == 0 {
+		r.ParseMode = mode
+	}
+	if c, ok := r.Content.(*InputTextMessageContent); ok && c.ParseMode == ModeDefault && len(c.Entities) == 0 {
+		c.ParseMode = mode
 	}
 	if r.ReplyMarkup != nil {
 		processButtons(r.ReplyMarkup.InlineKeyboard)
@@ -63,6 +72,8 @@ func (r *ResultBase) Process(b *Bot) {
 // GameResult represents a game. Game is a content type
 // supported by Telegram, which can be sent back to the
 // user as a result for an inline query.
+//
+// Bot API: InlineQueryResultGame.
 type GameResult struct {
 	ResultBase
 
@@ -71,6 +82,8 @@ type GameResult struct {
 }
 
 // ArticleResult represents a link to an article or web page.
+//
+// Bot API: InlineQueryResultArticle.
 type ArticleResult struct {
 	ResultBase
 
@@ -98,6 +111,8 @@ type ArticleResult struct {
 }
 
 // AudioResult represents a link to an mp3 audio file.
+//
+// Bot API: InlineQueryResultAudio, InlineQueryResultCachedAudio.
 type AudioResult struct {
 	ResultBase
 
@@ -121,6 +136,8 @@ type AudioResult struct {
 }
 
 // ContactResult represents a contact with a phone number.
+//
+// Bot API: InlineQueryResultContact.
 type ContactResult struct {
 	ResultBase
 
@@ -147,6 +164,8 @@ type ContactResult struct {
 }
 
 // DocumentResult represents a link to a file.
+//
+// Bot API: InlineQueryResultDocument, InlineQueryResultCachedDocument.
 type DocumentResult struct {
 	ResultBase
 
@@ -180,6 +199,8 @@ type DocumentResult struct {
 }
 
 // GifResult represents a link to an animated GIF file.
+//
+// Bot API: InlineQueryResultGif, InlineQueryResultCachedGif.
 type GifResult struct {
 	ResultBase
 
@@ -216,6 +237,8 @@ type GifResult struct {
 }
 
 // LocationResult represents a location on a map.
+//
+// Bot API: InlineQueryResultLocation.
 type LocationResult struct {
 	ResultBase
 
@@ -226,10 +249,16 @@ type LocationResult struct {
 
 	// Optional. Url of the thumbnail for the result.
 	ThumbURL string `json:"thumbnail_url,omitempty"`
+
+	// Optional. Thumbnail width and height.
+	ThumbWidth  int `json:"thumbnail_width,omitempty"`
+	ThumbHeight int `json:"thumbnail_height,omitempty"`
 }
 
 // Mpeg4GifResult represents a link to a video animation
 // (H.264/MPEG-4 AVC video without sound).
+//
+// Bot API: InlineQueryResultMpeg4Gif, InlineQueryResultCachedMpeg4Gif.
 type Mpeg4GifResult struct {
 	ResultBase
 
@@ -266,6 +295,8 @@ type Mpeg4GifResult struct {
 }
 
 // PhotoResult represents a link to a photo.
+//
+// Bot API: InlineQueryResultPhoto, InlineQueryResultCachedPhoto.
 type PhotoResult struct {
 	ResultBase
 
@@ -299,6 +330,8 @@ type PhotoResult struct {
 }
 
 // VenueResult represents a venue.
+//
+// Bot API: InlineQueryResultVenue.
 type VenueResult struct {
 	ResultBase
 
@@ -313,6 +346,11 @@ type VenueResult struct {
 	// Optional. Foursquare identifier of the venue if known.
 	FoursquareID string `json:"foursquare_id,omitempty"`
 
+	// Optional. Foursquare type, and Google Places identifier and type.
+	FoursquareType  string `json:"foursquare_type,omitempty"`
+	GooglePlaceID   string `json:"google_place_id,omitempty"`
+	GooglePlaceType string `json:"google_place_type,omitempty"`
+
 	// Optional. URL of the thumbnail for the result.
 	ThumbURL string `json:"thumbnail_url,omitempty"`
 
@@ -325,6 +363,8 @@ type VenueResult struct {
 
 // VideoResult represents a link to a page containing an embedded
 // video player or a video file.
+//
+// Bot API: InlineQueryResultVideo, InlineQueryResultCachedVideo.
 type VideoResult struct {
 	ResultBase
 
@@ -364,6 +404,8 @@ type VideoResult struct {
 
 // VoiceResult represents a link to a voice recording in an .ogg
 // container encoded with OPUS.
+//
+// Bot API: InlineQueryResultVoice, InlineQueryResultCachedVoice.
 type VoiceResult struct {
 	ResultBase
 
@@ -384,6 +426,8 @@ type VoiceResult struct {
 }
 
 // StickerResult represents an inline cached sticker response.
+//
+// Bot API: InlineQueryResultCachedSticker.
 type StickerResult struct {
 	ResultBase
 
@@ -392,6 +436,8 @@ type StickerResult struct {
 }
 
 // PreparedInlineMessage describes an inline message to be sent by a user of a Mini App.
+//
+// Bot API: PreparedInlineMessage.
 type PreparedInlineMessage struct {
 	// Unique identifier of the prepared message
 	ID string `json:"id"`

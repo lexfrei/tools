@@ -7,6 +7,8 @@ import (
 )
 
 // File object represents any sort of file.
+//
+// Bot API: File, InputFile.
 type File struct {
 	FileID   string `json:"file_id"`
 	UniqueID string `json:"file_unique_id"`
@@ -34,8 +36,7 @@ type File struct {
 // so upon uploading media you'll need to set embedded File
 // with something. NewFile() returning File makes it a one-liner.
 //
-//		photo := &tele.Photo{File: tele.FromDisk("chicken.jpg")}
-//
+//	photo := &tele.Photo{File: tele.FromDisk("chicken.jpg")}
 func FromDisk(filename string) File {
 	return File{
 		FileLocal: filename,
@@ -55,8 +56,7 @@ func FromDisk(filename string) File {
 // so upon uploading media you'll need to set embedded File
 // with something. NewFile() returning File makes it a one-liner.
 //
-//		photo := &tele.Photo{File: tele.FromURL("https://site.com/picture.jpg")}
-//
+//	photo := &tele.Photo{File: tele.FromURL("https://site.com/picture.jpg")}
 func FromURL(url string) File {
 	return File{FileURL: url}
 }
@@ -68,8 +68,7 @@ func FromURL(url string) File {
 // so upon uploading media you'll need to set embedded File
 // with something. NewFile() returning File makes it a one-liner.
 //
-//		photo := &tele.Photo{File: tele.FromReader(bytes.NewReader(...))}
-//
+//	photo := &tele.Photo{File: tele.FromReader(bytes.NewReader(...))}
 func FromReader(reader io.Reader) File {
 	return File{FileReader: reader}
 }

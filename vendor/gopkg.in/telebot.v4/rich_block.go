@@ -26,17 +26,24 @@ const (
 	RichBlockVideoType     = "video"
 	RichBlockVoiceNote     = "voice_note"
 	RichBlockThinking      = "thinking"
+
+	// Bot API 10.3.
+	RichBlockExpandableBlockquote = "expandable_blockquote"
+	RichBlockButtons              = "buttons"
+	RichBlockDocumentType         = "document"
 )
 
 // RichBlock is a single block of a received RichMessage (Bot API 10.1). It is a
 // polymorphic type discriminated by Type; only the fields relevant to a given
 // Type are populated. RichBlock is a received-only type.
+//
+// Bot API: RichBlock, RichBlockParagraph, RichBlockSectionHeading, RichBlockPreformatted, RichBlockFooter, RichBlockDivider, RichBlockMathematicalExpression, RichBlockAnchor, RichBlockList, RichBlockBlockQuotation, RichBlockPullQuotation, RichBlockCollage, RichBlockSlideshow, RichBlockTable, RichBlockDetails, RichBlockMap, RichBlockAnimation, RichBlockAudio, RichBlockPhoto, RichBlockVideo, RichBlockVoiceNote, RichBlockThinking, RichBlockExpandableBlockQuotation, RichBlockButtons, RichBlockDocument.
 type RichBlock struct {
 	// Type is the block discriminator (see the RichBlock* constants).
 	Type string `json:"type"`
 
 	// Text is the block's formatted text (paragraph, heading, pre, footer,
-	// pullquote, thinking).
+	// pullquote, expandable blockquote, thinking).
 	Text *RichText `json:"text,omitempty"`
 
 	// Size is the heading level, 1 (largest) to 6 (smallest).
@@ -70,9 +77,15 @@ type RichBlock struct {
 	// Cells are the rows-by-columns of a "table" block.
 	Cells [][]RichBlockTableCell `json:"cells,omitempty"`
 
-	// IsBordered and IsStriped style a "table" block.
+	// IsBordered, IsStriped and IsCompact style a "table" block.
 	IsBordered bool `json:"is_bordered,omitempty"`
 	IsStriped  bool `json:"is_striped,omitempty"`
+	IsCompact  bool `json:"is_compact,omitempty"`
+
+	// Buttons and Align describe a "buttons" block; Align is "left",
+	// "center" or "right".
+	Buttons []RichMessageButton `json:"buttons,omitempty"`
+	Align   string              `json:"align,omitempty"`
 
 	// Location, Zoom, Width and Height describe a "map" block.
 	Location *Location `json:"location,omitempty"`
@@ -86,6 +99,7 @@ type RichBlock struct {
 	Photo     []Photo    `json:"photo,omitempty"`
 	Video     *Video     `json:"video,omitempty"`
 	VoiceNote *Voice     `json:"voice_note,omitempty"`
+	Document  *Document  `json:"document,omitempty"`
 
 	// HasSpoiler marks an animation, photo or video block as a spoiler.
 	HasSpoiler bool `json:"has_spoiler,omitempty"`
@@ -126,6 +140,8 @@ func (rb *RichBlock) UnmarshalJSON(data []byte) error {
 }
 
 // RichBlockCaption is the caption of a media or container rich block.
+//
+// Bot API: RichBlockCaption.
 type RichBlockCaption struct {
 	// Text of the caption.
 	Text RichText `json:"text"`
@@ -136,6 +152,8 @@ type RichBlockCaption struct {
 
 // RichBlockTableCell is a single cell of a "table" rich block. An omitted Text
 // denotes an invisible cell spanned into by a neighbour.
+//
+// Bot API: RichBlockTableCell.
 type RichBlockTableCell struct {
 	Text     *RichText `json:"text,omitempty"`
 	IsHeader bool      `json:"is_header,omitempty"`
@@ -146,6 +164,8 @@ type RichBlockTableCell struct {
 }
 
 // RichBlockListItem is a single entry of a "list" rich block.
+//
+// Bot API: RichBlockListItem.
 type RichBlockListItem struct {
 	// Label is the rendered bullet or number of the item.
 	Label string `json:"label,omitempty"`

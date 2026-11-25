@@ -3,33 +3,40 @@ package telebot
 import "strings"
 
 // Update object represents an incoming update.
+//
+// Bot API: Update.
 type Update struct {
 	ID int `json:"update_id"`
 
-	Message                 *Message                 `json:"message,omitempty"`
-	EditedMessage           *Message                 `json:"edited_message,omitempty"`
-	ChannelPost             *Message                 `json:"channel_post,omitempty"`
-	EditedChannelPost       *Message                 `json:"edited_channel_post,omitempty"`
-	MessageReaction         *MessageReaction         `json:"message_reaction"`
-	MessageReactionCount    *MessageReactionCount    `json:"message_reaction_count"`
-	Callback                *Callback                `json:"callback_query,omitempty"`
-	Query                   *Query                   `json:"inline_query,omitempty"`
-	InlineResult            *InlineResult            `json:"chosen_inline_result,omitempty"`
-	ShippingQuery           *ShippingQuery           `json:"shipping_query,omitempty"`
-	PreCheckoutQuery        *PreCheckoutQuery        `json:"pre_checkout_query,omitempty"`
-	Poll                    *Poll                    `json:"poll,omitempty"`
-	PollAnswer              *PollAnswer              `json:"poll_answer,omitempty"`
-	MyChatMember            *ChatMemberUpdate        `json:"my_chat_member,omitempty"`
-	ChatMember              *ChatMemberUpdate        `json:"chat_member,omitempty"`
-	ChatJoinRequest         *ChatJoinRequest         `json:"chat_join_request,omitempty"`
-	Boost                   *BoostUpdated            `json:"chat_boost"`
-	BoostRemoved            *BoostRemoved            `json:"removed_chat_boost"`
-	BusinessConnection      *BusinessConnection      `json:"business_connection"`
-	BusinessMessage         *Message                 `json:"business_message"`
-	EditedBusinessMessage   *Message                 `json:"edited_business_message"`
-	DeletedBusinessMessages *BusinessMessagesDeleted `json:"deleted_business_messages"`
-	GuestMessage            *Message                 `json:"guest_message"`
-	PurchasedPaidMedia      *PaidMediaPurchased      `json:"purchased_paid_media"`
+	Message                 *Message                  `json:"message,omitempty"`
+	EditedMessage           *Message                  `json:"edited_message,omitempty"`
+	ChannelPost             *Message                  `json:"channel_post,omitempty"`
+	EditedChannelPost       *Message                  `json:"edited_channel_post,omitempty"`
+	MessageReaction         *MessageReaction          `json:"message_reaction"`
+	MessageReactionCount    *MessageReactionCount     `json:"message_reaction_count"`
+	Callback                *Callback                 `json:"callback_query,omitempty"`
+	Query                   *Query                    `json:"inline_query,omitempty"`
+	InlineResult            *InlineResult             `json:"chosen_inline_result,omitempty"`
+	ShippingQuery           *ShippingQuery            `json:"shipping_query,omitempty"`
+	PreCheckoutQuery        *PreCheckoutQuery         `json:"pre_checkout_query,omitempty"`
+	Poll                    *Poll                     `json:"poll,omitempty"`
+	PollAnswer              *PollAnswer               `json:"poll_answer,omitempty"`
+	MyChatMember            *ChatMemberUpdate         `json:"my_chat_member,omitempty"`
+	ChatMember              *ChatMemberUpdate         `json:"chat_member,omitempty"`
+	ChatJoinRequest         *ChatJoinRequest          `json:"chat_join_request,omitempty"`
+	Boost                   *BoostUpdated             `json:"chat_boost"`
+	BoostRemoved            *BoostRemoved             `json:"removed_chat_boost"`
+	BusinessConnection      *BusinessConnection       `json:"business_connection"`
+	BusinessMessage         *Message                  `json:"business_message"`
+	EditedBusinessMessage   *Message                  `json:"edited_business_message"`
+	DeletedBusinessMessages *BusinessMessagesDeleted  `json:"deleted_business_messages"`
+	GuestMessage            *Message                  `json:"guest_message"`
+	PurchasedPaidMedia      *PaidMediaPurchased       `json:"purchased_paid_media"`
+	Subscription            *BotSubscriptionUpdated   `json:"subscription,omitempty"`
+	GenerationStopped       *MessageGenerationStopped `json:"stopped_message_generation,omitempty"`
+	WidgetQuery             *WidgetQuery              `json:"widget_query,omitempty"`
+	SharedWidgetQuery       *SharedWidgetQuery        `json:"shared_widget_query,omitempty"`
+	ManagedBot              *ManagedBotUpdated        `json:"managed_bot,omitempty"`
 }
 
 // ProcessUpdate processes a single incoming update.
@@ -94,6 +101,10 @@ func (b *Bot) ProcessContext(c Context) {
 			return
 		}
 
+		if m.Checklist != nil {
+			b.handle(OnChecklist, c)
+			return
+		}
 		if m.Contact != nil {
 			b.handle(OnContact, c)
 			return
@@ -124,6 +135,78 @@ func (b *Bot) ProcessContext(c Context) {
 		}
 		if m.RefundedPayment != nil {
 			b.handle(OnRefund, c)
+			return
+		}
+		if m.Gift != nil {
+			b.handle(OnGift, c)
+			return
+		}
+		if m.UniqueGift != nil {
+			b.handle(OnUniqueGift, c)
+			return
+		}
+		if m.GiftUpgradeSent != nil {
+			b.handle(OnGiftUpgradeSent, c)
+			return
+		}
+		if m.TonWalletTransfer != nil {
+			b.handle(OnTonWalletTransfer, c)
+			return
+		}
+		if m.PaidMessagesWaived != nil {
+			b.handle(OnPaidMessagesWaived, c)
+			return
+		}
+		if m.ManagedBotCreated != nil {
+			b.handle(OnManagedBotCreated, c)
+			return
+		}
+		if m.SuggestedPostApproved != nil {
+			b.handle(OnSuggestedPostApproved, c)
+			return
+		}
+		if m.SuggestedPostApprovalFailed != nil {
+			b.handle(OnSuggestedPostApprovalFailed, c)
+			return
+		}
+		if m.SuggestedPostDeclined != nil {
+			b.handle(OnSuggestedPostDeclined, c)
+			return
+		}
+		if m.SuggestedPostPaid != nil {
+			b.handle(OnSuggestedPostPaid, c)
+			return
+		}
+		if m.SuggestedPostRefunded != nil {
+			b.handle(OnSuggestedPostRefunded, c)
+			return
+		}
+		if m.PassportData != nil {
+			b.handle(OnPassportData, c)
+			return
+		}
+		if m.PaidMessagePriceChanged != nil {
+			b.handle(OnPaidMessagePriceChanged, c)
+			return
+		}
+		if m.ChecklistTasksDone != nil {
+			b.handle(OnChecklistTasksDone, c)
+			return
+		}
+		if m.ChecklistTasksAdded != nil {
+			b.handle(OnChecklistTasksAdded, c)
+			return
+		}
+		if m.DirectMessagePriceChanged != nil {
+			b.handle(OnDirectMessagePriceChanged, c)
+			return
+		}
+		if m.PollOptionAdded != nil {
+			b.handle(OnPollOptionAdded, c)
+			return
+		}
+		if m.PollOptionDeleted != nil {
+			b.handle(OnPollOptionDeleted, c)
 			return
 		}
 		if m.TopicCreated != nil {
@@ -160,6 +243,18 @@ func (b *Bot) ProcessContext(c Context) {
 		}
 		if m.ChatOwnerChanged != nil {
 			b.handle(OnChatOwnerChanged, c)
+			return
+		}
+		if m.CommunityChatAdded != nil {
+			b.handle(OnCommunityChatAdded, c)
+			return
+		}
+		if m.CommunityChatRemoved != nil {
+			b.handle(OnCommunityChatRemoved, c)
+			return
+		}
+		if m.CommunityChatJoined != nil {
+			b.handle(OnCommunityChatJoined, c)
 			return
 		}
 
@@ -374,6 +469,34 @@ func (b *Bot) ProcessContext(c Context) {
 		b.handle(OnPurchasedPaidMedia, c)
 		return
 	}
+	if u.Subscription != nil {
+		b.handle(OnSubscription, c)
+		return
+	}
+	if u.MessageReaction != nil {
+		b.handle(OnReaction, c)
+		return
+	}
+	if u.MessageReactionCount != nil {
+		b.handle(OnReactionCount, c)
+		return
+	}
+	if u.GenerationStopped != nil {
+		b.handle(OnGenerationStopped, c)
+		return
+	}
+	if u.WidgetQuery != nil {
+		b.handle(OnWidgetQuery, c)
+		return
+	}
+	if u.SharedWidgetQuery != nil {
+		b.handle(OnSharedWidgetQuery, c)
+		return
+	}
+	if u.ManagedBot != nil {
+		b.handle(OnManagedBot, c)
+		return
+	}
 }
 
 func (b *Bot) handle(end string, c Context) bool {
@@ -389,6 +512,12 @@ func (b *Bot) handleMedia(c Context) bool {
 		m     = c.Message()
 		fired = true
 	)
+
+	// A live photo also carries its still in Photo, so without an
+	// OnLivePhoto handler it is handled as a photo.
+	if m.LivePhoto != nil && b.handle(OnLivePhoto, c) {
+		return true
+	}
 
 	switch {
 	case m.Photo != nil:

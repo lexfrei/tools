@@ -3,6 +3,8 @@ package telebot
 import "encoding/json"
 
 // Command represents a bot command.
+//
+// Bot API: BotCommand.
 type Command struct {
 	// Text is a text of the command, 1-32 characters.
 	// Can contain only lowercase English letters, digits and underscores.
@@ -10,6 +12,10 @@ type Command struct {
 
 	// Description of the command, 3-256 characters.
 	Description string `json:"description"`
+
+	// (Optional) The command is ephemeral: in groups, it and the bot's
+	// replies to it are visible only to the user who sent it (Bot API 10.2).
+	IsEphemeral bool `json:"is_ephemeral,omitempty"`
 }
 
 // CommandParams controls parameters for commands-related methods (setMyCommands, deleteMyCommands and getMyCommands).
@@ -32,6 +38,8 @@ const (
 )
 
 // CommandScope object represents a scope to which bot commands are applied.
+//
+// Bot API: BotCommandScope, BotCommandScopeDefault, BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats, BotCommandScopeAllChatAdministrators, BotCommandScopeChat, BotCommandScopeChatAdministrators, BotCommandScopeChatMember.
 type CommandScope struct {
 	Type   CommandScopeType `json:"type"`
 	ChatID int64            `json:"chat_id,omitempty"`
@@ -39,6 +47,8 @@ type CommandScope struct {
 }
 
 // Commands returns the current list of the bot's commands for the given scope and user language.
+//
+// Bot API: getMyCommands.
 func (b *Bot) Commands(opts ...interface{}) ([]Command, error) {
 	params := extractCommandsParams(opts...)
 	data, err := b.Raw("getMyCommands", params)
@@ -56,6 +66,8 @@ func (b *Bot) Commands(opts ...interface{}) ([]Command, error) {
 }
 
 // SetCommands changes the list of the bot's commands.
+//
+// Bot API: setMyCommands.
 func (b *Bot) SetCommands(opts ...interface{}) error {
 	params := extractCommandsParams(opts...)
 	_, err := b.Raw("setMyCommands", params)
@@ -63,6 +75,8 @@ func (b *Bot) SetCommands(opts ...interface{}) error {
 }
 
 // DeleteCommands deletes the list of the bot's commands for the given scope and user language.
+//
+// Bot API: deleteMyCommands.
 func (b *Bot) DeleteCommands(opts ...interface{}) error {
 	params := extractCommandsParams(opts...)
 	_, err := b.Raw("deleteMyCommands", params)

@@ -76,6 +76,28 @@ type Context interface {
 	// PurchasedPaidMedia returns the purchased paid media instance.
 	PurchasedPaidMedia() *PaidMediaPurchased
 
+	// Subscription returns the change to a user's payment subscription.
+	Subscription() *BotSubscriptionUpdated
+
+	// GenerationStopped returns the draft whose generation the user stopped.
+	GenerationStopped() *MessageGenerationStopped
+
+	// WidgetQuery returns the query from a widget.
+	WidgetQuery() *WidgetQuery
+
+	// SharedWidgetQuery returns the query from a forwarded shared widget.
+	SharedWidgetQuery() *SharedWidgetQuery
+
+	// ManagedBot returns the created or changed managed bot.
+	ManagedBot() *ManagedBotUpdated
+
+	// MessageReaction returns the change of a user's reactions to a message.
+	MessageReaction() *MessageReaction
+
+	// MessageReactionCount returns the changed anonymous reactions to a
+	// message.
+	MessageReactionCount() *MessageReactionCount
+
 	// Sender returns the current recipient, depending on the context type.
 	// Returns nil if user is not presented.
 	Sender() *User
@@ -226,6 +248,10 @@ func (c *nativeContext) Message() *Message {
 		return c.u.ChannelPost
 	case c.u.EditedChannelPost != nil:
 		return c.u.EditedChannelPost
+	case c.u.BusinessMessage != nil:
+		return c.u.BusinessMessage
+	case c.u.EditedBusinessMessage != nil:
+		return c.u.EditedBusinessMessage
 	default:
 		return nil
 	}
@@ -317,6 +343,34 @@ func (c *nativeContext) PurchasedPaidMedia() *PaidMediaPurchased {
 	return c.u.PurchasedPaidMedia
 }
 
+func (c *nativeContext) Subscription() *BotSubscriptionUpdated {
+	return c.u.Subscription
+}
+
+func (c *nativeContext) GenerationStopped() *MessageGenerationStopped {
+	return c.u.GenerationStopped
+}
+
+func (c *nativeContext) WidgetQuery() *WidgetQuery {
+	return c.u.WidgetQuery
+}
+
+func (c *nativeContext) SharedWidgetQuery() *SharedWidgetQuery {
+	return c.u.SharedWidgetQuery
+}
+
+func (c *nativeContext) ManagedBot() *ManagedBotUpdated {
+	return c.u.ManagedBot
+}
+
+func (c *nativeContext) MessageReaction() *MessageReaction {
+	return c.u.MessageReaction
+}
+
+func (c *nativeContext) MessageReactionCount() *MessageReactionCount {
+	return c.u.MessageReactionCount
+}
+
 func (c *nativeContext) Sender() *User {
 	switch {
 	case c.u.Callback != nil:
@@ -339,6 +393,16 @@ func (c *nativeContext) Sender() *User {
 		return c.u.ChatMember.Sender
 	case c.u.ChatJoinRequest != nil:
 		return c.u.ChatJoinRequest.Sender
+	case c.u.Subscription != nil:
+		return c.u.Subscription.User
+	case c.u.WidgetQuery != nil:
+		return c.u.WidgetQuery.Sender
+	case c.u.SharedWidgetQuery != nil:
+		return c.u.SharedWidgetQuery.Sender
+	case c.u.ManagedBot != nil:
+		return c.u.ManagedBot.User
+	case c.u.MessageReaction != nil:
+		return c.u.MessageReaction.User
 	case c.u.Boost != nil:
 		if b := c.u.Boost.Boost; b != nil && b.Source != nil {
 			return b.Source.Booster
@@ -361,6 +425,14 @@ func (c *nativeContext) Chat() *Chat {
 		return c.u.ChatMember.Chat
 	case c.u.ChatJoinRequest != nil:
 		return c.u.ChatJoinRequest.Chat
+	case c.u.GenerationStopped != nil:
+		return c.u.GenerationStopped.Chat
+	case c.u.WidgetQuery != nil:
+		return c.u.WidgetQuery.Chat
+	case c.u.MessageReaction != nil:
+		return c.u.MessageReaction.Chat
+	case c.u.MessageReactionCount != nil:
+		return c.u.MessageReactionCount.Chat
 	default:
 		return nil
 	}
@@ -576,7 +648,11 @@ func (c *nativeContext) DeleteAfter(d time.Duration) *time.Timer {
 }
 
 func (c *nativeContext) Notify(action ChatAction) error {
-	return c.b.Notify(c.Recipient(), action, c.ThreadID())
+	opts := &SendOptions{ThreadID: c.ThreadID()}
+	if m := c.Message(); m != nil {
+		opts.BusinessConnectionID = m.BusinessConnectionID
+	}
+	return c.b.Notify(c.Recipient(), action, opts)
 }
 
 func (c *nativeContext) Ship(what ...interface{}) error {

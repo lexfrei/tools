@@ -1,18 +1,21 @@
 package telebot
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type TransactionType = string
 
 const (
-	TransactionTypeUser               TransactionType = "user"
-	TransactionTypeFragment           TransactionType = "fragment"
-	TransactionPartnerTelegramAds     TransactionType = "telegram_ads"
-	TransactionPartnerTelegramApi     TransactionType = "telegram_api"
-	TransactionTypeAffiliateProgram   TransactionType = "affiliate_program"
-	TransactionTypeOther              TransactionType = "other"
+	TransactionTypeUser             TransactionType = "user"
+	TransactionTypeFragment         TransactionType = "fragment"
+	TransactionPartnerTelegramAds   TransactionType = "telegram_ads"
+	TransactionPartnerTelegramApi   TransactionType = "telegram_api"
+	TransactionTypeAffiliateProgram TransactionType = "affiliate_program"
+	TransactionTypeOther            TransactionType = "other"
 	// Bot API 8.3: Transaction partner is a chat
-	TransactionTypeChat               TransactionType = "chat"
+	TransactionTypeChat TransactionType = "chat"
 )
 
 type RevenueState = string
@@ -23,6 +26,9 @@ const (
 	RevenueStateFailed    RevenueState = "failed"
 )
 
+// StarTransaction describes a Telegram Star transaction.
+//
+// Bot API: StarTransaction.
 type StarTransaction struct {
 	// Unique identifier of the transaction. Coincides with the identifier of the
 	// original transaction for refund transactions. Coincides with
@@ -49,14 +55,23 @@ type StarTransaction struct {
 }
 
 // TransactionPartnerChat describes a transaction partner that is a chat.
+//
+// Bot API: TransactionPartnerChat.
 type TransactionPartnerChat struct {
 	// Type of the transaction partner, always "chat"
 	Type TransactionType `json:"type"`
 
 	// Information about the chat
 	Chat *Chat `json:"chat"`
+
+	// (Optional) The gift sent to the chat by the bot.
+	Gift *Gift `json:"gift,omitempty"`
 }
 
+// TransactionPartner describes the source or the recipient of a Telegram
+// Star transaction.
+//
+// Bot API: TransactionPartner, TransactionPartnerUser, TransactionPartnerChat, TransactionPartnerAffiliateProgram, TransactionPartnerFragment, TransactionPartnerTelegramAds, TransactionPartnerTelegramApi, TransactionPartnerOther.
 type TransactionPartner struct {
 	// Type of the state
 	Type    TransactionType `json:"type"`
@@ -75,10 +90,36 @@ type TransactionPartner struct {
 	// Bot API 8.1: Information about the affiliate program from which the transaction was made
 	Affiliate *AffiliateInfo `json:"affiliate,omitempty"`
 
-	// Bot API 8.3: Information about the chat transaction partner
-	Chat *TransactionPartnerChat `json:"chat,omitempty"`
+	// Bot API 8.1: for "affiliate_program" partners, the bot that sponsored
+	// the program, and the Stars the bot receives for each 1000 Stars the
+	// sponsor receives from referred users.
+	SponsorUser        *User `json:"sponsor_user,omitempty"`
+	CommissionPerMille int   `json:"commission_per_mille,omitempty"`
+
+	// Bot API 8.3: for "chat" partners, the chat.
+	Chat *Chat `json:"chat,omitempty"`
+
+	// Bot API 9.0: for "user" partners, the type of the transaction:
+	// "invoice_payment", "paid_media_payment", "gift_purchase",
+	// "premium_purchase" or "business_account_transfer".
+	TransactionType string `json:"transaction_type,omitempty"`
+
+	// For "paid_media_payment" transactions, the media bought and its
+	// payload.
+	PaidMedia        []PaidMedia `json:"paid_media,omitempty"`
+	PaidMediaPayload string      `json:"paid_media_payload,omitempty"`
+
+	// Bot API 9.0: for "premium_purchase" transactions, the months of
+	// Telegram Premium gifted.
+	PremiumSubscriptionDuration int `json:"premium_subscription_duration,omitempty"`
+
+	// For "telegram_api" partners, the billed requests over the limits.
+	RequestCount int `json:"request_count,omitempty"`
 }
 
+// RevenueWithdrawal describes the state of a revenue withdrawal operation.
+//
+// Bot API: RevenueWithdrawalState, RevenueWithdrawalStatePending, RevenueWithdrawalStateSucceeded, RevenueWithdrawalStateFailed.
 type RevenueWithdrawal struct {
 	// Type of the state
 	Type RevenueState `json:"type"`
@@ -91,6 +132,8 @@ type RevenueWithdrawal struct {
 }
 
 // TransactionPartnerAffiliateProgram describes the affiliate program that paid the transaction.
+//
+// Bot API: TransactionPartnerAffiliateProgram.
 type TransactionPartnerAffiliateProgram struct {
 	// Type of the transaction partner, always "affiliate_program"
 	Type TransactionType `json:"type"`
@@ -102,62 +145,16 @@ type TransactionPartnerAffiliateProgram struct {
 	CommissionPerMille int `json:"commission_per_mille"`
 }
 
-// VerificationLevel describes the verification level of a user or chat.
-type VerificationLevel string
-
-const (
-	VerificationLevelNone      VerificationLevel = "none"
-	VerificationLevelBasic     VerificationLevel = "basic"
-	VerificationLevelDetailed  VerificationLevel = "detailed"
-	VerificationLevelFull      VerificationLevel = "full"
-)
-
-// VerificationRequirements describes the requirements for verification.
-type VerificationRequirements struct {
-	// (Optional) Whether the user needs to provide a phone number
-	RequirePhoneNumber bool `json:"require_phone_number,omitempty"`
-
-	// (Optional) Whether the user needs to provide their real name
-	RequireRealName bool `json:"require_real_name,omitempty"`
-
-	// (Optional) Whether the user needs to provide their date of birth
-	RequireBirthDate bool `json:"require_birth_date,omitempty"`
-
-	// (Optional) Whether the user needs to provide their address
-	RequireAddress bool `json:"require_address,omitempty"`
-
-	// (Optional) Whether the user needs to provide identification documents
-	RequireDocuments bool `json:"require_documents,omitempty"`
-
-	// (Optional) Custom verification requirements
-	CustomRequirements []string `json:"custom_requirements,omitempty"`
-}
-
-// VerificationInfo contains information about the verification status.
-type VerificationInfo struct {
-	// Verification level of the user or chat
-	Level VerificationLevel `json:"level"`
-
-	// (Optional) Date when verification was granted in Unix time
-	VerificationDate int64 `json:"verification_date,omitempty"`
-
-	// (Optional) Expiration date of verification in Unix time
-	ExpirationDate int64 `json:"expiration_date,omitempty"`
-
-	// (Optional) Information about the entity that verified this user or chat
-	VerifiedBy string `json:"verified_by,omitempty"`
-
-	// (Optional) Additional verification details
-	Details string `json:"details,omitempty"`
-
-	// (Optional) Whether the verification is currently active
-	IsActive bool `json:"is_active"`
-}
-
 // AffiliateInfo contains information about the affiliate program from which the transaction was made.
+//
+// Bot API: AffiliateInfo.
 type AffiliateInfo struct {
 	// (Optional) Information about the affiliate program that paid the transaction
 	AffiliateProgram *TransactionPartnerAffiliateProgram `json:"affiliate_program,omitempty"`
+
+	// (Optional) The bot or user, or the chat, that received the commission.
+	AffiliateUser *User `json:"affiliate_user,omitempty"`
+	AffiliateChat *Chat `json:"affiliate_chat,omitempty"`
 
 	// (Optional) The number of Telegram Stars received by the affiliate program for each 1000 Telegram Stars received by the bot
 	CommissionPerMille int `json:"commission_per_mille"`
@@ -189,29 +186,6 @@ func (a *AffiliateInfo) HasNanostarAmount() bool {
 	return a.NanostarAmount > 0
 }
 
-// VerificationTime returns the date when verification was granted.
-func (v *VerificationInfo) VerificationTime() time.Time {
-	return time.Unix(v.VerificationDate, 0)
-}
-
-// ExpirationTime returns the expiration date of the verification.
-func (v *VerificationInfo) ExpirationTime() time.Time {
-	return time.Unix(v.ExpirationDate, 0)
-}
-
-// IsExpired returns whether the verification has expired.
-func (v *VerificationInfo) IsExpired() bool {
-	if v.ExpirationDate == 0 {
-		return false // No expiration date set
-	}
-	return time.Now().Unix() > v.ExpirationDate
-}
-
-// IsValid returns whether the verification is currently valid (active and not expired).
-func (v *VerificationInfo) IsValid() bool {
-	return v.IsActive && !v.IsExpired()
-}
-
 // Time returns the date of the transaction.
 func (c *StarTransaction) Time() time.Time {
 	return time.Unix(c.Unixtime, 0)
@@ -230,4 +204,34 @@ func (c *StarTransaction) NanostarAmountAsTON() float64 {
 // HasNanostarAmount returns whether the transaction has a nanostar amount.
 func (c *StarTransaction) HasNanostarAmount() bool {
 	return c.NanostarAmount > 0
+}
+
+// StarAmount is an amount of Telegram Stars (Bot API 9.1).
+//
+// Bot API: StarAmount.
+type StarAmount struct {
+	// Whole Stars, rounded towards zero; can be negative.
+	Amount int64 `json:"amount"`
+
+	// (Optional) Billionths of a Star, from -999999999 to 999999999.
+	NanostarAmount int64 `json:"nanostar_amount,omitempty"`
+}
+
+// StarBalance returns the bot's current balance of Telegram Stars
+// (Bot API 9.1).
+//
+// Bot API: getMyStarBalance.
+func (b *Bot) StarBalance() (*StarAmount, error) {
+	data, err := b.Raw("getMyStarBalance", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Result *StarAmount
+	}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, wrapError(err)
+	}
+	return resp.Result, nil
 }
